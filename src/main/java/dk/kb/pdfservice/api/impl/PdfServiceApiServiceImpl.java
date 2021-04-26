@@ -1,10 +1,10 @@
 package dk.kb.pdfservice.api.impl;
 
 import dk.kb.pdfservice.api.*;
-import dk.kb.pdfservice.model.ErrorDto;
-import dk.kb.pdfservice.model.HelloReplyDto;
-import java.util.List;
-import java.util.Map;
+
+import java.io.ByteArrayOutputStream;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 import dk.kb.pdfservice.webservice.exception.ServiceException;
 import dk.kb.pdfservice.webservice.exception.InternalServiceException;
@@ -12,34 +12,24 @@ import dk.kb.pdfservice.webservice.exception.InternalServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.List;
-import java.util.Map;
-import java.io.File;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import javax.validation.constraints.NotNull;
-import javax.ws.rs.*;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.*;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Providers;
-import javax.ws.rs.core.MediaType;
-import org.apache.cxf.jaxrs.model.wadl.Description;
-import org.apache.cxf.jaxrs.model.wadl.DocTarget;
-import org.apache.cxf.jaxrs.ext.MessageContext;
-import org.apache.cxf.jaxrs.ext.multipart.*;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
-import io.swagger.annotations.Api;
+import org.apache.cxf.jaxrs.ext.MessageContext;
+
+import org.w3c.dom.Document;
 
 /**
  * pdf-service
@@ -89,32 +79,75 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
 
 
     /**
-     * Request a Hello World message, for testing purposes
+     * Request a theater manuscript summary.
      * 
-     * @param alternateHello: Optional alternative to using the word &#39;Hello&#39; in the reply
+     * @param barcode: Barcode for a theater manuscript
      * 
      * @return <ul>
-      *   <li>code = 200, message = "A JSON structure containing a Hello World message", response = HelloReplyDto.class</li>
+      *   <li>code = 200, message = "A pdf with attached page", response = File.class</li>
       *   </ul>
       * @throws ServiceException when other http codes should be returned
       *
       * @implNote return will always produce a HTTP 200 code. Throw ServiceException if you need to return other codes
      */
     @Override
-    public HelloReplyDto getGreeting(String alternateHello) throws ServiceException {
+    public javax.ws.rs.core.StreamingOutput getManuscript(String barcode, String pdflink) throws ServiceException {
         // TODO: Implement...
-    
+
         
         try{ 
-            HelloReplyDto response = new HelloReplyDto();
-        response.setMessage("f291w");
-        return response;
+            httpServletResponse.setHeader("Content-Disposition", "inline; filename=\"filename.ext\"");
+            String doc = getRawManuscript((barcode));
+     //       return output -> output.write("Magic".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            return output -> output.write(doc.getBytes(java.nio.charset.StandardCharsets.UTF_8));
         } catch (Exception e){
             throw handleException(e);
         }
     
     }
 
+    /**
+     * Request a theater manuscript summary.
+     * 
+     * @param barCode : Barcode for a theater manuscript
+     *
+     * @return <ul>
+      *   <li>code = 200, message = "A pdf with attached page", response = String.class</li>
+      *   </ul>
+      * @throws ServiceException when other http codes should be returned
+      *
+      * @implNote return will always produce a HTTP 200 code. Throw ServiceException if you need to return other codes
+     */
+    @Override
+    public String getRawManuscript(String barCode) throws ServiceException {
+        // TODO: Implement...barcode=130018972949
+        final String USER_AGENT = "Mozilla/5.0";
+        String response = null;
+//        HttpURLConnection conn = null;
+        try {
+            String urlString = "https://soeg.kb.dk/view/sru/45KBDK_KGL?version=1.2&operation=searchRetrieve&query=barcode=" + barCode + "&recordSchema=marcxml";
+            URL url = new URL(urlString);
+
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            Document doc = db.parse(new URL(urlString).openStream());
+            doc.getDocumentElement().normalize();
+            System.out.println("Document type: " + doc.getDoctype());
+             return transformToString(doc);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw handleException(e);
+        }
+    }
+
+    public String transformToString(Document doc) throws TransformerException {
+        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        Transformer xform = transformerFactory.newTransformer();
+        ByteArrayOutputStream bao = new ByteArrayOutputStream();
+
+        xform.transform(new DOMSource(doc), new StreamResult(bao));
+        return bao.toString(StandardCharsets.UTF_8);
+    }
     /**
      * Ping the server to check if the server is reachable.
      * 
@@ -133,7 +166,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     
         
         try{ 
-            String response = "j4qKP6";
+            String response = "e7nJq";
         return response;
         } catch (Exception e){
             throw handleException(e);

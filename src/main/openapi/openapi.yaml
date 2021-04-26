@@ -41,27 +41,58 @@ paths:
             text/plain:
               schema:
                 type: string
-  /hello:
+  /getManuscript:
     get:
       tags:
         - "${project.name}"
-      summary: 'Request a Hello World message, for testing purposes'
-      operationId: getGreeting
+      summary: 'Request a theater manuscript summary.'
+      operationId: getManuscript
+      x-streamingOutput: true # If enabled the method will return StreamingOutput.
       parameters:
-        - name: alternateHello
+        - name: barcode
           in: query
-          description: Optional alternative to using the word 'Hello' in the reply
-          required: false
+          description: Barcode for a theater manuscript
+          required: true
           schema:
             type: string
-            default: World
+            example: 130018972949
+        - name: pdflink
+          in: query
+          description: Barcode for a theater manuscript
+          required: true
+          schema:
+            type: string
+            example: string
       responses:
         '200':
-          description: A JSON structure containing a Hello World message
+          description: A pdf with attached page
           content:
-            application/json:
+            application/pdf:
               schema:
-                $ref: '#/components/schemas/HelloReply'
+                type: string
+                format: binary
+  /getRawManuscript:
+    get:
+      tags:
+        - "${project.name}"
+      summary: 'Request a theater manuscript summary.'
+      operationId: getRawManuscript
+      parameters:
+        - name: barcode
+          in: query
+          description: Barcode for a theater manuscript
+          required: true
+          schema:
+            type: string
+            example: 130018972949
+      responses:
+        '200':
+          description: A pdf with attached page
+          content:
+            application/xml:
+ #           text/xml:
+              schema:
+                type: string
 components:
   schemas:
     HelloReply:
