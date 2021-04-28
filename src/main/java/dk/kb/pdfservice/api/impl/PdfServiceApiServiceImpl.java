@@ -148,6 +148,9 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         xform.transform(new DOMSource(doc), new StreamResult(bao));
         return bao.toString(StandardCharsets.UTF_8);
     }
+
+
+
     /**
      * Ping the server to check if the server is reachable.
      * 
