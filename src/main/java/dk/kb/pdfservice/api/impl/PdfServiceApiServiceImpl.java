@@ -2,13 +2,15 @@ package dk.kb.pdfservice.api.impl;
 
 import dk.kb.pdfservice.api.*;
 
-import java.io.ByteArrayOutputStream;
+import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
+import dk.kb.pdfservice.config.ServiceConfig;
 import dk.kb.pdfservice.webservice.exception.ServiceException;
 import dk.kb.pdfservice.webservice.exception.InternalServiceException;
 
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +32,7 @@ import javax.xml.transform.stream.StreamResult;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 
 import org.w3c.dom.Document;
+import org.apache.pdfbox.pdmodel.PDDocument;
 
 /**
  * pdf-service
@@ -40,6 +43,9 @@ import org.w3c.dom.Document;
 public class PdfServiceApiServiceImpl implements PdfServiceApi {
     private Logger log = LoggerFactory.getLogger(this.toString());
 
+    // Setup directories
+    File baseDir = new File(".");
+    File outDir = new File(baseDir, "out");
 
 
     /* How to access the various web contexts. See https://cxf.apache.org/docs/jax-rs-basics.html#JAX-RSBasics-Contextannotations */
@@ -150,6 +156,44 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     }
 
 
+/**
+ * Request a theater manuscript summary in pdf format.
+ *
+ * @param pdflink2 : Relative path including .pdf file
+ *
+ * @return <ul>
+ *   <li>code = 200, message = "A pdf with attached page", response = String.class</li>
+ *   </ul>
+ * @throws ServiceException when other http codes should be returned
+ *
+ * @implNote return will always produce a HTTP 200 code. Throw ServiceException if you need to return other codes
+ **/
+    @Override
+
+    public StreamingOutput getPdf(String pdflink2) {
+        PDDocument pdfDoc;
+        String basepath;
+        basepath = ServiceConfig.getBasepath();
+        System.out.println("basepath: " + basepath);
+
+        if (pdflink2 == null)
+            pdflink2 = "";
+
+        try {
+            httpServletResponse.setHeader("Content-disposition", " filename = " + pdflink2);
+            final InputStream inputStream = new FileInputStream(new File( pdflink2));
+            return output ->  {
+                IOUtils.copy(inputStream, output);
+            };
+        } catch (FileNotFoundException e) {
+          //  throw new NoContentException("Kan ikke finde pdflink");
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
 
     /**
      * Ping the server to check if the server is reachable.

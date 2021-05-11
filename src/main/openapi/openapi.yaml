@@ -93,6 +93,29 @@ paths:
  #           text/xml:
               schema:
                 type: string
+  /getPdf:
+    get:
+      tags:
+        - "${project.name}"
+      summary: 'Request a Pdf file from link.'
+      operationId: getPdf
+      x-streamingOutput: true # If enabled the method will return StreamingOutput.
+      parameters:
+        - name: pdflink2
+          in: query
+          description: Pdf for a theater manuscript
+          required: true
+          schema:
+            type: string
+            example: test.pdf
+      responses:
+        '200':
+          description: A pdf with attached page
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
 components:
   schemas:
     HelloReply:
