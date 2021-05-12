@@ -101,6 +101,13 @@ paths:
       operationId: getPdf
       x-streamingOutput: true # If enabled the method will return StreamingOutput.
       parameters:
+        - name: barcode
+          in: query
+          description: Barcode for a theater manuscript
+          required: true
+          schema:
+            type: string
+            example: 130018972949
         - name: pdflink2
           in: query
           description: Pdf for a theater manuscript

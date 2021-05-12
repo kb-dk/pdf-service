@@ -42,6 +42,14 @@ public class ServiceConfig {
         return serviceConfig.getString("config.basePath");
     }
 
+    public static String getOutputDir() {
+        return serviceConfig.getString("config.outputDir");
+    }
+
+    public static String getResourcesDir() {
+        return serviceConfig.getString("config.resourcesDir");
+    }
+
     /**
      * Direct access to the backing YAML-class is used for configurations with more flexible content
      * and/or if the service developer prefers key-based property access.
