@@ -178,26 +178,35 @@ public void convertToPdf() throws TransformerException, SAXException, IOExceptio
     // to store output
     // ByteArrayOutputStream outStream = new ByteArrayOutputStream();
 // New
-    File xconf = new File("fop.xconf");
-    FopConfParser parser = new FopConfParser(xconf); //parsing configuration
-    FopFactoryBuilder builder = parser.getFopFactoryBuilder(); //building the factory with the user options
+   // File xconf = new File("fop.xconf");
+    // File xconf = new File(this.fopConfigFile.toURI());
+  //  FopConfParser parser = new FopConfParser(xconf); //parsing configuration
+//    FopFactoryBuilder builder = parser.getFopFactoryBuilder(); //building the factory with the user options
+    FopFactoryBuilder builder = new FopFactoryBuilder(new File(".").toURI());
+    builder.setAccessibility(true);
     FopFactory fopFactory = builder.build();
 // Outdated
     FOUserAgent foUserAgent = fopFactory.newFOUserAgent();
     OutputStream outStream = null;
-
+    Fop fop = null;
+    Result result = null;
+    File pdfOut = new File((ServiceConfig.getOutputDir() + "//output.pdf"));
     // Transformer xslfoTransformer = null; // WRONG
     try {
-        outStream = new BufferedOutputStream(new FileOutputStream(ServiceConfig.getOutputDir() + "//output.pdf"));
+        // outStream = new BufferedOutputStream(new FileOutputStream(ServiceConfig.getOutputDir() + "//output.pdf"));
+        outStream = new BufferedOutputStream(new FileOutputStream(pdfOut));
         // Outdated
         // Fop fop = fopFactory.newFop(MimeConstants.MIME_PDF, foUserAgent, outStream);
-    Fop fop = fopFactory.newFop(MimeConstants.MIME_PDF, foUserAgent, outStream);
+        fop = fopFactory.newFop(MimeConstants.MIME_PDF, foUserAgent, outStream);
+
         TransformerFactory factory = TransformerFactory.newInstance();
         Transformer xslfoTransformer = factory.newTransformer(new StreamSource(xsltFile));
-        Result res = new SAXResult(fop.getDefaultHandler());
+
+
+        result = new SAXResult(fop.getDefaultHandler());
 
         // everything will happen here..
-        xslfoTransformer.transform(xmlSource, res);
+        xslfoTransformer.transform(xmlSource, result);
 
         // if you want to get the PDF bytes, use the following code
         //return outStream.toByteArray();
@@ -212,15 +221,18 @@ public void convertToPdf() throws TransformerException, SAXException, IOExceptio
                         out.close(); */
 
         // to write the content to out put stream
-        //        byte[] pdfBytes = outStream.toByteArray();
+        // wrong:         byte[] pdfBytes = outStream.toByteArray();
+
         // for servlet use:
-            /*        response.setContentLength(pdfBytes.length);
+            /*        byte[] pdfBytes = res.toString().getBytes();
+                    response.setContentLength(pdfBytes.length);
                     response.setContentType("application/pdf");
                     response.addHeader("Content-Disposition",
                             "attachment;filename=pdffile.pdf");
                     response.getOutputStream().write(pdfBytes);
                     response.getOutputStream().flush(); */
-    } finally {
+    }
+     finally {
         outStream.close();
     }
 }
@@ -252,7 +264,14 @@ public void convertToPdf() throws TransformerException, SAXException, IOExceptio
         try {
             httpServletResponse.setHeader("Content-disposition", " filename = " + pdflink2);
             final InputStream inputStream = new FileInputStream(new File( pdflink2));
-
+//  New code-start
+            try {
+                PdfServiceApiServiceImpl xslfot = new PdfServiceApiServiceImpl();
+                xslfot.convertToPdf();
+            } catch ( TransformerException | SAXException| IOException e ) {
+                e.printStackTrace();
+            }
+//  ->// <-New code-end
            return output ->  {
                 IOUtils.copy(inputStream, output);
             };
