@@ -58,7 +58,7 @@ paths:
             example: 130018972949
         - name: pdflink
           in: query
-          description: Barcode for a theater manuscript
+          description: pdfLink for a theater manuscript
           required: true
           schema:
             type: string
@@ -109,6 +109,36 @@ paths:
             type: string
             example: 130018852943
         - name: pdflink2
+          in: query
+          description: Pdf for a theater manuscript
+          required: true
+          schema:
+            type: string
+            example: TS_DRAlaes-A552.pdf
+      responses:
+        '200':
+          description: A pdf with attached page
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+  /getMergePDFs:
+    get:
+      tags:
+        - "${project.name}"
+      summary: 'Request a Merged Pdf file two pdf files'
+      operationId: getMergePDFs
+      x-streamingOutput: true # If enabled the method will return StreamingOutput.
+      parameters:
+        - name: apron
+          in: query
+          description: Name of XML-tree from getPDFFile request
+          required: true
+          schema:
+            type: string
+            example: output.pdf
+        - name: pdfFile
           in: query
           description: Pdf for a theater manuscript
           required: true

@@ -12,6 +12,8 @@ import dk.kb.pdfservice.webservice.exception.InternalServiceException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.fop.apps.*;
+import org.apache.pdfbox.io.MemoryUsageSetting;
+import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.xml.utils.res.XResourceBundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +22,7 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.core.*;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Providers;
@@ -121,6 +124,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     
     }
 
+
     /**
      * Request a theater manuscript summary.
      * 
@@ -163,7 +167,6 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         return bao.toString(StandardCharsets.UTF_8);
     }
 
-// NEW
 public void convertToPdf(String barCode, String pdflink2) throws TransformerException, SAXException, IOException {
     // the XSL FO file
     File xsltFile = new File(ServiceConfig.getResourcesDir() + "//formatter.xsl");
@@ -283,11 +286,52 @@ public void convertToPdf(String barCode, String pdflink2) throws TransformerExce
         } catch ( TransformerException | SAXException| IOException e ) {
             e.printStackTrace();
         }
-
         return null;
     }
 
+    /**
+     * Request a theater manuscript summary in pdf format.
+     *
+     * @param apron : name of  xml result tree String containing info about pdf
+     * @param pdfFile : Relative path including .pdf file
+     *
+     * @return <ul>
+     *   <li>code = 200, message = "A pdf apron and with attached pages", response = String.class</li>
+     *   </ul>
+     * @throws ServiceException when other http codes should be returned
+     *
+     * @implNote return will always produce a HTTP 200 code. Throw ServiceException if you need to return other codes
+     **/
 
+    @Override
+    public StreamingOutput getMergePDFs(@NotNull String apron, @NotNull String pdfFile) {
+
+    // public StreamingOutput mergePDFs(String apron, String pdfFile) {
+        String outputDir = ServiceConfig.getOutputDir();
+
+        String resourcesDir = ServiceConfig.getResourcesDir();
+        File file1 = new File(outputDir + "output.pdf");
+        File file2 = new File(resourcesDir + pdfFile);
+
+        //Instantiating PDFMergerUtility class
+        PDFMergerUtility PDFmerger = new PDFMergerUtility();
+
+        //Setting the destination file
+        PDFmerger.setDestinationFileName(resourcesDir + "//merged.pdf"); // alt: outputFilePath.toString()
+
+        httpServletResponse.setHeader("Content-disposition", " filename = " + pdfFile);
+        //adding the source files
+        try {
+            PDFmerger.addSource(file1);
+            PDFmerger.addSource(file2);
+            //Merging the two documents
+            PDFmerger.mergeDocuments(MemoryUsageSetting.setupMixed(1024 * 1024 * 500));
+        } catch ( IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Documents merged");
+        return (StreamingOutput) PDFmerger.getDestinationStream();
+    }
 
     /**
      * Ping the server to check if the server is reachable.
