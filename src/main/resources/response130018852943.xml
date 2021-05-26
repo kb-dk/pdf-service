@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?><searchRetrieveResponse xmlns="http://www.loc.gov/zing/srw/">
+  <version>1.2</version>
+  <numberOfRecords>1</numberOfRecords>
+  <records>
+    <record>
+      <recordSchema>marcxml</recordSchema>
+      <recordPacking>xml</recordPacking>
+      <recordData>
+        <record xmlns="http://www.loc.gov/MARC21/slim">
+          <leader>00572ntm-a2200193-i 4500</leader>
+          <controlfield tag="001">99122277948105763</controlfield>
+          <controlfield tag="005">20191108183829.0</controlfield>
+          <controlfield tag="008">000000s1993    dk ||||||     00||d dan||</controlfield>
+          <datafield ind1=" " ind2=" " tag="035">
+            <subfield code="a">x331026014</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="035">
+            <subfield code="a">(DK-810010)000035697DRA01</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="035">
+            <subfield code="a">(EXLNZ-45KBDK_NETWORK)995708271005761</subfield>
+          </datafield>
+          <datafield ind1="1" ind2=" " tag="100">
+            <subfield code="a">Woolf, Virginia.</subfield>
+          </datafield>
+          <datafield ind1="1" ind2="0" tag="245">
+            <subfield code="a">Orlando /</subfield>
+            <subfield code="c">Woolf/Pinckney/Wilson ; Oversat af Jørgen Årup Hansen og Karen-Maria Bille.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="300">
+            <subfield code="a">40 bl.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="500">
+            <subfield code="a">Premiere 1993 på Betty Nansen Teatret.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="599">
+            <subfield code="a">DRA20110309</subfield>
+            <subfield code="5">dra</subfield>
+            <subfield code="9">LOCAL</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="901">
+            <subfield code="a">x331026014.</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="997">
+            <subfield code="a">DRA</subfield>
+            <subfield code="9">LOCAL</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="997">
+            <subfield code="a">EJD</subfield>
+            <subfield code="9">LOCAL</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="998">
+            <subfield code="a">dra</subfield>
+            <subfield code="9">LOCAL</subfield>
+          </datafield>
+          <datafield ind1=" " ind2=" " tag="AVA">
+            <subfield code="0">99122277948105763</subfield>
+            <subfield code="8">222089304240005763</subfield>
+            <subfield code="a">45KBDK_KGL</subfield>
+            <subfield code="b">KBL</subfield>
+            <subfield code="c">Reading room only (place request)</subfield>
+            <subfield code="d">DRAlæs</subfield>
+            <subfield code="e">available</subfield>
+            <subfield code="f">2</subfield>
+            <subfield code="g">0</subfield>
+            <subfield code="i">KBH</subfield>
+            <subfield code="j">KBS_SFDRA</subfield>
+            <subfield code="k">8</subfield>
+            <subfield code="p">1</subfield>
+            <subfield code="q">Nationalbiblioteket</subfield>
+          </datafield>
+        </record>
+      </recordData>
+      <recordIdentifier>99122277948105763</recordIdentifier>
+      <recordPosition>1</recordPosition>
+    </record>
+  </records>
+  <extraResponseData xmlns:xb="http://www.exlibris.com/repository/search/xmlbeans/">
+    <xb:exact>true</xb:exact>
+    <xb:responseDate>2021-05-26T16:22:12+0200</xb:responseDate>
+  </extraResponseData>
+</searchRetrieveResponse>
+

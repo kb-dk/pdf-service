@@ -12,6 +12,7 @@ import dk.kb.pdfservice.webservice.exception.InternalServiceException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.fop.apps.*;
+import org.apache.xml.utils.res.XResourceBundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -137,7 +138,6 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         // TODO: Implement...barcode=130018972949
         final String USER_AGENT = "Mozilla/5.0";
         String response = null;
-//        HttpURLConnection conn = null;
         try {
             String urlString = "https://soeg.kb.dk/view/sru/45KBDK_KGL?version=1.2&operation=searchRetrieve&query=barcode=" + barCode + "&recordSchema=marcxml";
             URL url = new URL(urlString);
@@ -164,12 +164,18 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     }
 
 // NEW
-public void convertToPdf() throws TransformerException, SAXException, IOException {
+public void convertToPdf(String barCode, String pdflink2) throws TransformerException, SAXException, IOException {
     // the XSL FO file
     File xsltFile = new File(ServiceConfig.getResourcesDir() + "//formatter.xsl");
-    // the XML file from which we take the name
-    StreamSource xmlSource = new StreamSource(new File(ServiceConfig.getResourcesDir() + "//response_1620140259669.xml"));
 
+    // Hardcoded: the XML file from which we take the name
+    // StreamSource xmlSource = new StreamSource(new File(ServiceConfig.getResourcesDir() + "//response_1620140259669.xml"));
+    // StreamSource xmlSource = new StreamSource(new File(ServiceConfig.getResourcesDir() + "//response130018852943.xml"));
+
+    String response = getRawManuscript(barCode);
+    System.out.println("Response: " + response);
+    StreamSource xmlSource =  new StreamSource(new StringReader(response));
+    //StreamSource xmlSource = new StreamSource(new File(ServiceConfig.getResourcesDir() + response));
     // create an instance of fop factory
 // Ourdated!
     // FopFactory fopFactory = FopFactory.newInstance(new File(".").toURI());
@@ -241,6 +247,7 @@ public void convertToPdf() throws TransformerException, SAXException, IOExceptio
 /**
  * Request a theater manuscript summary in pdf format.
  *
+ * @param barcode : code to get xml result tree String containing info about pdf
  * @param pdflink2 : Relative path including .pdf file
  *
  * @return <ul>
@@ -255,30 +262,25 @@ public void convertToPdf() throws TransformerException, SAXException, IOExceptio
     public StreamingOutput getPdf(String barcode, String pdflink2) {
         PDDocument pdfDoc;
         String basepath;
+
         basepath = ServiceConfig.getBasepath();
         System.out.println("basepath: " + basepath);
+        String resourcesDir = ServiceConfig.getResourcesDir();
+        System.out.println("Resources dir: " + resourcesDir );
 
         if (pdflink2 == null)
             pdflink2 = "";
 
+        httpServletResponse.setHeader("Content-disposition", " filename = " + pdflink2);
+
         try {
-            httpServletResponse.setHeader("Content-disposition", " filename = " + pdflink2);
-            final InputStream inputStream = new FileInputStream(new File( pdflink2));
-//  New code-start
-            try {
-                PdfServiceApiServiceImpl xslfot = new PdfServiceApiServiceImpl();
-                xslfot.convertToPdf();
-            } catch ( TransformerException | SAXException| IOException e ) {
-                e.printStackTrace();
-            }
-//  ->// <-New code-end
-           return output ->  {
+            PdfServiceApiServiceImpl xslfot = new PdfServiceApiServiceImpl();
+            xslfot.convertToPdf(barcode, pdflink2);
+            final InputStream inputStream = new FileInputStream(new File((ServiceConfig.getOutputDir() + "//output.pdf")));
+            return output ->  {
                 IOUtils.copy(inputStream, output);
             };
-        } catch (FileNotFoundException e) {
-          //  throw new NoContentException("Kan ikke finde pdflink");
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch ( TransformerException | SAXException| IOException e ) {
             e.printStackTrace();
         }
 
