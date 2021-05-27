@@ -200,15 +200,11 @@ public void convertToPdf(String barCode, String pdflink2) throws TransformerExce
     File pdfOut = new File((ServiceConfig.getOutputDir() + "//output.pdf"));
     // Transformer xslfoTransformer = null; // WRONG
     try {
-        // outStream = new BufferedOutputStream(new FileOutputStream(ServiceConfig.getOutputDir() + "//output.pdf"));
         outStream = new BufferedOutputStream(new FileOutputStream(pdfOut));
-        // Outdated
-        // Fop fop = fopFactory.newFop(MimeConstants.MIME_PDF, foUserAgent, outStream);
         fop = fopFactory.newFop(MimeConstants.MIME_PDF, foUserAgent, outStream);
 
         TransformerFactory factory = TransformerFactory.newInstance();
         Transformer xslfoTransformer = factory.newTransformer(new StreamSource(xsltFile));
-
 
         result = new SAXResult(fop.getDefaultHandler());
 
@@ -218,18 +214,7 @@ public void convertToPdf(String barCode, String pdflink2) throws TransformerExce
         // if you want to get the PDF bytes, use the following code
         //return outStream.toByteArray();
 
-        // if you want to save PDF file use the following code
-			/* File pdffile = new File("Result.pdf");
-			OutputStream outStream = new java.io.FileOutputStream(pdffile);
-                        outStream = new java.io.BufferedOutputStream(out);
-                        FileOutputStream str = new FileOutputStream(pdffile);
-                        str.write(outStream.toByteArray());
-                        str.close();
-                        out.close(); */
-
         // to write the content to out put stream
-        // wrong:         byte[] pdfBytes = outStream.toByteArray();
-
         // for servlet use:
             /*        byte[] pdfBytes = res.toString().getBytes();
                     response.setContentLength(pdfBytes.length);
@@ -275,9 +260,7 @@ public void convertToPdf(String barCode, String pdflink2) throws TransformerExce
         httpServletResponse.setHeader("Content-disposition", " filename = " + pdflink2);
 
         try {
-        //    PdfServiceApiServiceImpl xslfot = new PdfServiceApiServiceImpl();
             convertToPdf(barcode, pdflink2);
-           // xslfot.getMergePDFs("output.pdf",pdflink2);
             mergePDFFile("output.pdf",pdflink2);
             final InputStream inputStream = new FileInputStream(new File((ServiceConfig.getOutputDir() + "//merged.pdf")));
             return output ->  {
@@ -303,7 +286,6 @@ public void convertToPdf(String barCode, String pdflink2) throws TransformerExce
      * @implNote return will always produce a HTTP 200 code. Throw ServiceException if you need to return other codes
      **/
 
-    @Override
     public StreamingOutput getMergePDFs(@NotNull String apron, @NotNull String pdfFile) {
     return  null; }
 
