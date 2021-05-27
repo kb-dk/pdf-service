@@ -14,7 +14,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.fop.apps.*;
 import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
-import org.apache.xml.utils.res.XResourceBundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +40,6 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 // New
 import org.xml.sax.SAXException;
 
-import java.io.*;
 import javax.xml.transform.*;
 import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.stream.StreamSource;
@@ -277,9 +275,11 @@ public void convertToPdf(String barCode, String pdflink2) throws TransformerExce
         httpServletResponse.setHeader("Content-disposition", " filename = " + pdflink2);
 
         try {
-            PdfServiceApiServiceImpl xslfot = new PdfServiceApiServiceImpl();
-            xslfot.convertToPdf(barcode, pdflink2);
-            final InputStream inputStream = new FileInputStream(new File((ServiceConfig.getOutputDir() + "//output.pdf")));
+        //    PdfServiceApiServiceImpl xslfot = new PdfServiceApiServiceImpl();
+            convertToPdf(barcode, pdflink2);
+           // xslfot.getMergePDFs("output.pdf",pdflink2);
+            mergePDFFile("output.pdf",pdflink2);
+            final InputStream inputStream = new FileInputStream(new File((ServiceConfig.getOutputDir() + "//merged.pdf")));
             return output ->  {
                 IOUtils.copy(inputStream, output);
             };
@@ -305,21 +305,24 @@ public void convertToPdf(String barCode, String pdflink2) throws TransformerExce
 
     @Override
     public StreamingOutput getMergePDFs(@NotNull String apron, @NotNull String pdfFile) {
+    return  null; }
 
+    private void mergePDFFile(String apron, @NotNull String pdfFile) {
     // public StreamingOutput mergePDFs(String apron, String pdfFile) {
         String outputDir = ServiceConfig.getOutputDir();
 
         String resourcesDir = ServiceConfig.getResourcesDir();
-        File file1 = new File(outputDir + "output.pdf");
+        // File file1 = new File(outputDir + "output.pdf");
+        File file1 = new File(outputDir + apron);
         File file2 = new File(resourcesDir + pdfFile);
 
         //Instantiating PDFMergerUtility class
         PDFMergerUtility PDFmerger = new PDFMergerUtility();
 
         //Setting the destination file
-        PDFmerger.setDestinationFileName(resourcesDir + "//merged.pdf"); // alt: outputFilePath.toString()
+        PDFmerger.setDestinationFileName(outputDir + "//merged.pdf"); // alt: outputFilePath.toString()
 
-        httpServletResponse.setHeader("Content-disposition", " filename = " + pdfFile);
+        httpServletResponse.setHeader("Content-disposition", " filename = merged_" + pdfFile);
         //adding the source files
         try {
             PDFmerger.addSource(file1);
@@ -330,7 +333,7 @@ public void convertToPdf(String barCode, String pdflink2) throws TransformerExce
             e.printStackTrace();
         }
         System.out.println("Documents merged");
-        return (StreamingOutput) PDFmerger.getDestinationStream();
+        //return  PDFmerger.getDestinationStream();
     }
 
     /**
@@ -364,7 +367,7 @@ public void convertToPdf(String barCode, String pdflink2) throws TransformerExce
     * This method simply converts any Exception into a Service exception
     * @param e: Any kind of exception
     * @return A ServiceException
-    * @see dk.kb.webservice.ServiceExceptionMapper
+    *  dk.kb.webservice.ServiceExceptionMapper
     */
     private ServiceException handleException(Exception e) {
         if (e instanceof ServiceException) {
