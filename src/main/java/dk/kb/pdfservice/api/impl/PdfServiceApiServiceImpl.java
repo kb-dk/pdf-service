@@ -318,6 +318,7 @@ public void convertToPdf(String barCode, String pdflink2) throws TransformerExce
         //return  PDFmerger.getDestinationStream();
     }
 
+
     /**
      * Ping the server to check if the server is reachable.
      * 
@@ -333,8 +334,6 @@ public void convertToPdf(String barCode, String pdflink2) throws TransformerExce
     @Override
     public String ping() throws ServiceException {
         // TODO: Implement...
-    
-        
         try{ 
             String response = "e7nJq";
         return response;
@@ -343,7 +342,6 @@ public void convertToPdf(String barCode, String pdflink2) throws TransformerExce
         }
     
     }
-
 
     /**
     * This method simply converts any Exception into a Service exception

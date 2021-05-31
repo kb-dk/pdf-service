@@ -78,10 +78,33 @@
 
                                     <fo:table-cell border="solid 0px black"
                                                    text-align="left" font-weight="normal">
-                                            <fo:block>
-                                                 <xsl:value-of select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='700']/marc:subfield[@code='a']"/>
-                                            </fo:block>
+                                        <fo:block>
+                                            <xsl:variable name="tag100a"
+                                                          select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='100']/marc:subfield[@code='a']"/>
+                                            <xsl:variable name="tag700a"
+                                                          select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='700']/marc:subfield[@code='a']"/>
+                                            <xsl:variable name="tag245c"
+                                                          select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='245']/marc:subfield[@code='c']"/>
+                                            <xsl:choose>
+                                                <xsl:when test="@tag100a = '' and @tag700a = '' and @tag700c = '' and @tag245c = ''">
+                                                    <xsl:message>
+                                                        []
+                                                    </xsl:message>
+                                                </xsl:when>
+                                                <xsl:when test="$tag100a" >
+                                                    <xsl:value-of select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='100']/marc:subfield[@code='a']"/>
+                                                </xsl:when>
+                                                <xsl:when  test="$tag700a">
+                                                    <xsl:value-of select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='700']/marc:subfield[@code='a']"/>
+                                                    <xsl:value-of select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='700']/marc:subfield[@code='d']"/>
+                                                </xsl:when>
+                                                <xsl:when  test="$tag245c">
+                                                    <xsl:value-of select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='245']/marc:subfield[@code='c']"/>
+                                                </xsl:when>
+                                            </xsl:choose>
+                                        </fo:block>
                                     </fo:table-cell>
+
                                 </fo:table-row>
 
 
@@ -96,6 +119,7 @@
                                                    text-align="left" font-weight="normal">
                                         <fo:block>
                                             <xsl:value-of select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='245']/marc:subfield[@code='a']"/>
+                                            <xsl:value-of select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='245']/marc:subfield[@code='b']"/>
                                         </fo:block>
                                     </fo:table-cell>
                                 </fo:table-row>
@@ -111,7 +135,7 @@
                                     <fo:table-cell border="solid 0px black"
                                                    text-align="left" font-weight="normal">
                                         <fo:block>
-                                            <xsl:value-of select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='505']/marc:subfield[@code='a']"/>
+                                            <xsl:value-of select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='246']/marc:subfield[@code='a']"/>
                                         </fo:block>
                                     </fo:table-cell>
                                 </fo:table-row>
