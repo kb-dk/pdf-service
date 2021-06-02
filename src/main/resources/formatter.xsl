@@ -129,7 +129,9 @@
                                     <fo:table-cell border="solid 0px black"
                                                    text-align="left" font-weight="normal">
                                         <fo:block>
-                                            Alternativ titel | Alternative title:
+                                            <xsl:if test="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='246']/marc:subfield[@code='a'] !=''">
+                                                Alternativ titel | Alternative title:
+                                            </xsl:if>
                                         </fo:block>
                                     </fo:table-cell>
                                     <fo:table-cell border="solid 0px black"
@@ -145,7 +147,9 @@
                                     <fo:table-cell border="solid 0px black"
                                                    text-align="left" font-weight="normal">
                                         <fo:block>
-                                            Udgavebetegnelse | Edition Statement:
+                                            <xsl:if test="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='250']/marc:subfield[@code='a'] != ''">
+                                                Udgavebetegnelse | Edition Statement:
+                                            </xsl:if>
                                         </fo:block>
                                     </fo:table-cell>
                                     <fo:table-cell border="solid 0px black"
