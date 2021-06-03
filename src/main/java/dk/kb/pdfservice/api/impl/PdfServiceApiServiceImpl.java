@@ -249,10 +249,13 @@ public void convertToPdf(String barCode, String pdflink2) throws TransformerExce
         PDDocument pdfDoc;
         String basepath;
 
+        System.out.println("barcode: " + barcode);
+        System.out.println("pdfLink2: " + pdflink2);
         basepath = ServiceConfig.getBasepath();
         System.out.println("basepath: " + basepath);
         String resourcesDir = ServiceConfig.getResourcesDir();
         System.out.println("Resources dir: " + resourcesDir );
+        String outputDir = ServiceConfig.getOutputDir();
 
         if (pdflink2 == null)
             pdflink2 = "";
@@ -261,15 +264,16 @@ public void convertToPdf(String barCode, String pdflink2) throws TransformerExce
 
         try {
             convertToPdf(barcode, pdflink2);
-            mergePDFFile("output.pdf",pdflink2);
+            System.out.println("mergePDFile(" + outputDir + "," + pdflink2 +")");
+            mergePDFFile(outputDir + "output.pdf",pdflink2);
             final InputStream inputStream = new FileInputStream(new File((ServiceConfig.getOutputDir() + "//merged.pdf")));
             return output ->  {
                 IOUtils.copy(inputStream, output);
             };
         } catch ( TransformerException | SAXException| IOException e ) {
             e.printStackTrace();
+            throw new InternalServiceException("Fejl med getPdf", e);
         }
-        return null;
     }
 
     /**
@@ -295,7 +299,7 @@ public void convertToPdf(String barCode, String pdflink2) throws TransformerExce
 
         String resourcesDir = ServiceConfig.getResourcesDir();
         // File file1 = new File(outputDir + "output.pdf");
-        File file1 = new File(outputDir + apron);
+        File file1 = new File( apron);
         File file2 = new File(resourcesDir + pdfFile);
 
         //Instantiating PDFMergerUtility class
@@ -310,9 +314,11 @@ public void convertToPdf(String barCode, String pdflink2) throws TransformerExce
             PDFmerger.addSource(file1);
             PDFmerger.addSource(file2);
             //Merging the two documents
+            System.out.println("merging the two documents: " + file1 + " and " + file2 + ")");
             PDFmerger.mergeDocuments(MemoryUsageSetting.setupMixed(1024 * 1024 * 500));
         } catch ( IOException e) {
             e.printStackTrace();
+            throw new InternalServiceException("Fejl med merge af forside og pdf", e);
         }
         System.out.println("Documents merged");
         //return  PDFmerger.getDestinationStream();
