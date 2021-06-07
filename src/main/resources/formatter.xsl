@@ -4,7 +4,10 @@
                 xmlns:fo="http://www.w3.org/1999/XSL/Format"
                 xmlns:ns="http://www.loc.gov/zing/srw/"
                 xmlns:marc="http://www.loc.gov/MARC21/slim"
+                xmlns:str="http://exslt.org/strings"
+
                 exclude-result-prefixes="fo">
+    <xsl:import href="http://exslt.org/str/functions/tokenize/str.tokenize.function.xsl"/>
     <xsl:template match="/ns:searchRetrieveResponse">
         <fo:root xmlns:fo="http://www.w3.org/1999/XSL/Format">
             <fo:layout-master-set>
@@ -171,10 +174,24 @@
                                     <fo:table-cell border="solid 0px black"
                                                    text-align="left" font-weight="normal">
                                         <fo:block>
-                                            <xsl:value-of select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='a']"/>
-                                            <xsl:value-of select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='b']"/>
-                                            <xsl:value-of select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='c']"/>
-                                            <xsl:value-of select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='500']/marc:subfield[@code='a']"/>
+                                            <xsl:variable name="tag260"
+                                                          select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='a']"/>
+                                            <xsl:choose>
+                                                <xsl:when test="$tag260 != ''">
+                                                    <xsl:value-of select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='a']"/>
+                                                    <xsl:value-of select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='b']"/>
+                                                    <xsl:value-of select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='c']"/>
+                                                </xsl:when>
+                                            <xsl:otherwise>
+                                                <xsl:for-each select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='500']/marc:subfield[@code='a']">
+                            <!--                <xsl:value-of select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='500']/marc:subfield[@code='a']"/>  <-->
+                                                    <xsl:variable name="p500a" select="str:tokenize(normalize-space(.), ' ')"/>
+                                                    <xsl:if test="starts-with(.,'Premiere')">
+                                                        <xsl:value-of select="concat($p500a[1],' ', $p500a[2])"/>
+                                                    </xsl:if>
+                                                </xsl:for-each>
+                                            </xsl:otherwise>
+                                            </xsl:choose>
                                         </fo:block>
                                     </fo:table-cell>
                                 </fo:table-row>
