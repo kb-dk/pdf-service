@@ -43,7 +43,7 @@
 
                 <fo:flow flow-name="xsl-region-body">
                     <fo:block>
-                        <fo:external-graphic src="src/main/resources/images/KBlogo.png"  height="300pt"
+                        <fo:external-graphic src="src/main/resources/images/KBlogo.png"  height="270pt"
                                              border-width="thin" content-width="scale-to-fit"
                                              content-height="200pt" width="100%" scaling="uniform" text-align="center">
                         </fo:external-graphic>
@@ -212,32 +212,33 @@
                                     </fo:table-cell>
                                 </fo:table-row>
 
-                                <xsl:for-each select="records/record/recordData/record/datafield[@tag=700]/subfield">
-                                        <fo:table-cell border="solid 1px black" text-align="center">
-                                            <fo:block>
-                                                <xsl:attribute name="code">
-                                                    <xsl-value-of select="@code='a'"/>
-                                                </xsl:attribute>
-                                            </fo:block>
-                                        </fo:table-cell>
-                                </xsl:for-each>
                             </fo:table-body>
                         </fo:table>
-                     </fo:block>
-                    <fo:block font-size="16pt" font-weight="bold" space-before="15mm" space-after="5mm" text-align="center" line-height="15px" >DK
-                    </fo:block>
-                    <fo:block text-align="left">
-                        Værket kan være ophavsretligt beskyttet, og så må du kun bruge PDF-filen til personlig brug. Hvis ophavsmanden er død for
-                        mere end 70 år siden, er værket fri af ophavsret (public domain), og så kan du bruge værket frit. Hvis der er flere ophavsmænd,
-                        gælder den længstlevendes dødsår. Husk altid at kreditere ophavsmanden
-                    </fo:block>
-                    <fo:block font-size="16pt" font-weight="bold" space-before="15mm" space-after="5mm" text-align="center" line-height="15px" >UK
-                    </fo:block>
-                    <fo:block text-align="left">
-                        The work may be copyrighted in which case the PDF file may only be used for personal use. If the author died more than 70
-                        years ago, the work becomes public domain and can then be freely used. If there are several authors, the year of death of
-                        the longest living person applies. Always remember to credit the author
-                    </fo:block>
+                        </fo:block>
+                        <fo:block font-size="16pt" font-weight="bold" font-style="italic" space-before="15mm" space-after="5mm" text-align="center" line-height="15px">DK
+                        </fo:block>
+                        <fo:block text-align="left" font-style="italic" font-size="10pt">
+                            Dette manuskript kan være ophavsretligt beskyttet. Den ophavsretlige beskyttelsestid er 70 år efter ophavsmandens død. Eventuelle oversættere
+                            har ophavsrettigheder til den oversatte version af manuskriptet. Værker hvor ophavsretten er udløbet er fri af ophavsret
+                        </fo:block><fo:block space-after="2mm"/>
+                        <fo:block text-align="left" font-style="italic" font-size="10pt">
+                            Hvis manuskriptet er ophavsretligt beskyttet, må det kun anvendes til privat brug. Du må dog også bruge manuskriptet i forbindelse med optagelsesprøve på de danske teaterskoler.
+                        </fo:block><fo:block space-after="2mm"/>
+                        <fo:block/>
+                        <fo:block text-align="left" font-style="italic" font-size="10pt">
+                            Hvis du vil opføre manuskriptet, skal du have samtykke fra rettighedshaveren. Du kan i den forbindelse  kontakte rettighedsorganisationen Danske Dramatikere.
+                        </fo:block>
+                        <fo:block font-size="16pt" font-weight="bold" font-style="italic" space-before="15mm" space-after="5mm" text-align="center" line-height="15px">UK
+                        </fo:block>
+                        <fo:block text-align="left" font-style="italic" font-size="10pt">
+                            This manuscript may be copyrighted. The copyright protection period is 70 years after
+                            the death of the author. Any translators have copyright to the translated version of
+                            the script. Works where the copyright has expired are free of copyright.<fo:block space-after="2mm"/>
+                            If the manuscript is copyrighted, it may only be used for private use. However, you may also use
+                            the manuscript in connection with the entrance examination at the Danish theater schools.<fo:block space-after="2mm"/>
+                            If you want to write the manuscript, you must have the consent of the copyright holder. You can in that regard
+                            contact the rights organization Danske Dramatikere.
+                        </fo:block>
                 </fo:flow>
             </fo:page-sequence>
         </fo:root>
