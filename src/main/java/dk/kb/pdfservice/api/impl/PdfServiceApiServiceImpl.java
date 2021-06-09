@@ -165,7 +165,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         return bao.toString(StandardCharsets.UTF_8);
     }
 
-public void convertToPdf(String barCode, String pdflink2) throws TransformerException, SAXException, IOException {
+public void convertToPdf(String barCode) throws TransformerException, SAXException, IOException {
     // the XSL FO file
     File xsltFile = new File(ServiceConfig.getResourcesDir() + "//formatter.xsl");
 
@@ -246,7 +246,6 @@ public void convertToPdf(String barCode, String pdflink2) throws TransformerExce
     @Override
 
     public StreamingOutput getPdf(String barcode, String pdflink2) {
-        PDDocument pdfDoc;
         String basepath;
 
         System.out.println("barcode: " + barcode);
@@ -263,7 +262,7 @@ public void convertToPdf(String barCode, String pdflink2) throws TransformerExce
         httpServletResponse.setHeader("Content-disposition", " filename = " + pdflink2);
 
         try {
-            convertToPdf(barcode, pdflink2);
+            convertToPdf(barcode);
             System.out.println("mergePDFile(" + outputDir + "," + pdflink2 +")");
             mergePDFFile(outputDir + "output.pdf",pdflink2);
             final InputStream inputStream = new FileInputStream(new File((ServiceConfig.getOutputDir() + "//merged.pdf")));
