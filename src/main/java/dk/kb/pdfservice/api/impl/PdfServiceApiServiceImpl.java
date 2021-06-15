@@ -6,6 +6,7 @@ import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
+import dk.kb.pdfservice.cachingtransformerfactory.SingletonCachingTransformerFactory;
 import dk.kb.pdfservice.config.ServiceConfig;
 import dk.kb.pdfservice.webservice.exception.ServiceException;
 import dk.kb.pdfservice.webservice.exception.InternalServiceException;
@@ -109,7 +110,6 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     @Override
     public javax.ws.rs.core.StreamingOutput getManuscript(String barcode, String pdflink) throws ServiceException {
         // TODO: Implement...
-
         
         try{ 
             httpServletResponse.setHeader("Content-Disposition", "inline; filename=\"filename.ext\"");
@@ -119,7 +119,6 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         } catch (Exception e){
             throw handleException(e);
         }
-    
     }
 
 
@@ -169,60 +168,31 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
     // the XSL FO file
     File xsltFile = new File(ServiceConfig.getResourcesDir() + "//formatter.xsl");
 
-    // Hardcoded: the XML file from which we take the name
-    // StreamSource xmlSource = new StreamSource(new File(ServiceConfig.getResourcesDir() + "//response_1620140259669.xml"));
-    // StreamSource xmlSource = new StreamSource(new File(ServiceConfig.getResourcesDir() + "//response130018852943.xml"));
-
     String response = getRawManuscript(barCode);
     System.out.println("Response: " + response);
     StreamSource xmlSource =  new StreamSource(new StringReader(response));
-    //StreamSource xmlSource = new StreamSource(new File(ServiceConfig.getResourcesDir() + response));
-    // create an instance of fop factory
-// Ourdated!
-    // FopFactory fopFactory = FopFactory.newInstance(new File(".").toURI());
-    // a user agent is needed for transformation
 
-    // to store output
-    // ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-// New
-   // File xconf = new File("fop.xconf");
-    // File xconf = new File(this.fopConfigFile.toURI());
-  //  FopConfParser parser = new FopConfParser(xconf); //parsing configuration
-//    FopFactoryBuilder builder = parser.getFopFactoryBuilder(); //building the factory with the user options
     FopFactoryBuilder builder = new FopFactoryBuilder(new File(".").toURI());
     builder.setAccessibility(true);
     FopFactory fopFactory = builder.build();
-// Outdated
+
     FOUserAgent foUserAgent = fopFactory.newFOUserAgent();
     OutputStream outStream = null;
     Fop fop = null;
     Result result = null;
-    File pdfOut = new File((ServiceConfig.getOutputDir() + "//output.pdf"));
-    // Transformer xslfoTransformer = null; // WRONG
+    File pdfOut = new File((ServiceConfig.getOutputDir() + "//" + barCode + ".pdf"));
     try {
         outStream = new BufferedOutputStream(new FileOutputStream(pdfOut));
         fop = fopFactory.newFop(MimeConstants.MIME_PDF, foUserAgent, outStream);
 
-        TransformerFactory factory = TransformerFactory.newInstance();
+        // TransformerFactory factory = TransformerFactory.newInstance(); // Old alt. adaption
+        TransformerFactory factory = SingletonCachingTransformerFactory.newInstance();   // NEW adaption
         Transformer xslfoTransformer = factory.newTransformer(new StreamSource(xsltFile));
 
         result = new SAXResult(fop.getDefaultHandler());
 
         // everything will happen here..
         xslfoTransformer.transform(xmlSource, result);
-
-        // if you want to get the PDF bytes, use the following code
-        //return outStream.toByteArray();
-
-        // to write the content to out put stream
-        // for servlet use:
-            /*        byte[] pdfBytes = res.toString().getBytes();
-                    response.setContentLength(pdfBytes.length);
-                    response.setContentType("application/pdf");
-                    response.addHeader("Content-Disposition",
-                            "attachment;filename=pdffile.pdf");
-                    response.getOutputStream().write(pdfBytes);
-                    response.getOutputStream().flush(); */
     }
      finally {
         outStream.close();
@@ -263,9 +233,10 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
 
         try {
             convertToPdf(barcode);
-            System.out.println("mergePDFile(" + outputDir + "," + pdflink2 +")");
-            mergePDFFile(outputDir + "output.pdf",pdflink2);
-            final InputStream inputStream = new FileInputStream(new File((ServiceConfig.getOutputDir() + "//merged.pdf")));
+            System.out.println("mergePDFile(" + outputDir + barcode + ".pdf" + "," + pdflink2 +")");
+            // mergePDFFile(outputDir + "output.pdf",pdflink2);
+            mergePDFFile(outputDir + barcode + ".pdf",pdflink2); // TEST
+            final InputStream inputStream = new FileInputStream(new File((outputDir + "//" + barcode + ".pdf")));
             return output ->  {
                 IOUtils.copy(inputStream, output);
             };
@@ -303,9 +274,9 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
 
         //Instantiating PDFMergerUtility class
         PDFMergerUtility PDFmerger = new PDFMergerUtility();
-
+        System.out.println(("APRON in mergePDFFile: " + apron));
         //Setting the destination file
-        PDFmerger.setDestinationFileName(outputDir + "//merged.pdf"); // alt: outputFilePath.toString()
+        PDFmerger.setDestinationFileName( apron );
 
         httpServletResponse.setHeader("Content-disposition", " filename = merged_" + pdfFile);
         //adding the source files
