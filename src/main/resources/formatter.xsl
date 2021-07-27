@@ -215,30 +215,64 @@
                             </fo:table-body>
                         </fo:table>
                         </fo:block>
-                        <fo:block font-size="16pt" font-weight="bold" font-style="italic" space-before="15mm" space-after="5mm" text-align="center" line-height="15px">DK
-                        </fo:block>
-                        <fo:block text-align="left" font-style="italic" font-size="10pt">
-                            Dette manuskript kan være ophavsretligt beskyttet. Den ophavsretlige beskyttelsestid er 70 år efter ophavsmandens død. Eventuelle oversættere
-                            har ophavsrettigheder til den oversatte version af manuskriptet. Værker hvor ophavsretten er udløbet er fri af ophavsret
-                        </fo:block><fo:block space-after="2mm"/>
-                        <fo:block text-align="left" font-style="italic" font-size="10pt">
-                            Hvis manuskriptet er ophavsretligt beskyttet, må det kun anvendes til privat brug. Du må dog også bruge manuskriptet i forbindelse med optagelsesprøve på de danske teaterskoler.
-                        </fo:block><fo:block space-after="2mm"/>
-                        <fo:block/>
-                        <fo:block text-align="left" font-style="italic" font-size="10pt">
-                            Hvis du vil opføre manuskriptet, skal du have samtykke fra rettighedshaveren. Du kan i den forbindelse  kontakte rettighedsorganisationen Danske Dramatikere.
-                        </fo:block>
-                        <fo:block font-size="16pt" font-weight="bold" font-style="italic" space-before="15mm" space-after="5mm" text-align="center" line-height="15px">UK
-                        </fo:block>
-                        <fo:block text-align="left" font-style="italic" font-size="10pt">
-                            This manuscript may be copyrighted. The copyright protection period is 70 years after
-                            the death of the author. Any translators have copyright to the translated version of
-                            the script. Works where the copyright has expired are free of copyright.<fo:block space-after="2mm"/>
-                            If the manuscript is copyrighted, it may only be used for private use. However, you may also use
-                            the manuscript in connection with the entrance examination at the Danish theater schools.<fo:block space-after="2mm"/>
-                            If you want to write the manuscript, you must have the consent of the copyright holder. You can in that regard
-                            contact the rights organization Danske Dramatikere.
-                        </fo:block>
+
+
+                    <fo:block>
+                        <xsl:variable name ="tag260"
+                                      select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='c']"/>
+                        <xsl:choose>
+                            <xsl:when test="($tag260 != '') and (ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='c'])">
+                                <fo:block font-size="16pt" font-weight="bold" font-style="italic" space-before="15mm" space-after="5mm" text-align="center" line-height="15px">DK
+                                </fo:block>
+                                <fo:block text-align="left" font-style="italic" font-size="10pt">
+                                    Dette manuskript kan være ophavsretligt beskyttet. Den ophavsretlige beskyttelsestid er 70 år efter ophavsmandens død. Eventuelle oversættere
+                                    har ophavsrettigheder til den oversatte version af manuskriptet. Værker hvor ophavsretten er udløbet er fri af ophavsret
+                                </fo:block><fo:block space-after="2mm"/>
+                                <fo:block text-align="left" font-style="italic" font-size="10pt">
+                                    Hvis manuskriptet er ophavsretligt beskyttet, må det kun anvendes til privat brug. Du må dog også bruge manuskriptet i forbindelse med optagelsesprøve på de danske teaterskoler.
+                                </fo:block><fo:block space-after="2mm"/>
+                                <fo:block/>
+                                <fo:block text-align="left" font-style="italic" font-size="10pt">
+                                    Hvis du vil opføre manuskriptet, skal du have samtykke fra rettighedshaveren. Du kan i den forbindelse  kontakte rettighedsorganisationen Danske Dramatikere.
+                                </fo:block>
+                                <fo:block font-size="16pt" font-weight="bold" font-style="italic" space-before="15mm" space-after="5mm" text-align="center" line-height="15px">UK
+                                </fo:block>
+                                <fo:block text-align="left" font-style="italic" font-size="10pt">
+                                    This manuscript may be copyrighted. The copyright protection period is 70 years after
+                                    the death of the author. Any translators have copyright to the translated version of
+                                    the script. Works where the copyright has expired are free of copyright.<fo:block space-after="2mm"/>
+                                    If the manuscript is copyrighted, it may only be used for private use. However, you may also use
+                                    the manuscript in connection with the entrance examination at the Danish theater schools.<fo:block space-after="2mm"/>
+                                    If you want to write the manuscript, you must have the consent of the copyright holder. You can in that regard
+                                    contact the rights organization Danske Dramatikere.
+                                </fo:block>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <fo:block>
+                                    <fo:block font-size="16pt" font-weight="bold" font-style="italic" space-before="15mm" space-after="5mm" text-align="center" line-height="15px">UK
+                                    </fo:block>
+                                    <xsl:for-each select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='500']/marc:subfield[@code='a']">
+                                        <xsl:if test="starts-with(.,'Premiere')">
+                                            <xsl:variable name="p500b" select="str:tokenize(normalize-space(.), ' ')"/>
+                                            <xsl:value-of select="$p500b[2]"/>
+                                            <fo:block font-size="16pt" font-weight="bold" font-style="italic" space-before="15mm" space-after="5mm" text-align="center" line-height="15px">DK
+                                            </fo:block>
+                                            <fo:block>
+                                                <!--
+                                                <xsl:if test="year-from-date(xs:date('1994-12-31')) > 1900">
+                                                   true
+                                                </xsl:if>
+                                                -->
+                                                <xsl:call-template name="date:date">
+                                                    <xsl:with-param name="date-time" select="1994-12-31"/>?
+                                                </xsl:call-template>
+                                            </fo:block>
+                                        </xsl:if>
+                                    </xsl:for-each>
+                                </fo:block>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                    </fo:block>
                 </fo:flow>
             </fo:page-sequence>
         </fo:root>
