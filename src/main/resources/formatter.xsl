@@ -5,9 +5,11 @@
                 xmlns:ns="http://www.loc.gov/zing/srw/"
                 xmlns:marc="http://www.loc.gov/MARC21/slim"
                 xmlns:str="http://exslt.org/strings"
+                xmlns:date="http://exslt.org/dates-and-times"
 
                 exclude-result-prefixes="fo">
     <xsl:import href="http://exslt.org/str/functions/tokenize/str.tokenize.function.xsl"/>
+    <xsl:import href="http://exslt.org/date/functions/date/date.date.function.xsl"/>
     <xsl:template match="/ns:searchRetrieveResponse">
         <fo:root xmlns:fo="http://www.w3.org/1999/XSL/Format">
             <fo:layout-master-set>
@@ -256,16 +258,22 @@
                                             <xsl:variable name="p500b" select="str:tokenize(normalize-space(.), ' ')"/>
                                             <xsl:value-of select="$p500b[2]"/>
                                             <fo:block font-size="16pt" font-weight="bold" font-style="italic" space-before="15mm" space-after="5mm" text-align="center" line-height="15px">DK
+                                                <!--Today as a string without -. I.e. 2021-07-27+02:00 becomes 20210727-->
+                                                <xsl:variable name="today" select="substring(translate(date:date(), '-', ''),0,8)"/>
+                                                <!--$p500b[2] is the premiere date-->
+                                                <!--It might just be a year, or it might be a full date-->
+                                                <!--Either way, we add -01-01, remove all non-num chars and take the first 8 chars-->
+                                                <!--So 1993 becomes 19930101-->
+                                                <xsl:variable name="cutoff" select="substring(translate(concat($p500b[2], '-01-01'),'- ',''),0,8)"/>
+                                                <!--1000000 is a hundred years. So we test if today is before the premiere date + 100 years-->
+                                                <xsl:if test="$today &lt;= ($cutoff+1000000)">
+                                                    today is before cutoff
+                                                </xsl:if>
+                                                <xsl:if test="$today &gt;= ($cutoff+1000000)">
+                                                    today is after cutoff
+                                                </xsl:if>
                                             </fo:block>
                                             <fo:block>
-                                                <!--
-                                                <xsl:if test="year-from-date(xs:date('1994-12-31')) > 1900">
-                                                   true
-                                                </xsl:if>
-                                                -->
-                                                <xsl:call-template name="date:date">
-                                                    <xsl:with-param name="date-time" select="1994-12-31"/>?
-                                                </xsl:call-template>
                                             </fo:block>
                                         </xsl:if>
                                     </xsl:for-each>
