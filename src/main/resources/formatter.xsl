@@ -233,6 +233,7 @@
                             <fo:block text-align="left" font-style="italic" font-size="10pt">
                                 Hvis du vil opføre manuskriptet, skal du have samtykke fra rettighedshaveren. Du kan i den forbindelse  kontakte rettighedsorganisationen Danske Dramatikere.
                             </fo:block>
+                            <fo:block space-after="2mm"/>
                         </xsl:variable>
                         <xsl:variable name="uk-fixed-text">
                             <fo:block font-size="16pt" font-weight="bold" font-style="italic" space-before="15mm" space-after="5mm" text-align="center" line-height="15px">UK</fo:block>
@@ -248,33 +249,26 @@
                         </xsl:variable>
                         <xsl:choose>
                             <xsl:when test="($tag260 != '') and (ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='c'])">
-                                <fo:block font-size="16pt" font-weight="bold" font-style="italic" space-before="15mm" space-after="5mm" text-align="center" line-height="15px">DK
-                                </fo:block>
-                                <fo:block text-align="left" font-style="italic" font-size="10pt">
-                                    Dette manuskript kan være ophavsretligt beskyttet. Den ophavsretlige beskyttelsestid er 70 år efter ophavsmandens død. Eventuelle oversættere
-                                    har ophavsrettigheder til den oversatte version af manuskriptet. Værker hvor ophavsretten er udløbet er fri af ophavsret.<fo:block space-after="2mm"/>
-                                    Hvis manuskriptet er ophavsretligt beskyttet kan det kun benyttes til privat brug. Men manuskriptet kan dog også benyttes i sammenhæng med adgangsprøverne
-                                    til De Danske Teater Skoler<fo:block space-after="2mm"/>
-                                    Hvis du ønsker at skrive manuskriptet skal du have rettighedshavers samtykke. For at opnå dette kan du kontakte rettighedsorganisationen Danske Dramatikere.
-                                </fo:block><fo:block space-after="2mm"/>
-                                <fo:block text-align="left" font-style="italic" font-size="10pt">
-                                    Hvis manuskriptet er ophavsretligt beskyttet, må det kun anvendes til privat brug. Du må dog også bruge manuskriptet i forbindelse med optagelsesprøve på de danske teaterskoler.
-                                </fo:block><fo:block space-after="2mm"/>
-                                <fo:block/>
-                                <fo:block text-align="left" font-style="italic" font-size="10pt">
-                                    Hvis du vil opføre manuskriptet, skal du have samtykke fra rettighedshaveren. Du kan i den forbindelse  kontakte rettighedsorganisationen Danske Dramatikere.
-                                </fo:block>
-                                <fo:block font-size="16pt" font-weight="bold" font-style="italic" space-before="15mm" space-after="5mm" text-align="center" line-height="15px">UK
-                                </fo:block>
-                                <fo:block text-align="left" font-style="italic" font-size="10pt">
-                                    This manuscript may be copyrighted. The copyright protection period is 70 years after
-                                    the death of the author. Any translators have copyright to the translated version of
-                                    the script. Works where the copyright has expired are free of copyright.<fo:block space-after="2mm"/>
-                                    If the manuscript is copyrighted, it may only be used for private use. However, you may also use
-                                    the manuscript in connection with the entrance examination at the Danish theater schools.<fo:block space-after="2mm"/>
-                                    If you want to write the manuscript, you must have the consent of the copyright holder. You can in that regard
-                                    contact the rights organization Danske Dramatikere.
-                                </fo:block>
+                                <xsl:variable name="t260" select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='c']"/>
+                                <xsl:value-of select="$t260" />
+                                <!--     <xsl:if test="starts-with(.,'19')" -->
+                                <!--Today as a string without -. I.e. 2021-07-27+02:00 becomes 20210727-->  -->
+                                <xsl:variable name="today" select="substring(translate(date:date(), '-', ''),0,8)"/>
+                                <!--$t260[2] is the premiere date-->
+                                <!--It might just be a year, or it might be a full date-->
+                                <!--Either way, we add -01-01, remove all non-num chars and take the first 8 chars-->
+                                <!--So 1993 becomes 19930101-->
+                                <xsl:variable name="cutoff" select="substring(translate(concat($t260[2], '-01-01'),'- ',''),0,8)"/>
+                                <xsl:value-of select="substring(translate(concat($t260[2], '-01-01'),'- ',''),0,8)" />
+                                <!--1400000 is a hundred and fourty years. So we test if today is before the premiere date + 140 years-->
+                                <xsl:if test="$today &lt;= ($cutoff+1400000)">
+                                    <!-- today is before cutoff -->
+                                    <xsl:copy-of select="$dk-fixed-text" />
+                                    <xsl:copy-of select="$uk-fixed-text" />
+                                </xsl:if>
+                                <xsl:if test="$today &gt;= ($cutoff+1400000)">
+                                    today is after cutoff
+                                </xsl:if>
                             </xsl:when>
                             <xsl:otherwise>
                                 <fo:block>
