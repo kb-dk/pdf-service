@@ -247,27 +247,30 @@
                                 contact the rights organization Danske Dramatikere.
                             </fo:block>
                         </xsl:variable>
+                        <xsl:variable name="cutoff-span">
+                            1400000
+                        </xsl:variable>
                         <xsl:choose>
                             <xsl:when test="($tag260 != '') and (ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='c'])">
                                 <xsl:variable name="t260" select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='c']"/>
                                 <xsl:value-of select="$t260" />
                                 <!--     <xsl:if test="starts-with(.,'19')" -->
                                 <!--Today as a string without -. I.e. 2021-07-27+02:00 becomes 20210727-->  -->
-                                <xsl:variable name="today" select="substring(translate(date:date(), '-', ''),0,8)"/>
+                                <xsl:variable name="today" select="substring(translate(date:date(), '-', ''),1,8)"/>
                                 <!--$t260[2] is the premiere date-->
                                 <!--It might just be a year, or it might be a full date-->
                                 <!--Either way, we add -01-01, remove all non-num chars and take the first 8 chars-->
                                 <!--So 1993 becomes 19930101-->
-                                <xsl:variable name="cutoff" select="substring(translate(concat($t260[2], '-01-01'),'- ',''),0,8)"/>
-                                <xsl:value-of select="substring(translate(concat($t260[2], '-01-01'),'- ',''),0,8)" />
+                                <xsl:variable name="cutoff" select="substring(translate(concat($t260, '-01-01'),'-.',''),1,8)"/>
+                                <!--<xsl:value-of select="cutoff" />-->
                                 <!--1400000 is a hundred and fourty years. So we test if today is before the premiere date + 140 years-->
-                                <xsl:if test="$today &lt;= ($cutoff+1400000)">
+                                <xsl:if test="$today &lt;= ($cutoff+$cutoff-span)">
                                     <!-- today is before cutoff -->
                                     <xsl:copy-of select="$dk-fixed-text" />
                                     <xsl:copy-of select="$uk-fixed-text" />
                                 </xsl:if>
-                                <xsl:if test="$today &gt;= ($cutoff+1400000)">
-                                    today is after cutoff
+                                <xsl:if test="$today &gt;= ($cutoff+$cutoff-span)">
+                                    <!--today is after cutoff-->
                                 </xsl:if>
                             </xsl:when>
                             <xsl:otherwise>
@@ -277,20 +280,20 @@
                                             <xsl:variable name="p500b" select="str:tokenize(normalize-space(.), ' ')"/>
                                             <fo:block>
                                                 <!--Today as a string without -. I.e. 2021-07-27+02:00 becomes 20210727-->
-                                                <xsl:variable name="today" select="substring(translate(date:date(), '-', ''),0,8)"/>
+                                                <xsl:variable name="today" select="substring(translate(date:date(), '-', ''),1,8)"/>
                                                 <!--$p500b[2] is the premiere date-->
                                                 <!--It might just be a year, or it might be a full date-->
                                                 <!--Either way, we add -01-01, remove all non-num chars and take the first 8 chars-->
                                                 <!--So 1993 becomes 19930101-->
-                                                <xsl:variable name="cutoff" select="substring(translate(concat($p500b[2], '-01-01'),'- ',''),0,8)"/>
+                                                <xsl:variable name="cutoff" select="substring(translate(concat($p500b[2], '-01-01'),'- ',''),1,8)"/>
                                                 <!--1400000 is a hundred and fourty years. So we test if today is before the premiere date + 140 years-->
-                                                <xsl:if test="$today &lt;= ($cutoff+1400000)">
+                                                <xsl:if test="$today &lt;= ($cutoff+$cutoff-span)">
                                                     <!-- today is before cutoff -->
                                                     <xsl:copy-of select="$dk-fixed-text" />
                                                     <xsl:copy-of select="$uk-fixed-text" />
                                                 </xsl:if>
-                                                <xsl:if test="$today &gt;= ($cutoff+1400000)">
-                                                    today is after cutoff
+                                                <xsl:if test="$today &gt;= ($cutoff+$cutoff-span)">
+                                                    <!--today is after cutoff-->
                                                 </xsl:if>
                                             </fo:block>
                                             <fo:block>
