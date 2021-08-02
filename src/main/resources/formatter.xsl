@@ -247,6 +247,12 @@
                                 contact the rights organization Danske Dramatikere.
                             </fo:block>
                         </xsl:variable>
+                        <xsl:variable name="dk-after-cutoff-text">
+                            Værket er fri af ophavsret. Husk altid at kreditere ophavsmanden, selvom værket er fri af ophavsret.
+                        </xsl:variable>
+                        <xsl:variable name="uk-after-cutoff-text">
+                            The work is free of copyright. Always remember to credit the author, even if the work is free of copyright.
+                        </xsl:variable>
                         <xsl:variable name="cutoff-span">
                             1400000
                         </xsl:variable>
@@ -271,6 +277,8 @@
                                 </xsl:if>
                                 <xsl:if test="$today &gt;= ($cutoff+$cutoff-span)">
                                     <!--today is after cutoff-->
+                                    <xsl:copy-of select="$dk-after-cutoff-text" />
+                                    <xsl:copy-of select="$uk-after-cutoff-text" />
                                 </xsl:if>
                             </xsl:when>
                             <xsl:otherwise>
@@ -294,6 +302,8 @@
                                                 </xsl:if>
                                                 <xsl:if test="$today &gt;= ($cutoff+$cutoff-span)">
                                                     <!--today is after cutoff-->
+                                                    <xsl:copy-of select="$dk-after-cutoff-text" />
+                                                    <xsl:copy-of select="$uk-after-cutoff-text" />
                                                 </xsl:if>
                                             </fo:block>
                                             <fo:block>
