@@ -9,7 +9,7 @@ config:
   basePath: /home/pech/projects/pdf-service
 #  basePath: /home/pech/testpdfs
   resourcesDir: src/main/resources/
-  outputDir: src/main/resources/output/
+  outputDir: target/output/
 
   limits:
     max: 10000

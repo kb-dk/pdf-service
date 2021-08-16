@@ -48,7 +48,7 @@ import javax.xml.transform.stream.StreamSource;
 /**
  * pdf-service
  *
- * <p>This pom can be inherited by projects wishing to integrate to the SBForge development platform. 
+ * <p>This pom can be inherited by projects wishing to integrate to the SBForge development platform.
  *
  */
 public class PdfServiceApiServiceImpl implements PdfServiceApi {
@@ -77,7 +77,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     private transient Request request;
 
     @Context
-    private transient ContextResolver contextResolver;
+    private transient ContextResolver<?> contextResolver;
 
     @Context
     private transient HttpServletRequest httpServletRequest;
@@ -97,9 +97,9 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
 
     /**
      * Request a theater manuscript summary.
-     * 
+     *
      * @param barcode: Barcode for a theater manuscript
-     * 
+     *
      * @return <ul>
       *   <li>code = 200, message = "A pdf with attached page", response = File.class</li>
       *   </ul>
@@ -111,7 +111,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     public javax.ws.rs.core.StreamingOutput getManuscript(String barcode, String pdflink) throws ServiceException {
         // TODO: Implement...
         
-        try{ 
+        try{
             httpServletResponse.setHeader("Content-Disposition", "inline; filename=\"filename.ext\"");
             String doc = getRawManuscript((barcode));
      //       return output -> output.write("Magic".getBytes(java.nio.charset.StandardCharsets.UTF_8));
@@ -124,7 +124,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
 
     /**
      * Request a theater manuscript summary.
-     * 
+     *
      * @param barCode : Barcode for a theater manuscript
      *
      * @return <ul>
@@ -177,25 +177,21 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
     FopFactory fopFactory = builder.build();
 
     FOUserAgent foUserAgent = fopFactory.newFOUserAgent();
-    OutputStream outStream = null;
-    Fop fop = null;
-    Result result = null;
+    Fop fop;
+    Result result;
     File pdfOut = new File((ServiceConfig.getOutputDir() + "//" + barCode + ".pdf"));
-    try {
-        outStream = new BufferedOutputStream(new FileOutputStream(pdfOut));
+    pdfOut.getParentFile().mkdirs();
+    try (OutputStream outStream = new BufferedOutputStream(new FileOutputStream(pdfOut))) {
         fop = fopFactory.newFop(MimeConstants.MIME_PDF, foUserAgent, outStream);
-
+        
         // TransformerFactory factory = TransformerFactory.newInstance(); // Old alt. adaption
         TransformerFactory factory = SingletonCachingTransformerFactory.newInstance();   // NEW adaption
         Transformer xslfoTransformer = factory.newTransformer(new StreamSource(xsltFile));
-
+        
         result = new SAXResult(fop.getDefaultHandler());
-
+        
         // everything will happen here..
         xslfoTransformer.transform(xmlSource, result);
-    }
-     finally {
-        outStream.close();
     }
 }
 
@@ -214,7 +210,6 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
  * @implNote return will always produce a HTTP 200 code. Throw ServiceException if you need to return other codes
  **/
     @Override
-
     public StreamingOutput getPdf(String barcode, String pdflink2) {
         String basepath;
 
@@ -236,10 +231,8 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
             System.out.println("mergePDFile(" + outputDir + barcode + ".pdf" + "," + pdflink2 +")");
             // mergePDFFile(outputDir + "output.pdf",pdflink2);
             mergePDFFile(outputDir + barcode + ".pdf",pdflink2); // TEST
-            final InputStream inputStream = new FileInputStream(new File((outputDir + "//" + barcode + ".pdf")));
-            return output ->  {
-                IOUtils.copy(inputStream, output);
-            };
+            final InputStream inputStream = new FileInputStream((outputDir + "//" + barcode + ".pdf"));
+            return output -> IOUtils.copy(inputStream, output);
         } catch ( TransformerException | SAXException| IOException e ) {
             e.printStackTrace();
             throw new InternalServiceException("Fejl med getPdf", e);
@@ -297,7 +290,7 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
 
     /**
      * Ping the server to check if the server is reachable.
-     * 
+     *
      * @return <ul>
       *   <li>code = 200, message = "OK", response = String.class</li>
       *   <li>code = 406, message = "Not Acceptable", response = ErrorDto.class</li>
@@ -310,7 +303,7 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
     @Override
     public String ping() throws ServiceException {
         // TODO: Implement...
-        try{ 
+        try{
             String response = "e7nJq";
         return response;
         } catch (Exception e){
