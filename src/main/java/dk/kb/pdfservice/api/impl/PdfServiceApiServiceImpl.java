@@ -1,7 +1,7 @@
 package dk.kb.pdfservice.api.impl;
 
 import dk.kb.pdfservice.api.*;
-import dk.kb.pdfservice.model.ErrorDto;
+// import dk.kb.pdfservice.model.ErrorDto;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
