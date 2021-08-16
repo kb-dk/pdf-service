@@ -44,7 +44,7 @@ import io.swagger.annotations.Api;
 /**
  * pdf-service
  *
- * <p>This pom can be inherited by projects wishing to integrate to the SBForge development platform. 
+ * <p>This pom can be inherited by projects wishing to integrate to the SBForge development platform.
  *
  */
 public class PdfServiceApiServiceImpl implements PdfServiceApi {
@@ -70,7 +70,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     private transient Request request;
 
     @Context
-    private transient ContextResolver contextResolver;
+    private transient ContextResolver<?> contextResolver;
 
     @Context
     private transient HttpServletRequest httpServletRequest;
@@ -90,11 +90,11 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
 
     /**
      * Request a theater manuscript summary.
-     * 
+     *
      * @param barcode: Barcode for a theater manuscript
-     * 
+     *
      * @param pdflink: pdfLink for a theater manuscript
-     * 
+     *
      * @return <ul>
       *   <li>code = 200, message = "A pdf with attached page", response = File.class</li>
       *   </ul>
@@ -107,7 +107,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         // TODO: Implement...
     
         
-        try{ 
+        try{
             httpServletResponse.setHeader("Content-Disposition", "inline; filename=\"filename.ext\"");
             return output -> output.write("Magic".getBytes(java.nio.charset.StandardCharsets.UTF_8));
         } catch (Exception e){
@@ -118,11 +118,11 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
 
     /**
      * Request a Pdf file from link.
-     * 
+     *
      * @param barcode: Barcode for a theater manuscript
-     * 
+     *
      * @param pdflink2: Pdf for a theater manuscript
-     * 
+     *
      * @return <ul>
       *   <li>code = 200, message = "A pdf with attached page", response = File.class</li>
       *   </ul>
@@ -135,7 +135,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         // TODO: Implement...
     
         
-        try{ 
+        try{
             httpServletResponse.setHeader("Content-Disposition", "inline; filename=\"filename.ext\"");
             return output -> output.write("Magic".getBytes(java.nio.charset.StandardCharsets.UTF_8));
         } catch (Exception e){
@@ -146,9 +146,9 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
 
     /**
      * Request a theater manuscript summary.
-     * 
+     *
      * @param barcode: Barcode for a theater manuscript
-     * 
+     *
      * @return <ul>
       *   <li>code = 200, message = "A pdf with attached page", response = String.class</li>
       *   </ul>
@@ -161,7 +161,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         // TODO: Implement...
     
         
-        try{ 
+        try{
             String response = "ft4rUkv";
         return response;
         } catch (Exception e){
@@ -172,7 +172,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
 
     /**
      * Ping the server to check if the server is reachable.
-     * 
+     *
      * @return <ul>
       *   <li>code = 200, message = "OK", response = String.class</li>
       *   <li>code = 406, message = "Not Acceptable", response = ErrorDto.class</li>
@@ -187,7 +187,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         // TODO: Implement...
     
         
-        try{ 
+        try{
             String response = "o9W165";
         return response;
         } catch (Exception e){
@@ -201,7 +201,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     * This method simply converts any Exception into a Service exception
     * @param e: Any kind of exception
     * @return A ServiceException
-    * @see dk.kb.webservice.ServiceExceptionMapper
+    * @see dk.kb.pdfservice.webservice.ServiceExceptionMapper
     */
     private ServiceException handleException(Exception e) {
         if (e instanceof ServiceException) {
