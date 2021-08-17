@@ -5,6 +5,7 @@ import dk.kb.pdfservice.api.*;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 
 import dk.kb.pdfservice.cachingtransformerfactory.SingletonCachingTransformerFactory;
 import dk.kb.pdfservice.config.ServiceConfig;
@@ -228,6 +229,24 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
 
         try {
             convertToPdf(barcode);
+
+        // New code -->
+            System.out.println("mergePDFile(" + outputDir + barcode + ".pdf" + "," + pdflink2 +")");
+
+            final String input1 = Thread.currentThread()
+                    .getContextClassLoader()
+                    .getResource(pdflink2)
+                    .getFile();
+            System.out.println("input1: " + input1);
+
+            final String output1 = Path.of(input1).getParent().resolve(pdflink2).toString();
+            System.out.println("output1: " + output1);
+            PDDocument pddoc = PdfBoxCopyrightInserter.insertCopyrightFooter(new File(input1), new File(output1));
+            String fileName = new File(output1).getName();
+            System.out.println("fileName: " + fileName);
+            System.out.println("pdflink2: " + pdflink2);
+        // New code <--
+
             System.out.println("mergePDFile(" + outputDir + barcode + ".pdf" + "," + pdflink2 +")");
             // mergePDFFile(outputDir + "output.pdf",pdflink2);
             mergePDFFile(outputDir + barcode + ".pdf",pdflink2); // TEST
@@ -263,8 +282,13 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
         String resourcesDir = ServiceConfig.getResourcesDir();
         // File file1 = new File(outputDir + "output.pdf");
         File file1 = new File( apron);
-        File file2 = new File(resourcesDir + pdfFile);
-
+        // New -->
+        final String pdfFileAndPath = Thread.currentThread()
+                .getContextClassLoader()
+                .getResource(pdfFile)
+                .getFile();
+        File file2 = new File(pdfFileAndPath);
+        // <-- New
         //Instantiating PDFMergerUtility class
         PDFMergerUtility PDFmerger = new PDFMergerUtility();
         System.out.println(("APRON in mergePDFFile: " + apron));

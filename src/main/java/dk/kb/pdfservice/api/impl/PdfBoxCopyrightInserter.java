@@ -17,11 +17,12 @@ public class PdfBoxCopyrightInserter {
     public static PDDocument insertCopyrightFooter(File input, File output)
             throws IOException {
         PDFParser parser;
+        System.out.println("start of PdfBoxCopyrightInserter");
         try (final RandomAccessBufferedFileInputStream rabfis = new RandomAccessBufferedFileInputStream(input)) {
             parser = new PDFParser(rabfis);
             parser.parse();
         }
-
+        System.out.println("After try RandomAccessBuffer");
         final PDDocument doc = parser.getPDDocument();
 
         boolean initial = true;
@@ -30,7 +31,7 @@ public class PdfBoxCopyrightInserter {
                 initial = false;
                 continue;
             }
-
+        System.out.println("before mediabox");
             PDRectangle mediaBox = p.getMediaBox();
             PDRectangle cropbox = p.getCropBox();
 
@@ -41,7 +42,7 @@ public class PdfBoxCopyrightInserter {
             p.setMediaBox(mediaBox);
             cropbox.setLowerLeftY(cropbox.getLowerLeftY() - footer_height);
             p.setCropBox(cropbox);
-
+        System.out.println("Before try");
             try (var contentStream = new PDPageContentStream(doc, p, PDPageContentStream.AppendMode.PREPEND, true);) {
                 contentStream.setRenderingMode(RenderingMode.FILL);
                 contentStream.beginText();
@@ -54,7 +55,7 @@ public class PdfBoxCopyrightInserter {
                 contentStream.endText();
             }
         }
-
+        System.out.println("before doc.save(output)");
         doc.save(output);
         return doc;
     }
