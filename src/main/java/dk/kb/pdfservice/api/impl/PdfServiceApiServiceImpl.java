@@ -230,26 +230,27 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
         try {
             convertToPdf(barcode);
 
-        // New code -->
             System.out.println("mergePDFile(" + outputDir + barcode + ".pdf" + "," + pdflink2 +")");
 
             final String input1 = Thread.currentThread()
                     .getContextClassLoader()
                     .getResource(pdflink2)
                     .getFile();
+        // New code -->
             System.out.println("input1: " + input1);
 
             final String output1 = Path.of(input1).getParent().resolve(pdflink2).toString();
             System.out.println("output1: " + output1);
-            PDDocument pddoc = PdfBoxCopyrightInserter.insertCopyrightFooter(new File(input1), new File(output1));
+            PdfBoxCopyrightFooterInserter.insertCopyrightFooter(new File(input1), new File(output1));
             String fileName = new File(output1).getName();
             System.out.println("fileName: " + fileName);
             System.out.println("pdflink2: " + pdflink2);
         // New code <--
-
             System.out.println("mergePDFile(" + outputDir + barcode + ".pdf" + "," + pdflink2 +")");
             // mergePDFFile(outputDir + "output.pdf",pdflink2);
             mergePDFFile(outputDir + barcode + ".pdf",pdflink2); // TEST
+            //PDDocument pddoc = PdfBoxCopyrightInserter.insertCopyrightFooter(new File(input1), new File(output1));
+
             final InputStream inputStream = new FileInputStream((outputDir + "//" + barcode + ".pdf"));
             return output -> IOUtils.copy(inputStream, output);
         } catch ( TransformerException | SAXException| IOException e ) {

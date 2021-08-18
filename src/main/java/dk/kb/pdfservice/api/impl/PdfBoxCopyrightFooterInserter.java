@@ -12,29 +12,26 @@ import org.apache.pdfbox.pdmodel.graphics.state.RenderingMode;
 import java.io.File;
 import java.io.IOException;
 
-public class PdfBoxCopyrightInserter {
-public static long count;
-     // public static PDDocument insertCopyrightFooter(File input, File output)
-     public static void insertCopyrightFooter(File input, File output)
+public class PdfBoxCopyrightFooterInserter {
+    public static long count;
+    public static PDDocument insertCopyrightFooter(File input, File output)
             throws IOException {
         PDFParser parser;
-        System.out.println("start of PdfBoxCopyrightInserter");
+        System.out.println("start of PdfBoxCopyrightFooterInserter");
         try (final RandomAccessBufferedFileInputStream rabfis = new RandomAccessBufferedFileInputStream(input)) {
             parser = new PDFParser(rabfis);
             parser.parse();
         }
-        System.out.println("After try RandomAccessBuffer");
 
         final PDDocument doc = parser.getPDDocument();
-
         boolean initial = true;
+
         for (PDPage p : doc.getPages()) {
             if (initial) { //nasty way of skipping first page
                 initial = false;
                 continue;
             }
 
-        System.out.println("before mediabox");
             PDRectangle mediaBox = p.getMediaBox();
             PDRectangle cropbox = p.getCropBox();
 
@@ -45,7 +42,7 @@ public static long count;
             p.setMediaBox(mediaBox);
             cropbox.setLowerLeftY(cropbox.getLowerLeftY() - footer_height);
             p.setCropBox(cropbox);
-        System.out.println("Before try");
+
             try (var contentStream = new PDPageContentStream(doc, p, PDPageContentStream.AppendMode.PREPEND, true);) {
                 contentStream.setRenderingMode(RenderingMode.FILL);
                 contentStream.beginText();
@@ -58,10 +55,9 @@ public static long count;
                 contentStream.endText();
             }
         }
-         System.out.println("count: " + ++count);
-        System.out.println("before doc.save(output)");
+        System.out.println("count: " + ++count);
         doc.save(output);
-        //return doc;
-        doc.close();
+        return doc;
     }
+
 }
