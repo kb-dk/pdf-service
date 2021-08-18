@@ -241,7 +241,8 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
 
             final String output1 = Path.of(input1).getParent().resolve(pdflink2).toString();
             System.out.println("output1: " + output1);
-            PdfBoxCopyrightFooterInserter.insertCopyrightFooter(new File(input1), new File(output1));
+            PdfBoxCopyrightFooterInserter copyRightins =  new PdfBoxCopyrightFooterInserter();
+            copyRightins.insertCopyrightFooter(new File(input1), new File(output1));
             String fileName = new File(output1).getName();
             System.out.println("fileName: " + fileName);
             System.out.println("pdflink2: " + pdflink2);
