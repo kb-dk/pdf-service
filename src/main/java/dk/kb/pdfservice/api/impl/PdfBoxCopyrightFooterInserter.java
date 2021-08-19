@@ -48,12 +48,14 @@ public class PdfBoxCopyrightFooterInserter {
             try (var contentStream = new PDPageContentStream(doc, pd, PDPageContentStream.AppendMode.PREPEND, true);) {
                 contentStream.setRenderingMode(RenderingMode.FILL);
                 contentStream.beginText();
-                contentStream.setFont(PDType1Font.COURIER, footer_height);
+                // contentStream.setFont(PDType1Font.HELVETICA, footer_height);
+                contentStream.setFont(PDType1Font.HELVETICA, 10);
 
                 final float x = mediaBox.getWidth() * 0.10f;
                 final float y = -footer_height * 1.2f; //above 100% due to compensation for font height
                 contentStream.newLineAtOffset(x, y);
-                contentStream.showText("Copyright footer");
+                // contentStream.showText("Copyright footer");
+                contentStream.showText("Manuskriptkopien må ikke anvendes til opførelse og må ikke videre distribueres");
                 contentStream.endText();
             }
             no_pages++;
