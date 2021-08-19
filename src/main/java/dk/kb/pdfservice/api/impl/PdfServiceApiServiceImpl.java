@@ -113,7 +113,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         // TODO: Implement...
         
         try{
-            httpServletResponse.setHeader("Content-Disposition", "inline; filename=\"filename.ext\"");
+            httpServletResponse.setHeader("Content-Disposition", "inline; swaggerDownload=\"attachment\"; filename=\"filename.ext\"");
             String doc = getRawManuscript((barcode));
      //       return output -> output.write("Magic".getBytes(java.nio.charset.StandardCharsets.UTF_8));
             return output -> output.write(doc.getBytes(java.nio.charset.StandardCharsets.UTF_8));
@@ -225,7 +225,7 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
         if (pdflink2 == null)
             pdflink2 = "";
 
-        httpServletResponse.setHeader("Content-disposition", " filename = " + pdflink2);
+        httpServletResponse.setHeader("Content-disposition", "inline; swaggerDownload=\"attachment\"; filename = " + pdflink2);
 
         try {
             convertToPdf(barcode);
@@ -297,7 +297,7 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
         //Setting the destination file
         PDFmerger.setDestinationFileName( apron );
 
-        httpServletResponse.setHeader("Content-disposition", " filename = merged_" + pdfFile);
+        httpServletResponse.setHeader("Content-disposition", "inline; swaggerDownload=\"attachment\"; filename = merged_" + pdfFile);
         //adding the source files
         try {
             PDFmerger.addSource(file1);

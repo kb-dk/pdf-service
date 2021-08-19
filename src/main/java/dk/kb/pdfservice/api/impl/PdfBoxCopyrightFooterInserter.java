@@ -15,7 +15,6 @@ import org.apache.pdfbox.pdmodel.graphics.state.RenderingMode;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.List;
 
 public class PdfBoxCopyrightFooterInserter {
     public static long count;
@@ -29,20 +28,14 @@ public class PdfBoxCopyrightFooterInserter {
         }
 
         final PDDocument doc = parser.getPDDocument();
-        boolean initial = true;
 
         PDPageTree nbPages = doc.getPages();
         Iterator<PDPage> pddIter = nbPages.iterator();
-        int i = 1;
+        int no_pages = 0;
         while (pddIter.hasNext()) {
-        //for (PDPage p : doc.getPages()) {
-
             PDPage pd = pddIter.next();
-            System.out.println("Før mediaBox");
             PDRectangle mediaBox = pd.getMediaBox();
-            System.out.println("After mediaBox");
             PDRectangle cropbox = pd.getCropBox();
-            System.out.println("Efter cropbox");
 
             float ratio = mediaBox.getHeight() / PDRectangle.A4.getHeight();
             float footer_height = 15 * ratio * pd.getUserUnit();
@@ -63,9 +56,10 @@ public class PdfBoxCopyrightFooterInserter {
                 contentStream.showText("Copyright footer");
                 contentStream.endText();
             }
-            i++;
+            no_pages++;
         }
-        System.out.println("count: " + ++count);
+        System.out.println("count: " + count++);
+        System.out.println("no_pages in pdf-file: " + no_pages);
         doc.save(output);
         return doc;
     }
