@@ -5,7 +5,10 @@ import dk.kb.pdfservice.api.*;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Objects;
 
 import dk.kb.pdfservice.cachingtransformerfactory.SingletonCachingTransformerFactory;
 import dk.kb.pdfservice.config.ServiceConfig;
@@ -181,6 +184,8 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
     Fop fop;
     Result result;
     File pdfOut = new File((ServiceConfig.getOutputDir() + "//" + barCode + ".pdf"));
+    System.out.println("convertToPdf, ");
+    System.out.println("pdfOut: " + pdfOut);
     pdfOut.getParentFile().mkdirs();
     try (OutputStream outStream = new BufferedOutputStream(new FileOutputStream(pdfOut))) {
         fop = fopFactory.newFop(MimeConstants.MIME_PDF, foUserAgent, outStream);
@@ -226,8 +231,10 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
             pdflink2 = "";
 
         httpServletResponse.setHeader("Content-disposition", "inline; swaggerDownload=\"attachment\"; filename = " + pdflink2);
-
         try {
+            if (!isNotPdf(pdflink2)) {
+                System.out.println("This is not a pdf file");
+            }
             convertToPdf(barcode);
 
             System.out.println("mergePDFile(" + outputDir + barcode + ".pdf" + "," + pdflink2 +")");
@@ -237,6 +244,7 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
                     .getResource(pdflink2)
                     .getFile();
         // New code -->
+            System.out.println("!isNotpdf(pdflink2: " + !isNotPdf(pdflink2));
             System.out.println("input1: " + input1);
 
             final String output1 = Path.of(input1).getParent().resolve(pdflink2).toString();
@@ -258,6 +266,31 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
             e.printStackTrace();
             throw new InternalServiceException("Fejl med getPdf", e);
         }
+    }
+
+    boolean isNotPdf(String pdflink2) {
+        boolean result = false;
+        final String filePathString = ServiceConfig.getResourcesDir() + pdflink2;
+        File f = new File(filePathString);
+        String extension = getFileExtension(f);
+        if (!Objects.equals("pdf",new String(extension))) {
+            System.out.println("file is not a pdf file");
+            result = false;
+            // System.exit(0);
+        }
+        if (Files.notExists(Paths.get(filePathString)) && (f.isFile())) {
+            System.out.println("file does not exist");
+            // System.exit(0);
+            result = false;
+        }
+        return result;
+    }
+
+    private static String getFileExtension(File file) {
+        String fileName = file.getName();
+        if(fileName.lastIndexOf(".") != -1 && fileName.lastIndexOf(".") != 0)
+            return fileName.substring(fileName.lastIndexOf(".") + 1);
+        else return "";
     }
 
     /**
@@ -290,6 +323,7 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
                 .getResource(pdfFile)
                 .getFile();
         File file2 = new File(pdfFileAndPath);
+        System.out.println("pdfFileAndPath: " + pdfFileAndPath);
         // <-- New
         //Instantiating PDFMergerUtility class
         PDFMergerUtility PDFmerger = new PDFMergerUtility();
