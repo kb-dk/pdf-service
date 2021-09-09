@@ -49,6 +49,8 @@ import javax.xml.transform.*;
 import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.stream.StreamSource;
 
+import static java.nio.file.Files.isReadable;
+
 /**
  * pdf-service
  *
@@ -230,11 +232,23 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
         if (pdflink2 == null)
             pdflink2 = "";
 
+        String path = resourcesDir + pdflink2;
+        System.out.println("path: " + path);
         httpServletResponse.setHeader("Content-disposition", "inline; swaggerDownload=\"attachment\"; filename = " + pdflink2);
         try {
-            if (!isNotPdf(pdflink2)) {
+
+            if (isNotPdf(path)) {
                 System.out.println("This is not a pdf file");
+                Response.Status e = Response.Status.fromStatusCode(403); // forbidden
+                throw new ServiceException("This is not a pdf file", e);
             }
+
+ /*           if (!isStorageDirAccessible(path)) {
+                System.out.println("File or directory is not accessible");
+                Response.Status e = Response.Status.fromStatusCode(403);
+                throw new ServiceException("File or directory is not accessible", e);
+            }
+*/
             convertToPdf(barcode);
 
             System.out.println("mergePDFile(" + outputDir + barcode + ".pdf" + "," + pdflink2 +")");
@@ -244,7 +258,7 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
                     .getResource(pdflink2)
                     .getFile();
         // New code -->
-            System.out.println("!isNotpdf(pdflink2: " + !isNotPdf(pdflink2));
+           // System.out.println("!isNotpdf(pdflink2: " + !isNotPdf(pdflink2));
             System.out.println("input1: " + input1);
 
             final String output1 = Path.of(input1).getParent().resolve(pdflink2).toString();
@@ -262,7 +276,7 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
 
             final InputStream inputStream = new FileInputStream((outputDir + "//" + barcode + ".pdf"));
             return output -> IOUtils.copy(inputStream, output);
-        } catch ( TransformerException | SAXException| IOException e ) {
+        } catch ( TransformerException | SAXException| IOException |NullPointerException e ) {
             e.printStackTrace();
             throw new InternalServiceException("Fejl med getPdf", e);
         }
@@ -275,15 +289,23 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
         String extension = getFileExtension(f);
         if (!Objects.equals("pdf",new String(extension))) {
             System.out.println("file is not a pdf file");
-            result = false;
+            result = true;
             // System.exit(0);
         }
         if (Files.notExists(Paths.get(filePathString)) && (f.isFile())) {
             System.out.println("file does not exist");
             // System.exit(0);
-            result = false;
+            result = true;
         }
         return result;
+    }
+
+    public static boolean isStorageDirAccessible(String path) {
+        Path filePath = Paths.get(path);
+        return Files.exists(filePath)
+                && !Files.isDirectory(Paths.get(path))
+                && isReadable(filePath)
+                && Files.isWritable(filePath);
     }
 
     private static String getFileExtension(File file) {
