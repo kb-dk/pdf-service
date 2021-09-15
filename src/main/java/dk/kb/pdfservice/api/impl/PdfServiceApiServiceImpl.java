@@ -251,12 +251,19 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
 */
             convertToPdf(barcode);
 
-            System.out.println("mergePDFile(" + outputDir + barcode + ".pdf" + "," + pdflink2 +")");
+            System.out.println("Before mergePDFile1(" + outputDir + barcode + ".pdf" + "," + pdflink2 +")");
+            final String input1;
+            try {
 
-            final String input1 = Thread.currentThread()
-                    .getContextClassLoader()
-                    .getResource(pdflink2)
-                    .getFile();
+                input1 = Thread.currentThread()
+                        .getContextClassLoader()
+                        .getResource(pdflink2)
+                        .getFile();
+            }
+            catch (NullPointerException e) {
+                Response.Status ne = Response.Status.fromStatusCode(403);
+                throw new ServiceException("Pdf file does not exist", ne);
+            }
         // New code -->
            // System.out.println("!isNotpdf(pdflink2: " + !isNotPdf(pdflink2));
             System.out.println("input1: " + input1);
