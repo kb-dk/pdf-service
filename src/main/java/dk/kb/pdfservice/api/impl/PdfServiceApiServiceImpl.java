@@ -145,6 +145,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         // TODO: Implement...barcode=130018972949
         final String USER_AGENT = "Mozilla/5.0";
         String response = null;
+        log.info("Enter getRawManuscript");
         try {
             String urlString = "https://soeg.kb.dk/view/sru/45KBDK_KGL?version=1.2&operation=searchRetrieve&query=barcode=" + barCode + "&recordSchema=marcxml";
             URL url = new URL(urlString);
@@ -153,7 +154,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
             DocumentBuilder db = dbf.newDocumentBuilder();
             Document doc = db.parse(new URL(urlString).openStream());
             doc.getDocumentElement().normalize();
-            System.out.println("Document type: " + doc.getDoctype());
+            log.debug("Document type: " + doc.getDoctype());
              return transformToString(doc);
         } catch (Exception e) {
             e.printStackTrace();
@@ -173,9 +174,9 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
 public void convertToPdf(String barCode) throws TransformerException, SAXException, IOException {
     // the XSL FO file
     File xsltFile = new File(ServiceConfig.getResourcesDir() + "//formatter.xsl");
-
+    log.info("Enter convertToPf");
     String response = getRawManuscript(barCode);
-    System.out.println("Response: " + response);
+    log.debug("Response: " + response);
     StreamSource xmlSource =  new StreamSource(new StringReader(response));
 
     FopFactoryBuilder builder = new FopFactoryBuilder(new File(".").toURI());
@@ -186,8 +187,8 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
     Fop fop;
     Result result;
     File pdfOut = new File((ServiceConfig.getOutputDir() + "//" + barCode + ".pdf"));
-    System.out.println("convertToPdf, ");
-    System.out.println("pdfOut: " + pdfOut);
+    log.debug("convertToPdf, ");
+    log.debug("pdfOut: " + pdfOut);
     pdfOut.getParentFile().mkdirs();
     try (OutputStream outStream = new BufferedOutputStream(new FileOutputStream(pdfOut))) {
         fop = fopFactory.newFop(MimeConstants.MIME_PDF, foUserAgent, outStream);
@@ -220,29 +221,27 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
     @Override
     public StreamingOutput getPdf(String barcode, String pdflink2) {
         String basepath;
-
-        System.out.println("barcode: " + barcode);
-        System.out.println("pdfLink2: " + pdflink2);
+        log.info("Enter getPdf");
+        log.debug("barcode: " + barcode);
+        log.debug("pdfLink2: " + pdflink2);
         basepath = ServiceConfig.getBasepath();
-        System.out.println("basepath: " + basepath);
+        log.debug("basepath: " + basepath);
         String resourcesDir = ServiceConfig.getResourcesDir();
-        System.out.println("Resources dir: " + resourcesDir );
+        log.debug("Resources dir: " + resourcesDir );
         String outputDir = ServiceConfig.getOutputDir();
 
         if (pdflink2 == null)
             pdflink2 = "";
 
         String path = resourcesDir + pdflink2;
-        System.out.println("path: " + path);
+        log.debug("path: " + path);
         httpServletResponse.setHeader("Content-disposition", "inline; swaggerDownload=\"attachment\"; filename = " + pdflink2);
         try {
-
             if (isNotPdf(path)) {
                 System.out.println("This is not a pdf file");
                 Response.Status e = Response.Status.fromStatusCode(403); // forbidden
                 throw new ServiceException("This is not a pdf file", e);
             }
-
  /*           if (!isStorageDirAccessible(path)) {
                 System.out.println("File or directory is not accessible");
                 Response.Status e = Response.Status.fromStatusCode(403);
@@ -251,7 +250,7 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
 */
             convertToPdf(barcode);
 
-            System.out.println("Before mergePDFile1(" + outputDir + barcode + ".pdf" + "," + pdflink2 +")");
+            log.debug("Before mergePDFile1(" + outputDir + barcode + ".pdf" + "," + pdflink2 +")");
             final String input1;
             try {
 
@@ -266,15 +265,15 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
             }
         // New code -->
            // System.out.println("!isNotpdf(pdflink2: " + !isNotPdf(pdflink2));
-            System.out.println("input1: " + input1);
+            log.debug("input1: " + input1);
 
             final String output1 = Path.of(input1).getParent().resolve(pdflink2).toString();
-            System.out.println("output1: " + output1);
+            log.debug("output1: " + output1);
             PdfBoxCopyrightFooterInserter copyRightins =  new PdfBoxCopyrightFooterInserter();
             copyRightins.insertCopyrightFooter(new File(input1), new File(output1));
             String fileName = new File(output1).getName();
-            System.out.println("fileName: " + fileName);
-            System.out.println("pdflink2: " + pdflink2);
+            log.debug("fileName: " + fileName);
+            log.debug("pdflink2: " + pdflink2);
         // New code <--
             System.out.println("mergePDFile(" + outputDir + barcode + ".pdf" + "," + pdflink2 +")");
             // mergePDFFile(outputDir + "output.pdf",pdflink2);
@@ -295,12 +294,12 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
         File f = new File(filePathString);
         String extension = getFileExtension(f);
         if (!Objects.equals("pdf",new String(extension))) {
-            System.out.println("file is not a pdf file");
+            log.debug("file is not a pdf file");
             result = true;
             // System.exit(0);
         }
         if (Files.notExists(Paths.get(filePathString)) && (f.isFile())) {
-            System.out.println("file does not exist");
+            log.debug("file does not exist");
             // System.exit(0);
             result = true;
         }
@@ -366,13 +365,13 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
             PDFmerger.addSource(file1);
             PDFmerger.addSource(file2);
             //Merging the two documents
-            System.out.println("merging the two documents: " + file1 + " and " + file2 + ")");
+            log.debug("merging the two documents: " + file1 + " and " + file2 + ")");
             PDFmerger.mergeDocuments(MemoryUsageSetting.setupMixed(1024 * 1024 * 500));
         } catch ( IOException e) {
             e.printStackTrace();
             throw new InternalServiceException("Fejl med merge af forside og pdf", e);
         }
-        System.out.println("Documents merged");
+        log.debug("Documents merged");
         //return  PDFmerger.getDestinationStream();
     }
 
