@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 
 import dk.kb.pdfservice.cachingtransformerfactory.SingletonCachingTransformerFactory;
 import dk.kb.pdfservice.config.ServiceConfig;
+import dk.kb.pdfservice.webservice.exception.NotFoundServiceException;
 import dk.kb.pdfservice.webservice.exception.ServiceException;
 import dk.kb.pdfservice.webservice.exception.InternalServiceException;
 
@@ -162,7 +163,8 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
              return response; }
             else {
                 String e = "404";
-                throw new InternalServiceException(e);
+                // throw new InternalServiceException(e);
+                throw new NotFoundServiceException(e);
             }
         } catch (Exception e) {
             e.printStackTrace();
