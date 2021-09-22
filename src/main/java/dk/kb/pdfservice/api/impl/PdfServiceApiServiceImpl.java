@@ -9,6 +9,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import dk.kb.pdfservice.cachingtransformerfactory.SingletonCachingTransformerFactory;
 import dk.kb.pdfservice.config.ServiceConfig;
@@ -155,11 +157,39 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
             Document doc = db.parse(new URL(urlString).openStream());
             doc.getDocumentElement().normalize();
             log.debug("Document type: " + doc.getDoctype());
-             return transformToString(doc);
+            response = transformToString(doc);
+            if (findXMLTagValue(response)) {
+             return response; }
+            else {
+                String e = "404";
+                throw new InternalServiceException(e);
+            }
         } catch (Exception e) {
             e.printStackTrace();
             throw handleException(e);
         }
+    }
+
+private static String xmlString = "<numberOfRecords>0</numberOfRecords>";
+
+/*    public boolean checkResponse(String resp) {
+        String nodeStr = "<numberOfRecords>0</numberOfRecords>";
+        String regex = "<numberOfRecords>0</numberOfRecords>";
+        return true;
+    }
+*/
+    public boolean findXMLTagValue(String xmlString)
+    {
+        String result = null;
+        Pattern pattern = Pattern.compile("<numberOfRecords>" + "(.*?)" + "</numberOfRecords>");
+        Matcher matcher = pattern.matcher(xmlString);
+        if (matcher.find())
+        {
+            result = matcher.group().replaceAll("<numberOfRecords>", "").replace("</numberOfRecords>", "");
+            if (!"0".equals(result))
+                return true;
+        }
+           return false;
     }
 
     public String transformToString(Document doc) throws TransformerException {
@@ -176,9 +206,16 @@ public void convertToPdf(String barCode) throws TransformerException, SAXExcepti
     File xsltFile = new File(ServiceConfig.getResourcesDir() + "//formatter.xsl");
     log.info("Enter convertToPf");
     String response = getRawManuscript(barCode);
+
     log.debug("Response: " + response);
     StreamSource xmlSource =  new StreamSource(new StringReader(response));
 
+/*    String e = "404";
+    if (xmlSource.isEmpty()){
+        log.debug("No records in xml result");
+        throw new InternalServiceException(e);
+    }
+*/
     FopFactoryBuilder builder = new FopFactoryBuilder(new File(".").toURI());
     builder.setAccessibility(true);
     FopFactory fopFactory = builder.build();
