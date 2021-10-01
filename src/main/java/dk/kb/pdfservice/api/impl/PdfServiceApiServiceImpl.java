@@ -14,7 +14,6 @@ import org.apache.fop.apps.FopFactoryBuilder;
 import org.apache.fop.apps.MimeConstants;
 import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
-import org.apache.pdfbox.pdmodel.PDDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -24,7 +23,6 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.validation.constraints.NotNull;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
@@ -35,7 +33,6 @@ import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Providers;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.Result;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
@@ -46,7 +43,6 @@ import javax.xml.transform.stream.StreamSource;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -54,7 +50,6 @@ import java.io.OutputStream;
 import java.io.StringReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 
 /**
  * pdf-service
@@ -173,12 +168,12 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         return bao.toString(StandardCharsets.UTF_8);
     }
     
-    public void convertToPdf(String barCode) throws TransformerException, SAXException, IOException {
+    public File convertToPdf(String barCode) throws TransformerException, SAXException, IOException {
         // the XSL FO file
         File xsltFile = new File(ServiceConfig.getResourcesDir() + "//formatter.xsl");
         
         String response = getRawManuscript(barCode);
-        System.out.println("Response: " + response);
+        
         StreamSource xmlSource = new StreamSource(new StringReader(response));
         
         FopFactoryBuilder builder = new FopFactoryBuilder(new File(".").toURI());
@@ -186,22 +181,20 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         FopFactory fopFactory = builder.build();
         
         FOUserAgent foUserAgent = fopFactory.newFOUserAgent();
-        Fop fop;
-        Result result;
         File pdfOut = new File((ServiceConfig.getOutputDir() + "//" + barCode + ".pdf"));
         pdfOut.getParentFile().mkdirs();
         try (OutputStream outStream = new BufferedOutputStream(new FileOutputStream(pdfOut))) {
-            fop = fopFactory.newFop(MimeConstants.MIME_PDF, foUserAgent, outStream);
+            Fop fop = fopFactory.newFop(MimeConstants.MIME_PDF, foUserAgent, outStream);
             
-            // TransformerFactory factory = TransformerFactory.newInstance(); // Old alt. adaption
             TransformerFactory factory = SingletonCachingTransformerFactory.newInstance();   // NEW adaption
             Transformer xslfoTransformer = factory.newTransformer(new StreamSource(xsltFile));
             
-            result = new SAXResult(fop.getDefaultHandler());
+            SAXResult result = new SAXResult(fop.getDefaultHandler());
             
             // everything will happen here..
             xslfoTransformer.transform(xmlSource, result);
         }
+        return pdfOut;
     }
     
     
@@ -219,104 +212,43 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
      **/
     @Override
     public StreamingOutput getPdf(String barcode, String pdflink2) {
-        String basepath;
         
         System.out.println("barcode: " + barcode);
-        System.out.println("pdfLink2: " + pdflink2);
-        basepath = ServiceConfig.getBasepath();
-        System.out.println("basepath: " + basepath);
-        String resourcesDir = ServiceConfig.getResourcesDir();
-        System.out.println("Resources dir: " + resourcesDir);
-        String outputDir = ServiceConfig.getOutputDir();
         
-        if (pdflink2 == null) {
-            pdflink2 = "";
-        }
-        
-        httpServletResponse.setHeader("Content-disposition", " filename = " + pdflink2);
+        httpServletResponse.setHeader("Content-disposition", "inline; filename=\"" + barcode + "-bw.pdf\"");
         
         try {
-            convertToPdf(barcode);
+            File apronFile = convertToPdf(barcode);
             
-            // New code -->
-            System.out.println("mergePDFile(" + outputDir + barcode + ".pdf" + "," + pdflink2 + ")");
+            //TODO retrieve pdf from https://www.kb.dk/e-mat/dod/<barcode>-bw.pdf
             
-            final String input1 = Thread.currentThread()
-                                        .getContextClassLoader()
-                                        .getResource(pdflink2)
-                                        .getFile();
-            System.out.println("input1: " + input1);
             
-            final String output1 = Path.of(input1).getParent().resolve(pdflink2).toString();
-            System.out.println("output1: " + output1);
-            PDDocument pddoc = PdfBoxCopyrightInserter.insertCopyrightFooter(new File(input1), new File(output1));
-            String fileName = new File(output1).getName();
-            System.out.println("fileName: " + fileName);
-            System.out.println("pdflink2: " + pdflink2);
-            // New code <--
+            final URL url = new URL("http://www5.kb.dk/e-mat/dod/" + barcode + "-bw.pdf");
+            try (InputStream inPdf = url.openStream()) {
+                InputStream resultingPdf = PdfBoxCopyrightInserter.insertCopyrightFooter(inPdf);
+                log.info("Finished inserting footers");
+                
+                PDFMergerUtility pdfMergerUtility = new PDFMergerUtility();
+                pdfMergerUtility.addSource(apronFile);
+                pdfMergerUtility.addSource(resultingPdf);
+                try (final var completePDF = new org.apache.commons.io.output.ByteArrayOutputStream()) {
+                    pdfMergerUtility.setDestinationStream(new BufferedOutputStream(completePDF));
+                    pdfMergerUtility.mergeDocuments(MemoryUsageSetting.setupMixed(1024 * 1024 * 500));
+                    log.debug("Finished merging documents");
+                    return output -> {
+                        try (var resultInputStream = completePDF.toInputStream();) {
+                            IOUtils.copy(resultInputStream, output);
+                        }
+                        log.debug("Finished returning pdf");
+                    };
+                    
+                }
+            }
             
-            System.out.println("mergePDFile(" + outputDir + barcode + ".pdf" + "," + pdflink2 + ")");
-            // mergePDFFile(outputDir + "output.pdf",pdflink2);
-            mergePDFFile(outputDir + barcode + ".pdf", pdflink2); // TEST
-            final InputStream inputStream = new FileInputStream((outputDir + "//" + barcode + ".pdf"));
-            return output -> IOUtils.copy(inputStream, output);
         } catch (TransformerException | SAXException | IOException e) {
-            e.printStackTrace();
+            log.error("Fejl", e);
             throw new InternalServiceException("Fejl med getPdf", e);
         }
-    }
-    
-    /**
-     * Request a theater manuscript summary in pdf format.
-     *
-     * @param apron   : name of  xml result tree String containing info about pdf
-     * @param pdfFile : Relative path including .pdf file
-     * @return <ul>
-     *         <li>code = 200, message = "A pdf apron and with attached pages", response = String.class</li>
-     *         </ul>
-     * @throws ServiceException when other http codes should be returned
-     * @implNote return will always produce a HTTP 200 code. Throw ServiceException if you need to return other
-     *         codes
-     **/
-    
-    public StreamingOutput getMergePDFs(@NotNull String apron, @NotNull String pdfFile) {
-        return null;
-    }
-    
-    private void mergePDFFile(String apron, @NotNull String pdfFile) {
-        // public StreamingOutput mergePDFs(String apron, String pdfFile) {
-        String outputDir = ServiceConfig.getOutputDir();
-        
-        String resourcesDir = ServiceConfig.getResourcesDir();
-        // File file1 = new File(outputDir + "output.pdf");
-        File file1 = new File(apron);
-        // New -->
-        final String pdfFileAndPath = Thread.currentThread()
-                                            .getContextClassLoader()
-                                            .getResource(pdfFile)
-                                            .getFile();
-        File file2 = new File(pdfFileAndPath);
-        // <-- New
-        //Instantiating PDFMergerUtility class
-        PDFMergerUtility PDFmerger = new PDFMergerUtility();
-        System.out.println(("APRON in mergePDFFile: " + apron));
-        //Setting the destination file
-        PDFmerger.setDestinationFileName(apron);
-        
-        httpServletResponse.setHeader("Content-disposition", " filename = merged_" + pdfFile);
-        //adding the source files
-        try {
-            PDFmerger.addSource(file1);
-            PDFmerger.addSource(file2);
-            //Merging the two documents
-            System.out.println("merging the two documents: " + file1 + " and " + file2 + ")");
-            PDFmerger.mergeDocuments(MemoryUsageSetting.setupMixed(1024 * 1024 * 500));
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new InternalServiceException("Fejl med merge af forside og pdf", e);
-        }
-        System.out.println("Documents merged");
-        //return  PDFmerger.getDestinationStream();
     }
     
     

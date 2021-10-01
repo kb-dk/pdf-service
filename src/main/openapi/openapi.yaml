@@ -55,14 +55,14 @@ paths:
           required: true
           schema:
             type: string
-            example: 130018972949
+            example: 115808025307
         - name: pdflink
           in: query
           description: pdfLink for a theater manuscript
           required: true
           schema:
             type: string
-            example: string
+            example: 'http://www5.kb.dk/e-mat/dod/115808025307_bw.pdf'
       responses:
         '200':
           description: A pdf with attached page
@@ -84,7 +84,7 @@ paths:
           required: true
           schema:
             type: string
-            example: 130018972949
+            example: 115808025307
       responses:
         '200':
           description: A pdf with attached page
@@ -110,8 +110,8 @@ paths:
             example: 130018852943
         - name: pdflink2
           in: query
-          description: Pdf for a theater manuscript
-          required: true
+          description: Not used any more
+          required: false
           schema:
             type: string
             example: TS_DRAlaes-A552.pdf

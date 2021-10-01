@@ -1,0 +1,38 @@
+<included>
+    <contextName>pdf-service</contextName>
+
+    <property name="LOGFILE" value="${catalina.home}/logs/${CONTEXT_NAME}-app.log" />
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOGFILE}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover -->
+            <fileNamePattern>${LOGFILE}.%d{yyyy-MM-dd}</fileNamePattern>
+
+            <!-- keep 30 days' worth of history -->
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+
+        <append>true</append>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36}\(%file:%line\) - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- encoders are assigned the type
+             ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36}\(%file:%line\) - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+
+    <logger name="dk.kb" level="DEBUG" />
+
+    <root level="INFO">
+      <appender-ref ref="FILE" />
+    </root>
+
+</included>
+
