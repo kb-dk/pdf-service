@@ -34,11 +34,11 @@ public class InternalServiceException extends ServiceException {
     public InternalServiceException(String mimeType, Object entity) {
         super(mimeType, entity, responseStatus);
     }
-
+    
     public InternalServiceException(String mimeType, Object entity, Throwable cause) {
         super(mimeType, entity, cause, responseStatus);
     }
-
+    
 }
 
 

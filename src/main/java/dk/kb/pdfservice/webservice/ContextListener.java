@@ -1,15 +1,14 @@
 package dk.kb.pdfservice.webservice;
 
-import java.io.IOException;
+import dk.kb.pdfservice.config.ServiceConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
-
-import dk.kb.pdfservice.config.ServiceConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.IOException;
 
 /**
  * Listener to handle the various setups and configuration sanity checks that can be carried out at when the
@@ -18,12 +17,13 @@ import org.slf4j.LoggerFactory;
 
 public class ContextListener implements ServletContextListener {
     private final Logger log = LoggerFactory.getLogger(getClass());
-
-
+    
+    
     /**
      * On context initialisation this
      * i) Initialises the logging framework (logback).
      * ii) Initialises the configuration class.
+     *
      * @param sce context provided by the web server upon initialization.
      * @throws java.lang.RuntimeException if anything at all goes wrong.
      */
@@ -38,14 +38,15 @@ public class ContextListener implements ServletContextListener {
         } catch (NamingException e) {
             throw new RuntimeException("Failed to lookup settings", e);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to load settings", e);        } 
+            throw new RuntimeException("Failed to load settings", e);
+        }
         log.info("Service initialized.");
     }
-
-
+    
+    
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
         log.debug("Service destroyed");
     }
-
+    
 }

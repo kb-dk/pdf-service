@@ -11,19 +11,19 @@ import javax.ws.rs.ext.Provider;
  */
 @Provider
 public class ServiceExceptionMapper implements ExceptionMapper<ServiceException> {
-
+    
     @Override
     public Response toResponse(ServiceException exception) {
-    
+        
         Response.Status responseStatus = exception.getResponseStatus();
         Object entity = exception.getEntity();
         
         return entity != null ?
-                Response.status(responseStatus)
-                        .entity(entity)
-                        //TODO select mimetype more intelligently
-                        .type(exception.getMimeType())
-                        .build() :
-                Response.status(responseStatus).build();
+               Response.status(responseStatus)
+                       .entity(entity)
+                       //TODO select mimetype more intelligently
+                       .type(exception.getMimeType())
+                       .build() :
+               Response.status(responseStatus).build();
     }
 }
