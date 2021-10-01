@@ -6,6 +6,7 @@
         <groupId>org.sbforge</groupId>
         <artifactId>sbforge-parent</artifactId>
         <version>22</version>
+        <relativePath/>
     </parent>
 
     <groupId>dk.kb.pdfservice</groupId>
@@ -28,8 +29,8 @@
 
     <scm>
         <url>https://github.com/kb-dk/pdf-service</url>
-        <connection>scm:git:ssh://git@github.com:kb-dk/pdf-service.git </connection>
-        <developerConnection>scm:git:ssh://git@github.com:kb-dk/pdf-service.git </developerConnection>
+        <connection>scm:git:ssh://git@github.com:kb-dk/pdf-service.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com:kb-dk/pdf-service.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 
