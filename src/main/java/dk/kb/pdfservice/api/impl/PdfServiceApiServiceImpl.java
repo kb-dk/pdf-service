@@ -1,13 +1,14 @@
 package dk.kb.pdfservice.api.impl;
 
+import dk.kb.alma.client.AlmaInventoryClient;
+import dk.kb.alma.client.AlmaRestClient;
+import dk.kb.alma.gen.items.Item;
 import dk.kb.pdfservice.api.PdfServiceApi;
-import dk.kb.pdfservice.cachingtransformerfactory.SingletonCachingTransformerFactory;
-import dk.kb.pdfservice.config.ServiceConfig;
 import dk.kb.pdfservice.webservice.exception.InternalServiceException;
 import dk.kb.pdfservice.webservice.exception.ServiceException;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.cxf.jaxrs.ext.MessageContext;
-import org.apache.fop.apps.FOUserAgent;
 import org.apache.fop.apps.Fop;
 import org.apache.fop.apps.FopFactory;
 import org.apache.fop.apps.FopFactoryBuilder;
@@ -16,7 +17,6 @@ import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import javax.servlet.ServletConfig;
@@ -31,25 +31,20 @@ import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Providers;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.ErrorListener;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.sax.SAXResult;
-import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
+import java.util.stream.Collectors;
 
 /**
  * pdf-service
@@ -98,79 +93,24 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     private transient MessageContext messageContext;
     
     
-    /**
-     * Request a theater manuscript summary.
-     *
-     * @param barcode: Barcode for a theater manuscript
-     * @return <ul>
-     *         <li>code = 200, message = "A pdf with attached page", response = File.class</li>
-     *         </ul>
-     * @throws ServiceException when other http codes should be returned
-     * @implNote return will always produce a HTTP 200 code. Throw ServiceException if you need to return other
-     *         codes
-     */
-    @Override
-    public javax.ws.rs.core.StreamingOutput getManuscript(String barcode, String pdflink) throws ServiceException {
-        // TODO: Implement...
-        
-        try {
-            httpServletResponse.setHeader("Content-Disposition", "inline; filename=\"filename.ext\"");
-            String doc = getRawManuscript((barcode));
-            //       return output -> output.write("Magic".getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            return output -> output.write(doc.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-        } catch (Exception e) {
-            throw handleException(e);
-        }
-    }
-    
-    
-    /**
-     * Request a theater manuscript summary.
-     *
-     * @param barCode : Barcode for a theater manuscript
-     * @return <ul>
-     *         <li>code = 200, message = "A pdf with attached page", response = String.class</li>
-     *         </ul>
-     * @throws ServiceException when other http codes should be returned
-     * @implNote return will always produce a HTTP 200 code. Throw ServiceException if you need to return other
-     *         codes
-     */
-    @Override
     public String getRawManuscript(String barCode) throws ServiceException {
         // TODO: Implement...barcode=130018972949
-        final String USER_AGENT = "Mozilla/5.0";
-        String response = null;
+        //TODO switch to using AlmaClient
         try {
             String urlString =
                     "https://soeg.kb.dk/view/sru/45KBDK_KGL?version=1.2&operation=searchRetrieve&query=barcode="
                     + barCode
                     + "&recordSchema=marcxml";
-            URL url = new URL(urlString);
             
-            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-            DocumentBuilder db = dbf.newDocumentBuilder();
-            Document doc = db.parse(new URL(urlString).openStream());
-            doc.getDocumentElement().normalize();
-            System.out.println("Document type: " + doc.getDoctype());
-            return transformToString(doc);
+            try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new URL(urlString).openStream()))) {
+                return bufferedReader.lines().collect(Collectors.joining());
+            }
         } catch (Exception e) {
-            e.printStackTrace();
             throw handleException(e);
         }
     }
     
-    public String transformToString(Document doc) throws TransformerException {
-        TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        Transformer xform = transformerFactory.newTransformer();
-        ByteArrayOutputStream bao = new ByteArrayOutputStream();
-        
-        xform.transform(new DOMSource(doc), new StreamResult(bao));
-        return bao.toString(StandardCharsets.UTF_8);
-    }
-    
-    public File convertToPdf(String barCode) throws TransformerException, SAXException, IOException {
-        // the XSL FO file
-        File xsltFile = new File(ServiceConfig.getResourcesDir() + "//formatter.xsl");
+    public InputStream produceHeaderPage(String barCode) throws TransformerException, SAXException, IOException {
         
         String response = getRawManuscript(barCode);
         
@@ -179,22 +119,48 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         FopFactoryBuilder builder = new FopFactoryBuilder(new File(".").toURI());
         builder.setAccessibility(true);
         FopFactory fopFactory = builder.build();
+    
+        //TODO use alma client instead of this thing
+        //AlmaRestClient restClient = new AlmaRestClient("https://api-eu.hosted.exlibrisgroup.com/almaws/v1/", "TODO API KEY");
+        //
+        //AlmaInventoryClient inventoryClient = new AlmaInventoryClient(restClient);
+        //Item item = inventoryClient.getItem(barCode);
         
-        FOUserAgent foUserAgent = fopFactory.newFOUserAgent();
-        File pdfOut = new File((ServiceConfig.getOutputDir() + "//" + barCode + ".pdf"));
-        pdfOut.getParentFile().mkdirs();
-        try (OutputStream outStream = new BufferedOutputStream(new FileOutputStream(pdfOut))) {
-            Fop fop = fopFactory.newFop(MimeConstants.MIME_PDF, foUserAgent, outStream);
+        
+        try (ByteArrayOutputStream outStream = new ByteArrayOutputStream()) {
+            Fop fop = fopFactory.newFop(MimeConstants.MIME_PDF, outStream);
+
+            TransformerFactory factory = TransformerFactory.newInstance();
+            factory.setErrorListener(new ErrorListener() {
+                @Override
+                public void warning(TransformerException exception) throws TransformerException {
+                    log.warn("Transformer warning", exception);
+                }
+                
+                @Override
+                public void error(TransformerException exception) throws TransformerException {
+                    log.error("Transformer Exception", exception);
+                }
+                
+                @Override
+                public void fatalError(TransformerException exception) throws TransformerException {
+                    log.error("Transformer Fatal Exception", exception);
+                    throw exception;
+                }
+            });
             
-            TransformerFactory factory = SingletonCachingTransformerFactory.newInstance();   // NEW adaption
-            Transformer xslfoTransformer = factory.newTransformer(new StreamSource(xsltFile));
-            
-            SAXResult result = new SAXResult(fop.getDefaultHandler());
-            
-            // everything will happen here..
-            xslfoTransformer.transform(xmlSource, result);
+            try (InputStream formatterStream = Thread.currentThread()
+                                                     .getContextClassLoader()
+                                                     .getResourceAsStream("formatter.xsl")) {
+                Transformer xslfoTransformer = factory.newTransformer(new StreamSource(formatterStream));
+                //TODO do not perform logic in the extremely limited language of XSLT1.0
+                //Instead perform the logic here and feed the results in via params
+                xslfoTransformer.setParameter("input1","testInput1Value");
+                xslfoTransformer.transform(xmlSource, new SAXResult(fop.getDefaultHandler()));
+            }
+            outStream.flush(); //just in case it is not done automatically
+            return outStream.toInputStream();
         }
-        return pdfOut;
     }
     
     
@@ -218,10 +184,9 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         httpServletResponse.setHeader("Content-disposition", "inline; filename=\"" + barcode + "-bw.pdf\"");
         
         try {
-            File apronFile = convertToPdf(barcode);
+            InputStream apronFile = produceHeaderPage(barcode);
             
             //TODO retrieve pdf from https://www.kb.dk/e-mat/dod/<barcode>-bw.pdf
-            
             
             final URL url = new URL("http://www5.kb.dk/e-mat/dod/" + barcode + "-bw.pdf");
             try (InputStream inPdf = url.openStream()) {
@@ -232,10 +197,11 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                 pdfMergerUtility.addSource(apronFile);
                 pdfMergerUtility.addSource(resultingPdf);
                 try (final var completePDF = new org.apache.commons.io.output.ByteArrayOutputStream()) {
-                    pdfMergerUtility.setDestinationStream(new BufferedOutputStream(completePDF));
+                    pdfMergerUtility.setDestinationStream(completePDF);
                     pdfMergerUtility.mergeDocuments(MemoryUsageSetting.setupMixed(1024 * 1024 * 500));
                     log.debug("Finished merging documents");
                     return output -> {
+                        completePDF.flush(); //just in case it is not done automatically
                         try (var resultInputStream = completePDF.toInputStream();) {
                             IOUtils.copy(resultInputStream, output);
                         }
@@ -251,30 +217,6 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         }
     }
     
-    
-    /**
-     * Ping the server to check if the server is reachable.
-     *
-     * @return <ul>
-     *         <li>code = 200, message = "OK", response = String.class</li>
-     *         <li>code = 406, message = "Not Acceptable", response = ErrorDto.class</li>
-     *         <li>code = 500, message = "Internal Error", response = String.class</li>
-     *         </ul>
-     * @throws ServiceException when other http codes should be returned
-     * @implNote return will always produce a HTTP 200 code. Throw ServiceException if you need to return other
-     *         codes
-     */
-    @Override
-    public String ping() throws ServiceException {
-        // TODO: Implement...
-        try {
-            String response = "e7nJq";
-            return response;
-        } catch (Exception e) {
-            throw handleException(e);
-        }
-        
-    }
     
     /**
      * This method simply converts any Exception into a Service exception

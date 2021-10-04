@@ -28,18 +28,7 @@ public class ServiceConfig {
     public static synchronized void initialize(String configFile) throws IOException {
         serviceConfig = YAML.resolveLayeredConfigs(configFile);
     }
-    
-    /**
-     * Demonstration of a first-class property, meaning that an explicit method has been provided.
-     *
-     * @return the "Hello World" lines defined in the config file.
-     * @see #getConfig() for alternative.
-     */
-    public static List<String> getHelloLines() {
-        List<String> lines = serviceConfig.getList("config.helloLines");
-        return lines;
-    }
-    
+  
     public static String getBasepath() {
         return serviceConfig.getString("config.basePath");
     }
@@ -57,7 +46,6 @@ public class ServiceConfig {
      * and/or if the service developer prefers key-based property access.
      *
      * @return the backing YAML-handler for the configuration.
-     * @see #getHelloLines() for alternative.
      */
     public static YAML getConfig() {
         if (serviceConfig == null) {

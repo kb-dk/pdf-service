@@ -78,29 +78,7 @@ public class PdfBoxCopyrightInserter {
                 cropbox.setLowerLeftY(lowerLeftY);
                 p.setCropBox(cropbox);
                 log.debug("cropbox {}", cropbox);
-             /*
-                PDRectangle artBox = p.getArtBox();
-                if (artBox != cropbox) {
-                    artBox.setLowerLeftY(artBox.getLowerLeftY() - footer_height);
-                    p.setArtBox(artBox);
-                }
-                log.debug("artBox {}", artBox);
-    
-                PDRectangle trimBox = p.getTrimBox();
-                if (trimBox != cropbox) {
-                    trimBox.setLowerLeftY(trimBox.getLowerLeftY() - footer_height);
-                    p.setTrimBox(trimBox);
-                }
-                log.debug("trimBox {}", trimBox);
-    
-                PDRectangle bleedBox = p.getBleedBox();
-                if (bleedBox != cropbox) {
-                    bleedBox.setLowerLeftY(bleedBox.getLowerLeftY() - footer_height);
-                    p.setMediaBox(bleedBox);
-                }
-                log.debug("bleedBox {}", bleedBox);
-    */
-                
+           
                 
                 log.debug("Before try");
                 try (var contentStream = new PDPageContentStream(doc,
@@ -127,7 +105,7 @@ public class PdfBoxCopyrightInserter {
     
     
     public static int getLineHeight(double fontSize) {
-        return Math.toIntExact(Math.round(fontSize * 2.5));
+        return Math.toIntExact(Math.round(fontSize * 1.25));
     }
     
 }

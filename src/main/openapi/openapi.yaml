@@ -14,85 +14,85 @@ servers:
   - url: "/${project.artifactId}/api"
     description: "Current server"
 paths:
-  /ping:
-    get:
-      tags:
-        - "${project.name}"
-      summary: Ping the server to check if the server is reachable.
-      operationId: ping
-      x-useGenericResponse: false # If enabled the method will return Response
-      x-streamingOutput: false # If enabled the method will return StreamingOutput.
-      responses:
-        '200':
-          description: OK
-          content:
-            text/plain:
-              schema:
-                type: string
-        '406':
-          description: Not Acceptable
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal Error
-          content:
-            text/plain:
-              schema:
-                type: string
-  /getManuscript:
-    get:
-      tags:
-        - "${project.name}"
-      summary: 'Request a theater manuscript summary.'
-      operationId: getManuscript
-      x-streamingOutput: true # If enabled the method will return StreamingOutput.
-      parameters:
-        - name: barcode
-          in: query
-          description: Barcode for a theater manuscript
-          required: true
-          schema:
-            type: string
-            example: 115808025307
-        - name: pdflink
-          in: query
-          description: pdfLink for a theater manuscript
-          required: true
-          schema:
-            type: string
-            example: 'http://www5.kb.dk/e-mat/dod/115808025307_bw.pdf'
-      responses:
-        '200':
-          description: A pdf with attached page
-          content:
-            application/pdf:
-              schema:
-                type: string
-                format: binary
-  /getRawManuscript:
-    get:
-      tags:
-        - "${project.name}"
-      summary: 'Request a theater manuscript summary.'
-      operationId: getRawManuscript
-      parameters:
-        - name: barcode
-          in: query
-          description: Barcode for a theater manuscript
-          required: true
-          schema:
-            type: string
-            example: 115808025307
-      responses:
-        '200':
-          description: A pdf with attached page
-          content:
-            application/xml:
- #           text/xml:
-              schema:
-                type: string
+#  /ping:
+#    get:
+#      tags:
+#        - "${project.name}"
+#      summary: Ping the server to check if the server is reachable.
+#      operationId: ping
+#      x-useGenericResponse: false # If enabled the method will return Response
+#      x-streamingOutput: false # If enabled the method will return StreamingOutput.
+#      responses:
+#        '200':
+#          description: OK
+#          content:
+#            text/plain:
+#              schema:
+#                type: string
+#        '406':
+#          description: Not Acceptable
+#          content:
+#            application/json:
+#              schema:
+#                $ref: '#/components/schemas/Error'
+#        '500':
+#          description: Internal Error
+#          content:
+#            text/plain:
+#              schema:
+#                type: string
+#  /getManuscript:
+#    get:
+#      tags:
+#        - "${project.name}"
+#      summary: 'Request a theater manuscript summary.'
+#      operationId: getManuscript
+#      x-streamingOutput: true # If enabled the method will return StreamingOutput.
+#      parameters:
+#        - name: barcode
+#          in: query
+#          description: Barcode for a theater manuscript
+#          required: true
+#          schema:
+#            type: string
+#            example: 115808025307
+#        - name: pdflink
+#          in: query
+#          description: pdfLink for a theater manuscript
+#          required: true
+#          schema:
+#            type: string
+#            example: 'http://www5.kb.dk/e-mat/dod/115808025307_bw.pdf'
+#      responses:
+#        '200':
+#          description: A pdf with attached page
+#          content:
+#            application/pdf:
+#              schema:
+#                type: string
+#                format: binary
+#  /getRawManuscript:
+#    get:
+#      tags:
+#        - "${project.name}"
+#      summary: 'Request a theater manuscript summary.'
+#      operationId: getRawManuscript
+#      parameters:
+#        - name: barcode
+#          in: query
+#          description: Barcode for a theater manuscript
+#          required: true
+#          schema:
+#            type: string
+#            example: 115808025307
+#      responses:
+#        '200':
+#          description: A pdf with attached page
+#          content:
+#            application/xml:
+# #           text/xml:
+#              schema:
+#                type: string
   /getPdf:
     get:
       tags:
