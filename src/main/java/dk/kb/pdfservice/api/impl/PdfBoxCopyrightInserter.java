@@ -11,13 +11,13 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.state.RenderingMode;
 import org.apache.pdfbox.text.PDFTextStripper;
-import org.apache.pdfbox.tools.PDFBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Locale;
 
 public class PdfBoxCopyrightInserter {
     
@@ -27,48 +27,81 @@ public class PdfBoxCopyrightInserter {
             throws IOException {
         PDFParser parser;
         log.debug("start of PdfBoxCopyrightInserter");
-        
         try (final RandomAccessRead rabfis = new RandomAccessBufferedFileInputStream(input)) {
             parser = new PDFParser(rabfis);
             parser.parse();
         }
         log.debug("After try RandomAccessBuffer");
-    
+        
         PDFTextStripper stripper = new PDFTextStripper();
-    
-    
+        
         boolean foundRealPage = false;
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         try (final PDDocument doc = parser.getPDDocument();) {
-    
-            int pagecount = 0;
+            
+            //We assume that all previously inserted header pages contains the text "det kongelige bibliotek"
+            //So we remove them, until we find a page that does NOT contain this string. Then the removal stops
+            //and we assume that all the rest of the document are real pages
+            int pagenumber = 0;
             for (PDPage p : doc.getPages()) {
-                pagecount++;
+                pagenumber++;
                 if (!foundRealPage) {
-                    // get text of a certain page
-                    stripper.setStartPage(pagecount);
-                    stripper.setEndPage(pagecount);
+                    //Only extract text from this page
+                    stripper.setStartPage(pagenumber);
+                    stripper.setEndPage(pagenumber);
                     String content = stripper.getText(doc);
-                    if (content.toLowerCase().contains("det kongelige bibliotek")) {
-                        doc.removePage(p);
-                        pagecount--;
-                        continue;
-                    } else {
-                        foundRealPage = true;
+                    if (content != null) {
+                        content = content.replaceAll("\\s+", " ");
+                        if (content.toLowerCase(Locale.getDefault()).contains("det kongelige bibliotek")) {
+                            doc.removePage(p);
+                            pagenumber--;
+                            continue;
+                        }
                     }
+                    //If we got here, we did not remove a page, and the removal should stop
+                    foundRealPage = true;
                 }
                 
-                log.debug("before mediabox");
+                
                 PDRectangle mediaBox = p.getMediaBox();
-                PDRectangle cropbox = p.getCropBox();
-        
+                
                 float ratio = mediaBox.getHeight() / PDRectangle.A4.getHeight();
-                float footer_height = 15 * ratio * p.getUserUnit();
-        
-                mediaBox.setLowerLeftY(mediaBox.getLowerLeftY() - footer_height);
+                float fontSize = 15 * ratio * p.getUserUnit();
+                float footer_height = getLineHeight(fontSize);
+    
+                float lowerLeftY = mediaBox.getLowerLeftY() - footer_height;
+                mediaBox.setLowerLeftY(lowerLeftY);
                 p.setMediaBox(mediaBox);
-                cropbox.setLowerLeftY(cropbox.getLowerLeftY() - footer_height);
+                log.debug("mediebox {}", mediaBox);
+                
+                PDRectangle cropbox = p.getCropBox();
+                cropbox.setLowerLeftY(lowerLeftY);
                 p.setCropBox(cropbox);
+                log.debug("cropbox {}", cropbox);
+             /*
+                PDRectangle artBox = p.getArtBox();
+                if (artBox != cropbox) {
+                    artBox.setLowerLeftY(artBox.getLowerLeftY() - footer_height);
+                    p.setArtBox(artBox);
+                }
+                log.debug("artBox {}", artBox);
+    
+                PDRectangle trimBox = p.getTrimBox();
+                if (trimBox != cropbox) {
+                    trimBox.setLowerLeftY(trimBox.getLowerLeftY() - footer_height);
+                    p.setTrimBox(trimBox);
+                }
+                log.debug("trimBox {}", trimBox);
+    
+                PDRectangle bleedBox = p.getBleedBox();
+                if (bleedBox != cropbox) {
+                    bleedBox.setLowerLeftY(bleedBox.getLowerLeftY() - footer_height);
+                    p.setMediaBox(bleedBox);
+                }
+                log.debug("bleedBox {}", bleedBox);
+    */
+                
+                
                 log.debug("Before try");
                 try (var contentStream = new PDPageContentStream(doc,
                                                                  p,
@@ -77,10 +110,10 @@ public class PdfBoxCopyrightInserter {
                     log.debug("Handled page");
                     contentStream.setRenderingMode(RenderingMode.FILL);
                     contentStream.beginText();
-                    contentStream.setFont(PDType1Font.COURIER, footer_height);
-            
+                    contentStream.setFont(PDType1Font.COURIER, fontSize);
+                    
                     final float x = p.getMediaBox().getWidth() * 0.10f;
-                    final float y = -footer_height * 1.2f; //above 100% due to compensation for font height
+                    final float y = -fontSize; //above 100% due to compensation for font height
                     contentStream.newLineAtOffset(x, y);
                     contentStream.showText("Copyright footer");
                     contentStream.endText();
@@ -91,4 +124,10 @@ public class PdfBoxCopyrightInserter {
         }
         return output.toInputStream();
     }
+    
+    
+    public static int getLineHeight(double fontSize) {
+        return Math.toIntExact(Math.round(fontSize * 2.5));
+    }
+    
 }
