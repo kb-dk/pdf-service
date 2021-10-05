@@ -9,9 +9,10 @@ target/
 
 README_OLD.md
 .openapi-generator/
-conf/pdf-service-environment.yaml
-conf/pdf-service-local.yaml
+conf/**/pdf-service-environment.yaml
+conf/**/pdf-service-local.yaml
 setup_project.sh
+
 
 # Exclude test files for local testing
 test.pdf

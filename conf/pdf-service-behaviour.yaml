@@ -8,23 +8,41 @@
 # application config system.
 #
 #
-config:
-  limits:
-    min: 10
-    max: 100
-  mylist:
-    - Hello
-    - World
-    - from
-    - java-template
 
-# The entries below are just place holders.
-#  
-# There should be a corresponding `-environment.yaml`-file with the structure below, but with real values.
-# The entries in the environment-YAML will override the ones in the behaviour-YAML. The sole purpose of having the
-# structure in the behaviour-YAML is to document what needs to be defined in the environment.
-  backend:
-   db: 'http://placeholdermachine:8090/foobar/'
-   user: 'placeholder_dbuser'
-   password: 'placeholder_dbpassword'
-                                                                                                                                                                                           
+alma:
+
+  apikey: SHOULD SET IN librarylending-environment.yaml or librarylending-local.yaml
+
+
+  # The Alma URL. This should never change, you control which alma instance you use by the key, not the url
+  url: https://api-eu.hosted.exlibrisgroup.com/almaws/v1/
+
+  lang: da
+
+  #This parameter is nessesary when retrieving Resource Sharing Requests. It does not really matter what it it,
+  # but it NEEDS to be the code of any Partner. 800010 is the code of KGL Bib, and not likely to change.
+  partner_code: 800010
+
+  #How many requests per call, max 100
+  batch_size: 100
+
+  #The alma client will retry this number of times before giving up.
+  # If set to negative value, the client will retry forever
+  # if set to 0, no retries will be attempted.
+  max_retries: 3
+  # Not that HTTP 429 (Rate Limit) from ALMA will NOT be affected by this value, and these will always be retried forever
+
+  #cache alma responses for this duration
+  cache_timeout: 3600000
+
+  #Timeouts in milliseconds
+  connect_timeout: 30000
+  read_timeout: 30000
+
+  # Sleep durations when retrying or receiving a response 429 from alma (rate_limit)
+  rate_limit:
+    #When we retry we back off for at least min_sleep_millis
+    min_sleep_millis: 2000
+    #to avoid the rush when a lot of threads back off and then try again at the same time, we introduce a random element into
+    # the back off time. sleep_variation_millis multiplied with a randon number [0-1] will be added to the sleep time to combat this effect
+    sleep_variation_millis: 3000
