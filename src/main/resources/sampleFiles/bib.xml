@@ -1,0 +1,85 @@
+<record>
+    <leader>01088nam a2200217-i 4500</leader>
+    <controlfield tag="001">99122905335805763</controlfield>
+    <controlfield tag="005">20210612055938.0</controlfield>
+    <controlfield tag="008">000000g17441745dk ||||||     00||u dan||</controlfield>
+    <datafield ind1=" " ind2=" " tag="035">
+        <subfield code="a">x481956432</subfield>
+    </datafield>
+    <datafield ind1=" " ind2=" " tag="035">
+        <subfield code="a">(DK-810010)002162394KGL01</subfield>
+    </datafield>
+    <datafield ind1=" " ind2=" " tag="035">
+        <subfield code="a">(EXLNZ-45KBDK_NETWORK)995057234605761</subfield>
+    </datafield>
+    <datafield ind1=" " ind2=" " tag="084">
+        <subfield code="o">58,-55</subfield>
+        <subfield code="2">z</subfield>
+    </datafield>
+    <datafield ind1=" " ind2=" " tag="096">
+        <subfield code="a">58,-55 8°</subfield>
+        <subfield code="r">a</subfield>
+        <subfield code="u">Kan ikke hjemlånes</subfield>
+        <subfield code="5">kbd</subfield>
+        <subfield code="9">LOCAL</subfield>
+    </datafield>
+    <datafield ind1="1" ind2=" " tag="100">
+        <subfield code="a">Defoe, Daniel.</subfield>
+    </datafield>
+    <datafield ind1="1" ind2="4" tag="245">
+        <subfield code="a">Den navnkundige Engellænders Robinson Crusoe Levnet og meget selsomme Skiebne / </subfield>
+        <subfield code="c">[Dan. Defoe] ; oversat i det Danske Sprog, og ziiret med smukke Figurer.</subfield>
+    </datafield>
+    <datafield ind1=" " ind2=" " tag="260">
+        <subfield code="a">Kjøbenhavn :</subfield>
+        <subfield code="b">Ernst Henrich Berling,</subfield>
+        <subfield code="c">1744-1745.</subfield>
+    </datafield>
+    <datafield ind1=" " ind2=" " tag="300">
+        <subfield code="a">1-2 i 2 bd. :</subfield>
+        <subfield code="b">ill.</subfield>
+    </datafield>
+    <datafield ind1="8" ind2="0" tag="505">
+        <subfield code="g">1.</subfield>
+        <subfield code="t">Især da han i 28 Aar levede paa en øde og u-bebygget Øe ved Gabet af den store Strøm Oroonoko paa den Amerikanske Kust ....</subfield>
+    </datafield>
+    <datafield ind1="8" ind2="0" tag="505">
+        <subfield code="g">2.</subfield>
+        <subfield code="t">Som indeholder mange underlige Hændelser, saavel paa hans Reyse tilbage til hans Øe, som paa andre nye Reyser ... fordansket, og prydet med mange smukke Figurer.</subfield>
+    </datafield>
+    <datafield ind1="0" ind2=" " tag="510">
+        <subfield code="a">Beskrevet i: Bibliotheca Danica</subfield>
+        <subfield code="u">http://images.kb.dk/bibliotheca_danica/bind%2040244.jpg.</subfield>
+    </datafield>
+    <datafield ind1=" " ind2=" " tag="597">
+        <subfield code="a">FLB.</subfield>
+    </datafield>
+    <datafield ind1=" " ind2=" " tag="599">
+        <subfield code="c">SCK20010313</subfield>
+        <subfield code="5">kbd</subfield>
+        <subfield code="9">LOCAL</subfield>
+    </datafield>
+    <datafield ind1=" " ind2=" " tag="653">
+        <subfield code="a">Literatur</subfield>
+        <subfield code="a">Romaner og Fortællinger.</subfield>
+    </datafield>
+    <datafield ind1=" " ind2=" " tag="901">
+        <subfield code="a">x481956432.</subfield>
+    </datafield>
+    <datafield ind1=" " ind2=" " tag="997">
+        <subfield code="a">KBD</subfield>
+        <subfield code="9">LOCAL</subfield>
+    </datafield>
+    <datafield ind1=" " ind2=" " tag="997">
+        <subfield code="a">DOD</subfield>
+        <subfield code="9">LOCAL</subfield>
+    </datafield>
+    <datafield ind1=" " ind2=" " tag="998">
+        <subfield code="a">kbd</subfield>
+        <subfield code="9">LOCAL</subfield>
+    </datafield>
+    <datafield ind1=" " ind2=" " tag="999">
+        <subfield code="a">digitaliseret</subfield>
+        <subfield code="9">LOCAL</subfield>
+    </datafield>
+</record>

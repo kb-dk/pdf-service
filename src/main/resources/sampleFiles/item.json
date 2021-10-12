@@ -1,0 +1,130 @@
+{
+  "bibData" : {
+    "author" : "Defoe, Daniel.",
+    "bibSuppressFromPublishing" : "false",
+    "completeEdition" : "",
+    "dateOfPublication" : "1744-1745.",
+    "link" : "https://api-eu.hosted.exlibrisgroup.com/almaws/v1/bibs/99122905335805763",
+    "mmsId" : "99122905335805763",
+    "networkNumbers" : {
+      "networkNumbers" : [ "(DK-810010)002162394KGL01", "x481956432", "(EXLNZ-45KBDK_NETWORK)995057234605761" ]
+    },
+    "placeOfPublication" : "Kjøbenhavn :",
+    "publisherConst" : "Ernst Henrich Berling",
+    "title" : "Den navnkundige Engellænders Robinson Crusoe Levnet og meget selsomme Skiebne /"
+  },
+  "holdingData" : {
+    "accessionNumber" : "",
+    "callNumber" : "58,-55 8° 02529",
+    "callNumberType" : {
+      "desc" : "No information provided",
+      "value" : "#"
+    },
+    "copyId" : "",
+    "holdingId" : "222070815490005763",
+    "holdingSuppressFromPublishing" : "false",
+    "inTempLocation" : false,
+    "link" : "https://api-eu.hosted.exlibrisgroup.com/almaws/v1/bibs/99122905335805763/holdings/222070815490005763",
+    "permanentCallNumber" : "58,-55 8° 02529",
+    "permanentCallNumberType" : {
+      "desc" : "No information provided",
+      "value" : "#"
+    },
+    "tempCallNumber" : "",
+    "tempCallNumberSource" : "",
+    "tempCallNumberType" : {
+      "value" : ""
+    },
+    "tempLibrary" : {
+      "value" : ""
+    },
+    "tempLocation" : {
+      "value" : ""
+    },
+    "tempPolicy" : {
+      "value" : ""
+    }
+  },
+  "itemData" : {
+    "alternativeCallNumber" : "58,-55 8° 02530",
+    "alternativeCallNumberType" : {
+      "value" : ""
+    },
+    "arrivalDate" : "2019-09-04T00:00:00.000+00:00",
+    "awaitingReshelving" : false,
+    "barcode" : "115808025307",
+    "baseStatus" : {
+      "desc" : "Item in place",
+      "value" : "1"
+    },
+    "breakIndicator" : {
+      "value" : ""
+    },
+    "chronologyI" : "",
+    "chronologyJ" : "",
+    "chronologyK" : "",
+    "chronologyL" : "",
+    "chronologyM" : "",
+    "creationDate" : "2019-10-25T00:00:00.000+00:00",
+    "description" : "Vol. 2",
+    "enumerationA" : "2",
+    "enumerationB" : "",
+    "enumerationC" : "",
+    "enumerationD" : "",
+    "enumerationE" : "",
+    "enumerationF" : "",
+    "enumerationG" : "",
+    "enumerationH" : "",
+    "fulfillmentNote" : "",
+    "internalNote1" : "",
+    "internalNote2" : "",
+    "internalNote3" : "Process Status: DU",
+    "inventoryNumber" : "",
+    "inventoryPrice" : "",
+    "isMagnetic" : false,
+    "library" : {
+      "desc" : "Nationalbiblioteket ",
+      "value" : "KBL"
+    },
+    "linkingNumber" : "",
+    "location" : {
+      "desc" : "Danske Saml., fjernmag, læsesal KLDA_LFDA",
+      "value" : "KLDA_LFDA"
+    },
+    "modificationDate" : "2020-10-23T00:00:00.000+00:00",
+    "pages" : "",
+    "patternType" : {
+      "value" : ""
+    },
+    "physicalCondition" : {
+      "value" : ""
+    },
+    "physicalMaterialType" : {
+      "desc" : "Bog",
+      "value" : "BOOK"
+    },
+    "pid" : "231969671230005763",
+    "pieces" : "",
+    "poLine" : "",
+    "policy" : {
+      "desc" : "KB Læsesal KGL-26",
+      "value" : "26"
+    },
+    "processType" : {
+      "value" : ""
+    },
+    "provenance" : {
+      "value" : ""
+    },
+    "publicNote" : "",
+    "receivingOperator" : "import",
+    "requested" : false,
+    "statisticsNote1" : "",
+    "statisticsNote2" : "",
+    "statisticsNote3" : "Maintenance count: 001",
+    "storageLocationId" : "",
+    "typeOfUnit" : "",
+    "yearOfIssue" : ""
+  },
+  "link" : "https://api-eu.hosted.exlibrisgroup.com/almaws/v1/bibs/99122905335805763/holdings/222070815490005763/items/231969671230005763"
+}

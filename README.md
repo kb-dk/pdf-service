@@ -1,5 +1,13 @@
 # pdf-service
 
+<http://localhost:8080/pdf-service/api/getPdf?barcode=130022786122>
+
+<http://localhost:8080/pdf-service/api/getPdf?barcode=130018854342>
+
+<http://localhost:8080/pdf-service/api/getPdf?barcode=130018852943>
+
+<http://localhost:8080/pdf-service/api/getPdf?barcode=115808025307>
+
 **Webservice to produce a pdf-file from an existing pdf-fil with added dynamic content.**
 
 Developed and maintained by the Royal Danish Library.
