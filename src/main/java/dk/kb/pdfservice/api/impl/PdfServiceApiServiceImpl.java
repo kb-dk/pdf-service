@@ -1,11 +1,14 @@
 package dk.kb.pdfservice.api.impl;
 
 import dk.kb.alma.client.AlmaInventoryClient;
-import dk.kb.alma.client.AlmaRestClient;
+import dk.kb.alma.gen.bibs.Bib;
 import dk.kb.alma.gen.items.Item;
 import dk.kb.pdfservice.api.PdfServiceApi;
+import dk.kb.pdfservice.config.ServiceConfig;
 import dk.kb.pdfservice.webservice.exception.InternalServiceException;
 import dk.kb.pdfservice.webservice.exception.ServiceException;
+import dk.kb.util.xml.XPathSelector;
+import dk.kb.util.xml.XpathUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.cxf.jaxrs.ext.MessageContext;
@@ -17,6 +20,7 @@ import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 import javax.servlet.ServletConfig;
@@ -44,7 +48,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.net.URL;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * pdf-service
@@ -95,7 +102,8 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     
     public String getRawManuscript(String barCode) throws ServiceException {
         // TODO: Implement...barcode=130018972949
-        //TODO switch to using AlmaClient
+        
+        
         try {
             String urlString =
                     "https://soeg.kb.dk/view/sru/45KBDK_KGL?version=1.2&operation=searchRetrieve&query=barcode="
@@ -112,24 +120,34 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     
     public InputStream produceHeaderPage(String barCode) throws TransformerException, SAXException, IOException {
         
-        String response = getRawManuscript(barCode);
+        //String response = getRawManuscript(barCode);
         
-        StreamSource xmlSource = new StreamSource(new StringReader(response));
         
+        AlmaInventoryClient almaInventoryClient = new AlmaInventoryClient(ServiceConfig.getAlmaRestClient());
+        Item item = almaInventoryClient.getItem(barCode);
+        
+        String mmsID = item.getBibData().getMmsId();
+        Bib bib = almaInventoryClient.getBib(mmsID);
+        
+        Element marc21 = bib.getAnies().get(0);
+        String authors = getAuthors(marc21);
+        String title = getTitle(marc21);
+        String alternativeTitle = getAlternativeTitle(marc21);
+        String udgavebetegnelse = getUdgavebetegnelse(marc21);
+        String place = getPlace(marc21);
+        String size = getSize(marc21);
+        
+        boolean isWithinCopyright = isWithinCopyright(bib, marc21);
+    
+    
         FopFactoryBuilder builder = new FopFactoryBuilder(new File(".").toURI());
         builder.setAccessibility(true);
         FopFactory fopFactory = builder.build();
-    
-        //TODO use alma client instead of this thing
-        //AlmaRestClient restClient = new AlmaRestClient("https://api-eu.hosted.exlibrisgroup.com/almaws/v1/", "TODO API KEY");
-        //
-        //AlmaInventoryClient inventoryClient = new AlmaInventoryClient(restClient);
-        //Item item = inventoryClient.getItem(barCode);
         
         
         try (ByteArrayOutputStream outStream = new ByteArrayOutputStream()) {
             Fop fop = fopFactory.newFop(MimeConstants.MIME_PDF, outStream);
-
+            
             TransformerFactory factory = TransformerFactory.newInstance();
             factory.setErrorListener(new ErrorListener() {
                 @Override
@@ -153,14 +171,173 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                                                      .getContextClassLoader()
                                                      .getResourceAsStream("formatter.xsl")) {
                 Transformer xslfoTransformer = factory.newTransformer(new StreamSource(formatterStream));
-                //TODO do not perform logic in the extremely limited language of XSLT1.0
-                //Instead perform the logic here and feed the results in via params
-                xslfoTransformer.setParameter("input1","testInput1Value");
-                xslfoTransformer.transform(xmlSource, new SAXResult(fop.getDefaultHandler()));
+                xslfoTransformer.setParameter("authors", authors);
+                xslfoTransformer.setParameter("title", title);
+                xslfoTransformer.setParameter("altTitle", alternativeTitle);
+                xslfoTransformer.setParameter("edition", udgavebetegnelse);
+                xslfoTransformer.setParameter("place", place);
+                xslfoTransformer.setParameter("size", size);
+                xslfoTransformer.setParameter("isWithinCopyright", isWithinCopyright);
+                
+                xslfoTransformer.transform(new StreamSource(new StringReader("<xml/>")), new SAXResult(fop.getDefaultHandler()));
             }
             outStream.flush(); //just in case it is not done automatically
             return outStream.toInputStream();
         }
+    }
+    
+    private boolean isWithinCopyright(Bib bib, Element marc21) {
+        return false;
+        /*
+         <xsl:variable name="tag260c"
+                                      select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='c']"/>
+
+                        <xsl:choose>
+                            <xsl:when test="($tag260c != '')">
+                                <xsl:value-of select="$tag260c"/>  -->
+
+                                <!--Today as a string without -. I.e. 2021-07-27+02:00 becomes 20210727-->
+                                <xsl:variable name="today" select="substring(translate(date:date(), '-', ''),1,8)"/>
+                                <!--$tag260c[2] is the premiere date-->
+                                <!--It might just be a year, or it might be a full date-->
+                                <!--Either way, we add -01-01, remove all non-num chars and take the first 8 chars-->
+                                <!--So 1993 becomes 19930101-->
+                                <xsl:variable name="cutoff"
+                                              select="substring(translate(concat($tag260c, '-01-01'),'-.',''),1,8)"/>
+                                <!--<xsl:value-of select="cutoff" />-->
+                                <!--1400000 is a hundred and fourty years. So we test if today is before the premiere date + 140 years-->
+                                <xsl:if test="$today &lt;= ($cutoff+$cutoff-span)">
+                                    <!-- today is before cutoff -->
+                                    <xsl:copy-of select="$dk-fixed-text"/>
+                                    <xsl:copy-of select="$uk-fixed-text"/>
+                                </xsl:if>
+                                <xsl:if test="$today &gt;= ($cutoff+$cutoff-span)">
+                                    <!--today is after cutoff-->
+                                    <xsl:copy-of select="$dk-after-cutoff-text"/>
+                                    <xsl:copy-of select="$uk-after-cutoff-text"/>
+                                </xsl:if>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <fo:block>
+                                    <xsl:for-each
+                                            select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='500']/marc:subfield[@code='a']">
+                                        <xsl:if test="starts-with(.,'Premiere')">
+                                            <xsl:variable name="p500b" select="str:tokenize(normalize-space(.), ' ')"/>
+                                            <fo:block>
+                                                <!--Today as a string without -. I.e. 2021-07-27+02:00 becomes 20210727-->
+                                                <xsl:variable name="today"
+                                                              select="substring(translate(date:date(), '-', ''),1,8)"/>
+                                                <!--$p500b[2] is the premiere date-->
+                                                <!--It might just be a year, or it might be a full date-->
+                                                <!--Either way, we add -01-01, remove all non-num chars and take the first 8 chars-->
+                                                <!--So 1993 becomes 19930101-->
+                                                <xsl:variable name="cutoff"
+                                                              select="substring(translate(concat($p500b[2], '-01-01'),'- ',''),1,8)"/>
+                                                <!--1400000 is a hundred and fourty years. So we test if today is before the premiere date + 140 years-->
+                                                <xsl:if test="$today &lt;= ($cutoff+$cutoff-span)">
+                                                    <!-- today is before cutoff -->
+                                                    <xsl:copy-of select="$dk-fixed-text"/>
+                                                    <xsl:copy-of select="$uk-fixed-text"/>
+                                                </xsl:if>
+                                                <xsl:if test="$today &gt;= ($cutoff+$cutoff-span)">
+                                                    <!--today is after cutoff-->
+                                                    <xsl:copy-of select="$dk-after-cutoff-text"/>
+                                                    <xsl:copy-of select="$uk-after-cutoff-text"/>
+                                                </xsl:if>
+                                            </fo:block>
+                                            <fo:block>
+                                            </fo:block>
+                                        </xsl:if>
+                                    </xsl:for-each>
+                                </fo:block>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                    </fo:block>
+         */
+    }
+    
+    
+    private String getSize(Element marc21) {
+        // Forlæggets fysiske størrelse:
+        // hentes fra Marc21 300a
+        XPathSelector xpath = XpathUtils.createXPathSelector();
+    
+        return xpath.selectString(marc21, "/record/datafield[@tag='300']/subfield[@code='a']");
+    }
+    
+    private String getYear(Element marc21) {
+        //TODO
+        return null;
+    }
+    
+    private String getPlace(Element marc21) {
+        //  * hentes fra Marc21 260a + b + c eller 500a (hvis man kan afgrænse til *premiere*, da man ved overførslen til ALMA slog mange felter sammen til dette felt),
+        //  * 710 (udfaset felt, der stadig er data i) eller
+        //  * felt 96 (i 96 kan dog også være rettighedsbegrænsninger indskrevet).
+        
+        XPathSelector xpath = XpathUtils.createXPathSelector();
+        String tag260a = xpath.selectString(marc21, "/record/datafield[@tag='260']/subfield[@code='a']", null);
+        if (tag260a != null) {
+            String tag260b = xpath.selectString(marc21, "/record/datafield[@tag='260']/subfield[@code='b']", null);
+            String tag260c = xpath.selectString(marc21, "/record/datafield[@tag='260']/subfield[@code='c']", null);
+            return Stream.of(tag260a, tag260b, tag260c).filter(Objects::nonNull).collect(Collectors.joining(" "));
+        } else {
+            List<String> tag500As = xpath.selectStringList(marc21,
+                                                           "/record/datafield[@tag='500']/subfield[@code='a']");
+            return "TODO500A";
+            //TODO
+            /*
+                                                                <xsl:for-each
+                                                            select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='500']/marc:subfield[@code='a']">
+                                                        <xsl:variable name="p500a"
+                                                                      select="str:tokenize(normalize-space(.), ' ')"/>
+                                                        <xsl:if test="starts-with(.,'Premiere')">
+                                                            <xsl:value-of select="concat($p500a[1],' ', $p500a[2])"/>
+                                                        </xsl:if>
+                                                    </xsl:for-each>
+             */
+        }
+    }
+    
+    private String getUdgavebetegnelse(Element marc21) {
+        //* Udgavebetegnelse:
+        //  * 250a
+        //  * hvis ikke noget = ingenting (ikke relevant for teatermanuskripter)
+        XPathSelector xpath = XpathUtils.createXPathSelector();
+        String tag250a = xpath.selectString(marc21, "/record/datafield[@tag='250']/subfield[@code='a']", null);
+        return Stream.of(tag250a).filter(Objects::nonNull).collect(Collectors.joining(", "));
+    }
+    
+    private String getAlternativeTitle(Element marc21) {
+        XPathSelector xpath = XpathUtils.createXPathSelector();
+        return xpath.selectString(marc21, "/record/datafield[@tag='246']/subfield[@code='a']");
+    }
+    
+    
+    private String getTitle(Element marc21) {
+        //* Titel:
+        //  * hentes fra Marc21 245a + b
+        //  * opdelt i flere linjer hvis længere end ?
+        XPathSelector xpath = XpathUtils.createXPathSelector();
+        String tag245a = xpath.selectString(marc21, "/record/datafield[@tag='245']/subfield[@code='a']", null);
+        String tag245b = xpath.selectString(marc21, "/record/datafield[@tag='245']/subfield[@code='b']", null);
+        return Stream.of(tag245a, tag245b).filter(Objects::nonNull).collect(Collectors.joining(", "));
+    }
+    
+    private String getAuthors(Element marc21) {
+        //* Forfatter(e):
+        //  * hentes fra Marc21 100a,
+        //  * 700a + d ( kan forekomme flere gange),
+        //  * 245c - komma separeret og opdelt i flere linier hvis længere end ?
+        //  * [] - hvis ingen værdi(er).
+        XPathSelector xpath = XpathUtils.createXPathSelector();
+        String tag100a = xpath.selectString(marc21, "/record/datafield[@tag='100']/subfield[@code='a']", null);
+        String tag700a = xpath.selectString(marc21, "/record/datafield[@tag='700']/subfield[@code='a']", null);
+        String tag245c = xpath.selectString(marc21, "/record/datafield[@tag='245']/subfield[@code='c']", null);
+        if (tag100a == null && tag700a == null && tag245c == null) {
+            return "[]";
+        }
+        return Stream.of(tag100a, tag700a, tag245c).filter(Objects::nonNull).collect(Collectors.joining(", "));
     }
     
     

@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.1"
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                xmlns:xs="https://www.w3.org/2001/XMLSchema"
                 xmlns:fo="http://www.w3.org/1999/XSL/Format"
-                xmlns:ns="http://www.loc.gov/zing/srw/"
-                xmlns:marc="http://www.loc.gov/MARC21/slim"
-                xmlns:str="http://exslt.org/strings"
-                xmlns:date="http://exslt.org/dates-and-times"
-                exclude-result-prefixes="fo" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                exclude-result-prefixes="fo xs" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                 xsi:schemaLocation="http://www.w3.org/1999/XSL/Format https://svn.apache.org/viewvc/xmlgraphics/fop/trunk/fop/src/foschema/fop.xsd?view=co">
-    <xsl:import href="http://exslt.org/str/functions/tokenize/str.tokenize.function.xsl"/>
-    <xsl:import href="http://exslt.org/date/functions/date/date.date.function.xsl"/>
 
-    <!--TODO TEST OF INPUT VARS FOR THE XSLT FOP TRANSFORMATION-->
-    <xsl:param name="input1"/>
+    <xsl:param name="authors" as="xs:string"/>
+    <xsl:param name="title" as="xs:string"/>
+    <xsl:param name="altTitle" as="xs:string"/>
+    <xsl:param name="edition" as="xs:string"/>
+    <xsl:param name="place" as="xs:string"/>
+    <xsl:param name="size" as="xs:string"/>
+    <xsl:param name="isWithinCopyright" as="xs:boolean"/>
 
     <xsl:variable name="dk-fixed-text">
         <fo:block font-size="16pt" font-weight="bold" font-style="italic" space-before="15mm"
@@ -69,43 +69,8 @@
         1400000
     </xsl:variable>
 
-    <xsl:template match="/ns:searchRetrieveResponse">
+    <xsl:template match="/">
         <fo:root xmlns:fo="http://www.w3.org/1999/XSL/Format">
-
-
-            <xsl:variable name="tag100a"
-                          select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='100']/marc:subfield[@code='a']"/>
-
-            <xsl:variable name="tag245a"
-                          select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='245']/marc:subfield[@code='a']"/>
-            <xsl:variable name="tag245b"
-                          select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='245']/marc:subfield[@code='b']"/>
-            <xsl:variable name="tag245c"
-                          select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='245']/marc:subfield[@code='c']"/>
-
-            <xsl:variable name="tag246a"
-                          select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='246']/marc:subfield[@code='a']"/>
-
-            <xsl:variable name="tag250a"
-                          select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='250']/marc:subfield[@code='a']"/>
-
-            <xsl:variable name="tag260a"
-                          select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='a']"/>
-            <xsl:variable name="tag260b"
-                          select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='b']"/>
-            <xsl:variable name="tag260c"
-                          select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='c']"/>
-
-            <xsl:variable name="tag300a"
-                          select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='300']/marc:subfield[@code='a']"/>
-
-            <xsl:variable name="tag700a"
-                          select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='700']/marc:subfield[@code='a']"/>
-            <xsl:variable name="tag700c"
-                          select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='700']/marc:subfield[@code='c']"/>
-            <xsl:variable name="tag700d"
-                          select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='700']/marc:subfield[@code='d']"/>
-
 
             <fo:layout-master-set>
                 <fo:simple-page-master master-name="simpleA4" page-height="29.7cm" page-width="21cm" margin-top="2cm"
@@ -115,9 +80,6 @@
             </fo:layout-master-set>
             <fo:page-sequence master-reference="simpleA4">
                 <fo:flow flow-name="xsl-region-body">
-                    <fo:block>TODO TEST OF INPUT VARS FOR THE XSLT FOP TRANSFORMATION
-                        <xsl:value-of select="$input1"/>
-                    </fo:block>
                     <fo:block>
                         <fo:external-graphic src="src/main/resources/images/KBlogo.png" height="270pt"
                                              border-width="thin" content-width="scale-to-fit"
@@ -143,25 +105,7 @@
 
                                     <fo:table-cell border="solid 0px black" text-align="left" font-weight="normal">
                                         <fo:block>
-
-                                            <xsl:choose>
-                                                <xsl:when
-                                                        test="$tag100a = '' and $tag700a = '' and $tag700c = '' and $tag245c = ''">
-                                                    <xsl:message>
-                                                        []
-                                                    </xsl:message>
-                                                </xsl:when>
-                                                <xsl:when test="$tag100a">
-                                                    <xsl:value-of select="$tag100a"/>
-                                                </xsl:when>
-                                                <xsl:when test="$tag700a">
-                                                    <xsl:value-of select="$tag700a"/>
-                                                    <xsl:value-of select="$tag700d"/>
-                                                </xsl:when>
-                                                <xsl:when test="$tag245c">
-                                                    <xsl:value-of select="$tag245c"/>
-                                                </xsl:when>
-                                            </xsl:choose>
+                                            <xsl:value-of select="$authors"/>
                                         </fo:block>
                                     </fo:table-cell>
 
@@ -178,13 +122,12 @@
                                     <fo:table-cell border="solid 0px black"
                                                    text-align="left" font-weight="normal">
                                         <fo:block>
-                                            <xsl:value-of select="$tag245a"/>
-                                            <xsl:value-of select="$tag245b"/>
+                                            <xsl:value-of select="$title"/>
                                         </fo:block>
                                     </fo:table-cell>
                                 </fo:table-row>
 
-                                <xsl:if test="$tag246a !=''"> <!--Alternativ Titel-->
+                                <xsl:if test="$altTitle !=''"> <!--Alternativ Titel-->
                                     <fo:table-row>
                                         <fo:table-cell border="solid 0px black"
                                                        text-align="left" font-weight="normal">
@@ -196,14 +139,14 @@
                                                        text-align="left" font-weight="normal">
                                             <fo:block>
                                                 <xsl:value-of
-                                                        select="$tag246a"/>
+                                                        select="$altTitle"/>
                                             </fo:block>
                                         </fo:table-cell>
                                     </fo:table-row>
                                 </xsl:if>
 
 
-                                <xsl:if test="$tag250a != ''">
+                                <xsl:if test="$edition != ''">
                                     <fo:table-row>
                                         <fo:table-cell border="solid 0px black"
                                                        text-align="left" font-weight="normal">
@@ -214,7 +157,7 @@
                                         <fo:table-cell border="solid 0px black"
                                                        text-align="left" font-weight="normal">
                                             <fo:block>
-                                                <xsl:value-of select="$tag250a"/>
+                                                <xsl:value-of select="$edition"/>
                                             </fo:block>
                                         </fo:table-cell>
                                     </fo:table-row>
@@ -230,26 +173,7 @@
                                     <fo:table-cell border="solid 0px black"
                                                    text-align="left" font-weight="normal">
                                         <fo:block>
-                                            <xsl:choose>
-                                                <xsl:when test="$tag260a != ''">
-                                                    <xsl:value-of
-                                                            select="$tag260a"/>
-                                                    <xsl:value-of
-                                                            select="$tag260b"/>
-                                                    <xsl:value-of
-                                                            select="$tag260c"/>
-                                                </xsl:when>
-                                                <xsl:otherwise>
-                                                    <xsl:for-each
-                                                            select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='500']/marc:subfield[@code='a']">
-                                                        <xsl:variable name="p500a"
-                                                                      select="str:tokenize(normalize-space(.), ' ')"/>
-                                                        <xsl:if test="starts-with(.,'Premiere')">
-                                                            <xsl:value-of select="concat($p500a[1],' ', $p500a[2])"/>
-                                                        </xsl:if>
-                                                    </xsl:for-each>
-                                                </xsl:otherwise>
-                                            </xsl:choose>
+                                            <xsl:value-of select="$place"/>
                                         </fo:block>
                                     </fo:table-cell>
                                 </fo:table-row>
@@ -265,7 +189,7 @@
                                     <fo:table-cell border="solid 0px black"
                                                    text-align="left" font-weight="normal">
                                         <fo:block>
-                                            <xsl:value-of select="$tag300a"/>
+                                            <xsl:value-of select="$size"/>
                                         </fo:block>
                                     </fo:table-cell>
                                 </fo:table-row>
@@ -275,65 +199,15 @@
                     </fo:block>
 
                     <fo:block>
-
                         <xsl:choose>
-                            <xsl:when test="($tag260c != '')">
-                                <xsl:value-of select="$tag260c"/>  -->
-
-                                <!--Today as a string without -. I.e. 2021-07-27+02:00 becomes 20210727-->
-                                <xsl:variable name="today" select="substring(translate(date:date(), '-', ''),1,8)"/>
-                                <!--$tag260c[2] is the premiere date-->
-                                <!--It might just be a year, or it might be a full date-->
-                                <!--Either way, we add -01-01, remove all non-num chars and take the first 8 chars-->
-                                <!--So 1993 becomes 19930101-->
-                                <xsl:variable name="cutoff"
-                                              select="substring(translate(concat($tag260c, '-01-01'),'-.',''),1,8)"/>
-                                <!--<xsl:value-of select="cutoff" />-->
-                                <!--1400000 is a hundred and fourty years. So we test if today is before the premiere date + 140 years-->
-                                <xsl:if test="$today &lt;= ($cutoff+$cutoff-span)">
-                                    <!-- today is before cutoff -->
+                            <xsl:when test="$isWithinCopyright">
                                     <xsl:copy-of select="$dk-fixed-text"/>
                                     <xsl:copy-of select="$uk-fixed-text"/>
-                                </xsl:if>
-                                <xsl:if test="$today &gt;= ($cutoff+$cutoff-span)">
-                                    <!--today is after cutoff-->
-                                    <xsl:copy-of select="$dk-after-cutoff-text"/>
-                                    <xsl:copy-of select="$uk-after-cutoff-text"/>
-                                </xsl:if>
                             </xsl:when>
                             <xsl:otherwise>
-                                <fo:block>
-                                    <xsl:for-each
-                                            select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='500']/marc:subfield[@code='a']">
-                                        <xsl:if test="starts-with(.,'Premiere')">
-                                            <xsl:variable name="p500b" select="str:tokenize(normalize-space(.), ' ')"/>
-                                            <fo:block>
-                                                <!--Today as a string without -. I.e. 2021-07-27+02:00 becomes 20210727-->
-                                                <xsl:variable name="today"
-                                                              select="substring(translate(date:date(), '-', ''),1,8)"/>
-                                                <!--$p500b[2] is the premiere date-->
-                                                <!--It might just be a year, or it might be a full date-->
-                                                <!--Either way, we add -01-01, remove all non-num chars and take the first 8 chars-->
-                                                <!--So 1993 becomes 19930101-->
-                                                <xsl:variable name="cutoff"
-                                                              select="substring(translate(concat($p500b[2], '-01-01'),'- ',''),1,8)"/>
-                                                <!--1400000 is a hundred and fourty years. So we test if today is before the premiere date + 140 years-->
-                                                <xsl:if test="$today &lt;= ($cutoff+$cutoff-span)">
-                                                    <!-- today is before cutoff -->
-                                                    <xsl:copy-of select="$dk-fixed-text"/>
-                                                    <xsl:copy-of select="$uk-fixed-text"/>
-                                                </xsl:if>
-                                                <xsl:if test="$today &gt;= ($cutoff+$cutoff-span)">
-                                                    <!--today is after cutoff-->
-                                                    <xsl:copy-of select="$dk-after-cutoff-text"/>
-                                                    <xsl:copy-of select="$uk-after-cutoff-text"/>
-                                                </xsl:if>
-                                            </fo:block>
-                                            <fo:block>
-                                            </fo:block>
-                                        </xsl:if>
-                                    </xsl:for-each>
-                                </fo:block>
+                                <!--today is after cutoff-->
+                                <xsl:copy-of select="$dk-after-cutoff-text"/>
+                                <xsl:copy-of select="$uk-after-cutoff-text"/>
                             </xsl:otherwise>
                         </xsl:choose>
                     </fo:block>

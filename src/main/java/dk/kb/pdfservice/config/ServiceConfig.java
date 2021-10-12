@@ -1,6 +1,9 @@
 package dk.kb.pdfservice.config;
 
+import dk.kb.alma.client.AlmaRestClient;
 import dk.kb.util.yaml.YAML;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -11,11 +14,13 @@ import java.util.List;
  */
 public class ServiceConfig {
     
+    private static final Logger log = LoggerFactory.getLogger(ServiceConfig.class);
     /**
      * Besides parsing of YAML files using SnakeYAML, the YAML helper class provides convenience
      * methods like {@code getInteger("someKey", defaultValue)} and {@code getSubMap("config.sub1.sub2")}.
      */
     private static YAML serviceConfig;
+    private static AlmaRestClient almaRestClient;
     
     /**
      * Initialized the configuration from the provided configFile.
@@ -54,4 +59,21 @@ public class ServiceConfig {
         return serviceConfig;
     }
     
+    
+    public static synchronized AlmaRestClient getAlmaRestClient(){
+        if (almaRestClient == null){
+            log.debug("Creating new AlmaRestClient");
+            YAML config = getConfig();
+            almaRestClient = new AlmaRestClient(config.getString("alma.url"),
+                                                config.getString("alma.apikey"),
+                                                Long.parseLong(config.getString("alma.rate_limit.min_sleep_millis")),
+                                                Long.parseLong(config.getString("alma.rate_limit.sleep_variation_millis")),
+                                                config.getString("alma.lang"),
+                                                Integer.parseInt(config.getString("alma.connect_timeout")),
+                                                Integer.parseInt(config.getString("alma.read_timeout")),
+                                                Long.parseLong(config.getString("alma.cache_timeout", "0")),
+                                                Integer.parseInt(config.getString("alma.max_retries", "3")));
+        }
+        return almaRestClient;
+    }
 }
