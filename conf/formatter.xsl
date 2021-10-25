@@ -14,6 +14,8 @@
     <xsl:param name="size" as="xs:string"/>
     <xsl:param name="isWithinCopyright" as="xs:boolean"/>
 
+    <xsl:param name="logoPath" as="xs:string"/>
+
     <xsl:variable name="dk-fixed-text">
         <fo:block font-size="16pt" font-weight="bold" font-style="italic" space-before="15mm"
                   space-after="5mm" text-align="center" line-height="15px">DK
@@ -81,10 +83,19 @@
             <fo:page-sequence master-reference="simpleA4">
                 <fo:flow flow-name="xsl-region-body">
                     <fo:block>
-                        <fo:external-graphic src="src/main/resources/images/KBlogo.png" height="270pt"
-                                             border-width="thin" content-width="scale-to-fit"
-                                             content-height="200pt" width="100%" scaling="uniform" text-align="center">
-                        </fo:external-graphic>
+                        <xsl:element name="external-graphic" namespace="http://www.w3.org/1999/XSL/Format">
+                            <xsl:attribute name="height">270pt</xsl:attribute>
+                            <xsl:attribute name="border-width">thin</xsl:attribute>
+                            <xsl:attribute name="content-width">scale-to-fit</xsl:attribute>
+                            <xsl:attribute name="content-height">200pt</xsl:attribute>
+                            <xsl:attribute name="width">100%</xsl:attribute>
+                            <xsl:attribute name="scaling">uniform</xsl:attribute>
+                            <xsl:attribute name="text-align">center</xsl:attribute>
+                            <xsl:attribute name="src">
+<!--                                src/main/resources/images/KBlogo.png-->
+                                <xsl:value-of select="$logoPath"/>
+                            </xsl:attribute>
+                        </xsl:element>
                     </fo:block>
 
                     <fo:block font-size="24pt" font-weight="bold" space-after="5mm" text-align="center">

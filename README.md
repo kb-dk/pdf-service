@@ -10,6 +10,14 @@
 
 **Webservice to produce a pdf-file from an existing pdf-fil with added dynamic content.**
 
+
+
+
+Men der er nogen problemer med katalogiseringen i ALMA
+115808025307 er en stregkode for en fysisk bog
+Denne bog er en del af bib post 99122905335805763
+Men den elektroniske udgave kom fra bib post 995529632805761
+
 Developed and maintained by the Royal Danish Library.
 
 ## Requirements

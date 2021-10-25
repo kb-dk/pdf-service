@@ -41,15 +41,18 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.stream.StreamSource;
-import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.net.URL;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -100,34 +103,17 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     private transient MessageContext messageContext;
     
     
-    public String getRawManuscript(String barCode) throws ServiceException {
-        // TODO: Implement...barcode=130018972949
-        
-        
-        try {
-            String urlString =
-                    "https://soeg.kb.dk/view/sru/45KBDK_KGL?version=1.2&operation=searchRetrieve&query=barcode="
-                    + barCode
-                    + "&recordSchema=marcxml";
-            
-            try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new URL(urlString).openStream()))) {
-                return bufferedReader.lines().collect(Collectors.joining());
-            }
-        } catch (Exception e) {
-            throw handleException(e);
-        }
-    }
-    
     public InputStream produceHeaderPage(String barCode) throws TransformerException, SAXException, IOException {
         
-        //String response = getRawManuscript(barCode);
-        
+        String actualBarcode = barCode.split("-", 2)[0];
         
         AlmaInventoryClient almaInventoryClient = new AlmaInventoryClient(ServiceConfig.getAlmaRestClient());
-        Item item = almaInventoryClient.getItem(barCode);
+        Item item = almaInventoryClient.getItem(actualBarcode);
         
         String mmsID = item.getBibData().getMmsId();
         Bib bib = almaInventoryClient.getBib(mmsID);
+        
+        //Portfolios portFolios = almaInventoryClient.getBibPortfolios(mmsID);
         
         Element marc21 = bib.getAnies().get(0);
         String authors = getAuthors(marc21);
@@ -138,8 +124,8 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         String size = getSize(marc21);
         
         boolean isWithinCopyright = isWithinCopyright(bib, marc21);
-    
-    
+        
+        
         FopFactoryBuilder builder = new FopFactoryBuilder(new File(".").toURI());
         builder.setAccessibility(true);
         FopFactory fopFactory = builder.build();
@@ -151,12 +137,12 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
             TransformerFactory factory = TransformerFactory.newInstance();
             factory.setErrorListener(new ErrorListener() {
                 @Override
-                public void warning(TransformerException exception) throws TransformerException {
+                public void warning(TransformerException exception) {
                     log.warn("Transformer warning", exception);
                 }
                 
                 @Override
-                public void error(TransformerException exception) throws TransformerException {
+                public void error(TransformerException exception) {
                     log.error("Transformer Exception", exception);
                 }
                 
@@ -167,9 +153,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                 }
             });
             
-            try (InputStream formatterStream = Thread.currentThread()
-                                                     .getContextClassLoader()
-                                                     .getResourceAsStream("formatter.xsl")) {
+            try (InputStream formatterStream = new FileInputStream(ServiceConfig.getFrontPageFopFile().toFile())) {
                 Transformer xslfoTransformer = factory.newTransformer(new StreamSource(formatterStream));
                 xslfoTransformer.setParameter("authors", authors);
                 xslfoTransformer.setParameter("title", title);
@@ -178,8 +162,12 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                 xslfoTransformer.setParameter("place", place);
                 xslfoTransformer.setParameter("size", size);
                 xslfoTransformer.setParameter("isWithinCopyright", isWithinCopyright);
+    
+                final String logoPath = ServiceConfig.getLogoPath();
+                xslfoTransformer.setParameter("logoPath", logoPath);
                 
-                xslfoTransformer.transform(new StreamSource(new StringReader("<xml/>")), new SAXResult(fop.getDefaultHandler()));
+                xslfoTransformer.transform(new StreamSource(new StringReader("<xml/>")),
+                                           new SAXResult(fop.getDefaultHandler()));
             }
             outStream.flush(); //just in case it is not done automatically
             return outStream.toInputStream();
@@ -187,73 +175,14 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     }
     
     private boolean isWithinCopyright(Bib bib, Element marc21) {
-        return false;
-        /*
-         <xsl:variable name="tag260c"
-                                      select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='260']/marc:subfield[@code='c']"/>
-
-                        <xsl:choose>
-                            <xsl:when test="($tag260c != '')">
-                                <xsl:value-of select="$tag260c"/>  -->
-
-                                <!--Today as a string without -. I.e. 2021-07-27+02:00 becomes 20210727-->
-                                <xsl:variable name="today" select="substring(translate(date:date(), '-', ''),1,8)"/>
-                                <!--$tag260c[2] is the premiere date-->
-                                <!--It might just be a year, or it might be a full date-->
-                                <!--Either way, we add -01-01, remove all non-num chars and take the first 8 chars-->
-                                <!--So 1993 becomes 19930101-->
-                                <xsl:variable name="cutoff"
-                                              select="substring(translate(concat($tag260c, '-01-01'),'-.',''),1,8)"/>
-                                <!--<xsl:value-of select="cutoff" />-->
-                                <!--1400000 is a hundred and fourty years. So we test if today is before the premiere date + 140 years-->
-                                <xsl:if test="$today &lt;= ($cutoff+$cutoff-span)">
-                                    <!-- today is before cutoff -->
-                                    <xsl:copy-of select="$dk-fixed-text"/>
-                                    <xsl:copy-of select="$uk-fixed-text"/>
-                                </xsl:if>
-                                <xsl:if test="$today &gt;= ($cutoff+$cutoff-span)">
-                                    <!--today is after cutoff-->
-                                    <xsl:copy-of select="$dk-after-cutoff-text"/>
-                                    <xsl:copy-of select="$uk-after-cutoff-text"/>
-                                </xsl:if>
-                            </xsl:when>
-                            <xsl:otherwise>
-                                <fo:block>
-                                    <xsl:for-each
-                                            select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='500']/marc:subfield[@code='a']">
-                                        <xsl:if test="starts-with(.,'Premiere')">
-                                            <xsl:variable name="p500b" select="str:tokenize(normalize-space(.), ' ')"/>
-                                            <fo:block>
-                                                <!--Today as a string without -. I.e. 2021-07-27+02:00 becomes 20210727-->
-                                                <xsl:variable name="today"
-                                                              select="substring(translate(date:date(), '-', ''),1,8)"/>
-                                                <!--$p500b[2] is the premiere date-->
-                                                <!--It might just be a year, or it might be a full date-->
-                                                <!--Either way, we add -01-01, remove all non-num chars and take the first 8 chars-->
-                                                <!--So 1993 becomes 19930101-->
-                                                <xsl:variable name="cutoff"
-                                                              select="substring(translate(concat($p500b[2], '-01-01'),'- ',''),1,8)"/>
-                                                <!--1400000 is a hundred and fourty years. So we test if today is before the premiere date + 140 years-->
-                                                <xsl:if test="$today &lt;= ($cutoff+$cutoff-span)">
-                                                    <!-- today is before cutoff -->
-                                                    <xsl:copy-of select="$dk-fixed-text"/>
-                                                    <xsl:copy-of select="$uk-fixed-text"/>
-                                                </xsl:if>
-                                                <xsl:if test="$today &gt;= ($cutoff+$cutoff-span)">
-                                                    <!--today is after cutoff-->
-                                                    <xsl:copy-of select="$dk-after-cutoff-text"/>
-                                                    <xsl:copy-of select="$uk-after-cutoff-text"/>
-                                                </xsl:if>
-                                            </fo:block>
-                                            <fo:block>
-                                            </fo:block>
-                                        </xsl:if>
-                                    </xsl:for-each>
-                                </fo:block>
-                            </xsl:otherwise>
-                        </xsl:choose>
-                    </fo:block>
-         */
+        
+        LocalDate dateOfPublication = getPublicationDate(marc21);
+        
+        if (dateOfPublication == null) {
+            return true;
+        }
+        return dateOfPublication.plusYears(ServiceConfig.getYearsSincePublicationToBeOutsideCopyright())
+                                .isAfter(LocalDate.now(ZoneId.systemDefault()));
     }
     
     
@@ -261,12 +190,30 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         // Forlæggets fysiske størrelse:
         // hentes fra Marc21 300a
         XPathSelector xpath = XpathUtils.createXPathSelector();
-    
+        
         return xpath.selectString(marc21, "/record/datafield[@tag='300']/subfield[@code='a']");
     }
     
-    private String getYear(Element marc21) {
-        //TODO
+    private LocalDate getPublicationDate(Element marc21) {
+        XPathSelector xpath = XpathUtils.createXPathSelector();
+        String tag260c = xpath.selectString(marc21, "/record/datafield[@tag='260']/subfield[@code='c']", null);
+        //String dateOfPublicationString = bib.getDateOfPublication();
+        
+        Pattern year2year = Pattern.compile("(\\d{4})-\\d{4}\\.?");
+        final Matcher matcher = year2year.matcher(tag260c);
+        if (matcher.matches()) {
+            String firstYearString = matcher.group(1);
+            int firstYear = Integer.parseInt(firstYearString);
+            return LocalDate.of(firstYear, 1, 1);
+        }
+        
+        String tag500a = xpath.selectString(marc21, "/record/datafield[@tag='500']/subfield[@code='a']", "");
+        if (tag500a.startsWith("Premiere")) {
+            String date = tag500a.split(" ", 2)[1];
+            //TODO implement other date patterns
+            System.out.println(date);
+        }
+        
         return null;
     }
     
@@ -356,16 +303,13 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     @Override
     public StreamingOutput getPdf(String barcode, String pdflink2) {
         
-        System.out.println("barcode: " + barcode);
         
-        httpServletResponse.setHeader("Content-disposition", "inline; filename=\"" + barcode + "-bw.pdf\"");
+        httpServletResponse.setHeader("Content-disposition", "inline; filename=\"" + barcode + "\"");
         
         try {
             InputStream apronFile = produceHeaderPage(barcode);
             
-            //TODO retrieve pdf from https://www.kb.dk/e-mat/dod/<barcode>-bw.pdf
-            
-            final URL url = new URL("http://www5.kb.dk/e-mat/dod/" + barcode + "-bw.pdf");
+            final URL url = new URL(ServiceConfig.getPdfSourcePath() + barcode);
             try (InputStream inPdf = url.openStream()) {
                 InputStream resultingPdf = PdfBoxCopyrightInserter.insertCopyrightFooter(inPdf);
                 log.info("Finished inserting footers");
@@ -375,6 +319,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                 pdfMergerUtility.addSource(resultingPdf);
                 try (final var completePDF = new org.apache.commons.io.output.ByteArrayOutputStream()) {
                     pdfMergerUtility.setDestinationStream(completePDF);
+                    //TODO Configurable memory settings
                     pdfMergerUtility.mergeDocuments(MemoryUsageSetting.setupMixed(1024 * 1024 * 500));
                     log.debug("Finished merging documents");
                     return output -> {
@@ -394,21 +339,5 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         }
     }
     
-    
-    /**
-     * This method simply converts any Exception into a Service exception
-     *
-     * @param e: Any kind of exception
-     * @return A ServiceException
-     *         dk.kb.webservice.ServiceExceptionMapper
-     */
-    private ServiceException handleException(Exception e) {
-        if (e instanceof ServiceException) {
-            return (ServiceException) e; // Do nothing - this is a declared ServiceException from within module.
-        } else {// Unforseen exception (should not happen). Wrap in internal service exception
-            log.error("ServiceException(HTTP 500):", e); //You probably want to log this.
-            return new InternalServiceException(e.getMessage());
-        }
-    }
     
 }

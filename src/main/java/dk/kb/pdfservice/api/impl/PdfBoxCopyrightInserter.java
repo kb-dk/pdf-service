@@ -1,5 +1,6 @@
 package dk.kb.pdfservice.api.impl;
 
+import dk.kb.pdfservice.config.ServiceConfig;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.pdfbox.io.RandomAccessBufferedFileInputStream;
 import org.apache.pdfbox.io.RandomAccessRead;
@@ -51,8 +52,11 @@ public class PdfBoxCopyrightInserter {
                     stripper.setEndPage(pagenumber);
                     String content = stripper.getText(doc);
                     if (content != null) {
-                        content = content.replaceAll("\\s+", " ");
-                        if (content.toLowerCase(Locale.getDefault()).contains("det kongelige bibliotek")) {
+                        if (ServiceConfig.getHeaderLines()
+                                         .stream()
+                                         .anyMatch(line -> content.replaceAll("\\s+", " ")
+                                                                  .toLowerCase(Locale.ROOT)
+                                                                  .contains(line.toLowerCase(Locale.ROOT)))) {
                             doc.removePage(p);
                             pagenumber--;
                             continue;
@@ -62,23 +66,27 @@ public class PdfBoxCopyrightInserter {
                     foundRealPage = true;
                 }
                 
+                PDRectangle cropbox = p.getCropBox();
                 
                 PDRectangle mediaBox = p.getMediaBox();
                 
-                float ratio = mediaBox.getHeight() / PDRectangle.A4.getHeight();
+                PDRectangle box = cropbox;
+                
+                float ratio = box.getHeight() / PDRectangle.A4.getHeight();
                 float fontSize = 15 * ratio * p.getUserUnit();
                 float footer_height = getLineHeight(fontSize);
-    
-                float lowerLeftY = mediaBox.getLowerLeftY() - footer_height;
-                mediaBox.setLowerLeftY(lowerLeftY);
+                
+                //Important, get these values BEFORE you update, as mediabox and cropbox MIGHT be the same object
+                float lowerLeftY_mediabox = mediaBox.getLowerLeftY() - footer_height;
+                float lowerLeftY_cropbox = cropbox.getLowerLeftY() - footer_height;
+                
+                mediaBox.setLowerLeftY(lowerLeftY_mediabox);
                 p.setMediaBox(mediaBox);
                 log.debug("mediebox {}", mediaBox);
                 
-                PDRectangle cropbox = p.getCropBox();
-                cropbox.setLowerLeftY(lowerLeftY);
+                cropbox.setLowerLeftY(lowerLeftY_cropbox);
                 p.setCropBox(cropbox);
                 log.debug("cropbox {}", cropbox);
-           
                 
                 log.debug("Before try");
                 try (var contentStream = new PDPageContentStream(doc,
@@ -90,10 +98,10 @@ public class PdfBoxCopyrightInserter {
                     contentStream.beginText();
                     contentStream.setFont(PDType1Font.COURIER, fontSize);
                     
-                    final float x = p.getMediaBox().getWidth() * 0.10f;
+                    final float x = box.getWidth() * 0.10f;
                     final float y = -fontSize; //above 100% due to compensation for font height
                     contentStream.newLineAtOffset(x, y);
-                    contentStream.showText("Copyright footer");
+                    contentStream.showText(ServiceConfig.getCopyrightFooterText());
                     contentStream.endText();
                 }
             }

@@ -46,3 +46,18 @@ alma:
     #to avoid the rush when a lot of threads back off and then try again at the same time, we introduce a random element into
     # the back off time. sleep_variation_millis multiplied with a randon number [0-1] will be added to the sleep time to combat this effect
     sleep_variation_millis: 3000
+
+pdfService:
+  PDFsource: "http://www5.kb.dk/e-mat/dod/"
+
+  frontpageFOPfile: /home/pdf/services/conf/formatter.xsl
+  frontpageLogo: /home/pdf/services/conf/KBlogo.png
+
+  copyrightFooterText: "Copyright Footer"
+
+  yearsSincePublicationToBeOutsideCopyright: 140
+
+  oldHeaderStrings:
+    - "det kongelige bibliotek"
+    - "det kgl. bibliotek"
+    - "digitaliseret af"

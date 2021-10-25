@@ -6,7 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Sample configuration class using the Singleton pattern.
@@ -33,19 +35,31 @@ public class ServiceConfig {
     public static synchronized void initialize(String configFile) throws IOException {
         serviceConfig = YAML.resolveLayeredConfigs(configFile);
     }
-  
-    public static String getBasepath() {
-        return serviceConfig.getString("config.basePath");
+    
+    public static Path getFrontPageFopFile(){
+        return Path.of(getConfig().getString("pdfService.frontpageFOPfile"));
     }
     
-    public static String getOutputDir() {
-        return serviceConfig.getString("config.outputDir");
+    public static String getCopyrightFooterText(){
+        return getConfig().getString("pdfService.copyrightFooterText");
     }
     
-    public static String getResourcesDir() {
-        return serviceConfig.getString("config.resourcesDir");
+    public static List<String> getHeaderLines(){
+        return getConfig().getList("pdfService.oldHeaderStrings");
     }
     
+    public static String getLogoPath() {
+        return getConfig().getString("pdfService.frontpageLogo");
+    }
+    
+    public static String getPdfSourcePath() {
+        return getConfig().getString("pdfService.PDFsource");
+    }
+    
+    
+    public static Integer getYearsSincePublicationToBeOutsideCopyright(){
+        return getConfig().getInteger("pdfService.yearsSincePublicationToBeOutsideCopyright");
+    }
     /**
      * Direct access to the backing YAML-class is used for configurations with more flexible content
      * and/or if the service developer prefers key-based property access.
@@ -76,4 +90,5 @@ public class ServiceConfig {
         }
         return almaRestClient;
     }
+    
 }
