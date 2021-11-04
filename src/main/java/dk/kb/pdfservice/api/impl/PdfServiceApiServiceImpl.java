@@ -162,7 +162,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                 xslfoTransformer.setParameter("place", place);
                 xslfoTransformer.setParameter("size", size);
                 xslfoTransformer.setParameter("isWithinCopyright", isWithinCopyright);
-    
+                
                 final String logoPath = ServiceConfig.getLogoPath();
                 xslfoTransformer.setParameter("logoPath", logoPath);
                 
@@ -191,7 +191,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         // hentes fra Marc21 300a
         XPathSelector xpath = XpathUtils.createXPathSelector();
         
-        return xpath.selectString(marc21, "/record/datafield[@tag='300']/subfield[@code='a']");
+        return xpath.selectString(marc21, "/record/datafield[@tag='300']/subfield[@code='a']", "");
     }
     
     private LocalDate getPublicationDate(Element marc21) {
@@ -284,7 +284,9 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         if (tag100a == null && tag700a == null && tag245c == null) {
             return "[]";
         }
-        return Stream.of(tag100a, tag700a, tag245c).filter(Objects::nonNull).collect(Collectors.joining(", "));
+        return Stream.of(tag100a, tag700a, tag245c)
+                     .filter(Objects::nonNull)
+                     .collect(Collectors.joining(", "));
     }
     
     
