@@ -9,6 +9,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.state.RenderingMode;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -66,42 +67,45 @@ public class PdfBoxCopyrightInserter {
                     foundRealPage = true;
                 }
                 
-                PDRectangle cropbox = p.getCropBox();
                 
-                PDRectangle mediaBox = p.getMediaBox();
+                PDRectangle cropbox = p.getMediaBox();
+                
                 
                 PDRectangle box = cropbox;
-                
-                float ratio = box.getHeight() / PDRectangle.A4.getHeight();
-                float fontSize = 15 * ratio * p.getUserUnit();
+    
+                boolean landscape = box.getWidth() > box.getHeight();
+                float ratio = box.getHeight() / (landscape? PDRectangle.A4.getWidth() : PDRectangle.A4.getHeight());
+                //log.debug("box height {}, A4 height {}", box.getHeight(), PDRectangle.A4.getHeight());
+                //log.debug("box width {}, A4 width {}", box.getWidth(), PDRectangle.A4.getWidth());
+                float fontSize = 14;
+                float relative_fontsize = relative(p, ratio, fontSize);
                 float footer_height = getLineHeight(fontSize);
                 
-                //Important, get these values BEFORE you update, as mediabox and cropbox MIGHT be the same object
-                float lowerLeftY_mediabox = mediaBox.getLowerLeftY() - footer_height;
-                float lowerLeftY_cropbox = cropbox.getLowerLeftY() - footer_height;
-                
-                mediaBox.setLowerLeftY(lowerLeftY_mediabox);
-                p.setMediaBox(mediaBox);
-                log.debug("mediebox {}", mediaBox);
-                
-                cropbox.setLowerLeftY(lowerLeftY_cropbox);
-                p.setCropBox(cropbox);
-                log.debug("cropbox {}", cropbox);
-                
+       
                 log.debug("Before try");
                 try (var contentStream = new PDPageContentStream(doc,
                                                                  p,
-                                                                 PDPageContentStream.AppendMode.PREPEND,
+                                                                 PDPageContentStream.AppendMode.APPEND,
+                                                                 true,
                                                                  true)) {
                     log.debug("Handled page");
                     contentStream.setRenderingMode(RenderingMode.FILL);
-                    contentStream.beginText();
-                    contentStream.setFont(PDType1Font.COURIER, fontSize);
+                    final PDType1Font courier = PDType1Font.HELVETICA;
                     
-                    final float x = box.getWidth() * 0.10f;
-                    final float y = -fontSize; //above 100% due to compensation for font height
-                    contentStream.newLineAtOffset(x, y);
-                    contentStream.showText(ServiceConfig.getCopyrightFooterText());
+                    contentStream.moveTo(0,0);//Ensure we start at lowest left corner
+                    contentStream.beginText();
+                    
+                    
+                    contentStream.setFont(courier, relative_fontsize);
+                    final String copyrightFooterText = ServiceConfig.getCopyrightFooterText();
+                    float text_width = calculateTextLengthPixels(copyrightFooterText, relative_fontsize, courier);
+                    
+                    //Centered text
+                    final float x = (box.getWidth()-text_width)/2;
+    
+                    contentStream.newLineAtOffset(x, footer_height);
+                    
+                    contentStream.showText(copyrightFooterText);
                     contentStream.endText();
                 }
             }
@@ -111,9 +115,30 @@ public class PdfBoxCopyrightInserter {
         return output.toInputStream();
     }
     
+    private static float relative(PDPage p, float ratio, float fontSize) {
+        return fontSize * ratio * p.getUserUnit();
+    }
+    
     
     public static int getLineHeight(double fontSize) {
         return Math.toIntExact(Math.round(fontSize * 1.25));
     }
     
+    
+    protected static float calculateTextLengthPixels(String text,
+                                                   float fontSize,
+                                                   PDFont font) {
+        if (text == null) {
+            return 0;
+        }
+        float stringWidth;
+        try {
+            stringWidth = font.getStringWidth(text);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to get width of string '" + text + "'", e);
+        }
+    
+        float width = (fontSize * stringWidth);
+        return (width / 1000f);
+    }
 }
