@@ -53,7 +53,7 @@ pdfService:
   frontpageFOPfile: /home/pdf/services/conf/formatter.xsl
   frontpageLogo: /home/pdf/services/conf/KBlogo.png
 
-  copyrightFooterText: "Copyright Footer"
+  copyrightFooterText: "Manuskriptkopien må ikke anvendes til opførelse og må ikke videre distribueres."
 
   yearsSincePublicationToBeOutsideCopyright: 140
 

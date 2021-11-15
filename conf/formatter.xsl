@@ -20,19 +20,8 @@
         <fo:block font-size="16pt" font-weight="bold" font-style="italic" space-before="15mm"
                   space-after="5mm" text-align="center" line-height="15px">DK
         </fo:block>
-        <fo:block text-align="left" font-style="italic" font-size="10pt">Dette manuskript kan være
-            ophavsretligt beskyttet. Den ophavsretlige beskyttelsestid
-            er 70 år efter ophavsmandens død. Eventuelle oversættere har ophavsrettigheder til den
-            oversatte version af manuskriptet. Værker hvor ophavsretten er
-            udløbet er fri af ophavsret.
-            <fo:block space-after="2mm"/>
-            Hvis manuskriptet er ophavsretligt beskyttet må det kun benyttes til privat brug. Du må
-            dog også benytte manuskriptet i forbindelse med optagelsesprøve
-            på de danske teaterskoler.
-        </fo:block>
         <fo:block text-align="left" font-style="italic" font-size="10pt">
-            Hvis du vil opføre manuskriptet, skal du have samtykke fra rettighedshaveren. Du kan i
-            den forbindelse kontakte rettighedsorganisationen Danske Dramatikere.
+            Dette manuskript er ophavsretligt beskyttet, og må kun benyttes til personlig brug. Du må dog også bruge manuskriptet i forbindelse med optagelsesprøve på de danske teaterskoler. Hvis du vil opføre manuskriptet, skal du have samtykke fra rettighedshaveren. Du kan i den forbindelse kontakte fagorganisationen Danske Dramatikere. Husk altid at kreditere ophavsmanden.
         </fo:block>
         <fo:block space-after="2mm"/>
     </xsl:variable>
@@ -58,17 +47,12 @@
     </xsl:variable>
 
     <xsl:variable name="dk-after-cutoff-text">
-        Værket er fri af ophavsret. Husk altid at kreditere ophavsmanden, selvom værket er fri af
-        ophavsret.
+        Materialet er fri af ophavsret. Du kan kopiere, ændre, distribuere eller fremføre værket, også til kommercielle formål, uden at bede om tilladelse. Husk altid at kreditere ophavsmanden + cc logo – det sender jeg når det er endelig godkendt.
     </xsl:variable>
 
     <xsl:variable name="uk-after-cutoff-text">
         The work is free of copyright. Always remember to credit the author, even if the work is
         free of copyright.
-    </xsl:variable>
-
-    <xsl:variable name="cutoff-span">
-        1400000
     </xsl:variable>
 
     <xsl:template match="/">
