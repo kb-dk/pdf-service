@@ -82,13 +82,13 @@ public class PdfBoxCopyrightInserter {
                 float footer_height = getLineHeight(fontSize);
                 
        
-                log.debug("Before try");
+                //log.debug("Before try");
                 try (var contentStream = new PDPageContentStream(doc,
                                                                  p,
                                                                  PDPageContentStream.AppendMode.APPEND,
                                                                  true,
                                                                  true)) {
-                    log.debug("Handled page");
+                    //log.debug("Handled page");
                     contentStream.setRenderingMode(RenderingMode.FILL);
                     final PDType1Font courier = PDType1Font.HELVETICA;
                     

@@ -46,11 +46,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
-import java.net.URL;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -122,8 +122,19 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         String udgavebetegnelse = getUdgavebetegnelse(marc21);
         String place = getPlace(marc21);
         String size = getSize(marc21);
-        
-        boolean isWithinCopyright = isWithinCopyright(bib, marc21);
+    
+        String yearOfIssue = item.getItemData().getYearOfIssue();
+        log.debug("year of issue {}", yearOfIssue);
+        String publicationDate1 = item.getBibData().getDateOfPublication();
+        log.debug("pub date 1 {}",publicationDate1);
+        String publicationDate2 = bib.getDateOfPublication();
+        log.debug("pub date 2 {}", publicationDate2);
+    
+        Bib.LinkedRecordId linkedRecord = bib.getLinkedRecordId();
+    
+    
+        final LocalDate publicationDate = getPublicationDate(bib, marc21);
+        boolean isWithinCopyright = isWithinCopyright(publicationDate);
         
         
         FopFactoryBuilder builder = new FopFactoryBuilder(new File(".").toURI());
@@ -159,7 +170,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                 xslfoTransformer.setParameter("title", title);
                 xslfoTransformer.setParameter("altTitle", alternativeTitle);
                 xslfoTransformer.setParameter("edition", udgavebetegnelse);
-                xslfoTransformer.setParameter("place", place);
+                xslfoTransformer.setParameter("place", place+" " + publicationDate.toString());
                 xslfoTransformer.setParameter("size", size);
                 xslfoTransformer.setParameter("isWithinCopyright", isWithinCopyright);
                 
@@ -174,11 +185,10 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         }
     }
     
-    private boolean isWithinCopyright(Bib bib, Element marc21) {
-        
-        LocalDate dateOfPublication = getPublicationDate(marc21);
-        
+    private boolean isWithinCopyright(LocalDate dateOfPublication) {
+    
         if (dateOfPublication == null) {
+            //If we cannot parse a date, it is ALWAYS too young
             return true;
         }
         return dateOfPublication.plusYears(ServiceConfig.getYearsSincePublicationToBeOutsideCopyright())
@@ -194,27 +204,86 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         return xpath.selectString(marc21, "/record/datafield[@tag='300']/subfield[@code='a']", "");
     }
     
-    private LocalDate getPublicationDate(Element marc21) {
+    private LocalDate getPublicationDate(Bib bib, Element marc21) {
         XPathSelector xpath = XpathUtils.createXPathSelector();
-        String tag260c = xpath.selectString(marc21, "/record/datafield[@tag='260']/subfield[@code='c']", null);
-        //String dateOfPublicationString = bib.getDateOfPublication();
+
+
+        final String dateField;
+    
+        final String dateOfPublication = bib.getDateOfPublication();
         
+        final String tag260c = xpath.selectString(marc21, "/record/datafield[@tag='260']/subfield[@code='c']",
+                                                  null);
+        log.debug("tag260c {}",tag260c);
+        
+    
+        final List<String> tag500a = xpath.selectStringList(marc21, "/record/datafield[@tag='500']/subfield[@code='a']/text()");
+        log.debug("tag500a {}", tag500a );
+        final Optional<String> premiere = tag500a.stream().filter(str -> str.startsWith("Premiere")).findFirst();
+        if (premiere.isPresent()) {
+            dateField = premiere.get().split(" ", 3)[1];
+        } else if (tag260c != null) {
+            dateField = tag260c;
+        } else {
+            dateField = dateOfPublication;
+        }
+    
+        log.debug("input date is {}",dateField);
+        Optional<LocalDate> firstYear =
+                extractPubYearFromD4_D4(dateField)
+                        .or(() -> extractPubYearFromD4(dateField))
+                        .or(() -> extractPubYearFromDateISO(dateField))
+                        .or(() -> extractPubYearFromDateCommon(dateField));
+        
+        return firstYear.orElse(null);
+    }
+
+    private Optional<LocalDate> extractPubYearFromDateCommon(String tag260c) {
+        Pattern date = Pattern.compile("(?<day>\\d{1,2})(?<sep>[-/ .]+)(?<month>\\d{1,2})\\k<sep>(?<year>\\d{4}).*");
+        final Matcher matcher = date.matcher(tag260c);
+        if (matcher.matches()) {
+            int firstYear = Integer.parseInt(matcher.group("year"));
+            int firstMonth = Integer.parseInt(matcher.group("month"));
+            int firstDay = Integer.parseInt(matcher.group("day"));
+            return Optional.of(LocalDate.of(firstYear, firstMonth, firstDay));
+        }
+        return Optional.empty();
+    }
+
+    
+
+    private Optional<LocalDate> extractPubYearFromDateISO(String tag260c) {
+        Pattern date = Pattern.compile("(?<year>\\d{4})(?<sep>[-/ .]+)(?<month>\\d{1,2})\\k<sep>(?<day>\\d{1,2}).*");
+        final Matcher matcher = date.matcher(tag260c);
+        if (matcher.matches()) {
+            int firstYear = Integer.parseInt(matcher.group("year"));
+            int firstMonth = Integer.parseInt(matcher.group("month"));
+            int firstDay = Integer.parseInt(matcher.group("day"));
+            return Optional.of(LocalDate.of(firstYear, firstMonth, firstDay));
+        }
+        return Optional.empty();
+    }
+
+    private Optional<LocalDate> extractPubYearFromD4_D4(String tag260c) {
         Pattern year2year = Pattern.compile("(\\d{4})-\\d{4}\\.?");
         final Matcher matcher = year2year.matcher(tag260c);
         if (matcher.matches()) {
             String firstYearString = matcher.group(1);
             int firstYear = Integer.parseInt(firstYearString);
-            return LocalDate.of(firstYear, 1, 1);
+            return Optional.of(LocalDate.of(firstYear, 1, 1));
         }
-        
-        String tag500a = xpath.selectString(marc21, "/record/datafield[@tag='500']/subfield[@code='a']", "");
-        if (tag500a.startsWith("Premiere")) {
-            String date = tag500a.split(" ", 2)[1];
-            //TODO implement other date patterns
-            System.out.println(date);
+        return Optional.empty();
+    }
+    
+    private Optional<LocalDate> extractPubYearFromD4(String tag260c) {
+        Pattern year = Pattern.compile("(\\d{4}).*");
+        final Matcher matcher = year.matcher(tag260c);
+        if (matcher.matches()) {
+            String firstYearString = matcher.group(1);
+            int firstYear = Integer.parseInt(firstYearString);
+            return Optional.of(LocalDate.of(firstYear, 1, 1));
         }
-        
-        return null;
+        return Optional.empty();
     }
     
     private String getPlace(Element marc21) {
@@ -307,12 +376,19 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         
         
         httpServletResponse.setHeader("Content-disposition", "inline; filename=\"" + barcode + "\"");
-        
+    
+        InputStream apronFile;
         try {
-            InputStream apronFile = produceHeaderPage(barcode);
-            
-            final URL url = new URL(ServiceConfig.getPdfSourcePath() + barcode);
-            try (InputStream inPdf = url.openStream()) {
+            apronFile = produceHeaderPage(barcode);
+            //apronFile = new NullInputStream();
+        } catch ( Exception e) {
+            log.error("Fejl", e);
+            throw new InternalServiceException("Fejl med getPdf", e);
+        }
+
+        try {
+            final File url = new File(ServiceConfig.getPdfSourcePath(),barcode+".pdf");
+            try (InputStream inPdf = new FileInputStream(url)) {
                 InputStream resultingPdf = PdfBoxCopyrightInserter.insertCopyrightFooter(inPdf);
                 log.info("Finished inserting footers");
                 
@@ -334,11 +410,12 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                     
                 }
             }
-            
-        } catch (TransformerException | SAXException | IOException e) {
+    
+        } catch (IOException e) {
             log.error("Fejl", e);
             throw new InternalServiceException("Fejl med getPdf", e);
         }
+    
     }
     
     
