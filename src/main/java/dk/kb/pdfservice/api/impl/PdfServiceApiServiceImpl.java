@@ -122,15 +122,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         String udgavebetegnelse = getUdgavebetegnelse(marc21);
         String place = getPlace(marc21);
         String size = getSize(marc21);
-    
-        String yearOfIssue = item.getItemData().getYearOfIssue();
-        log.debug("year of issue {}", yearOfIssue);
-        String publicationDate1 = item.getBibData().getDateOfPublication();
-        log.debug("pub date 1 {}",publicationDate1);
-        String publicationDate2 = bib.getDateOfPublication();
-        log.debug("pub date 2 {}", publicationDate2);
-    
-        Bib.LinkedRecordId linkedRecord = bib.getLinkedRecordId();
+        
     
     
         final LocalDate publicationDate = getPublicationDate(bib, marc21);
@@ -170,7 +162,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                 xslfoTransformer.setParameter("title", title);
                 xslfoTransformer.setParameter("altTitle", alternativeTitle);
                 xslfoTransformer.setParameter("edition", udgavebetegnelse);
-                xslfoTransformer.setParameter("place", place+" " + publicationDate.toString());
+                xslfoTransformer.setParameter("place", place);
                 xslfoTransformer.setParameter("size", size);
                 xslfoTransformer.setParameter("isWithinCopyright", isWithinCopyright);
                 
@@ -298,20 +290,12 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
             String tag260c = xpath.selectString(marc21, "/record/datafield[@tag='260']/subfield[@code='c']", null);
             return Stream.of(tag260a, tag260b, tag260c).filter(Objects::nonNull).collect(Collectors.joining(" "));
         } else {
-            List<String> tag500As = xpath.selectStringList(marc21,
-                                                           "/record/datafield[@tag='500']/subfield[@code='a']");
-            return "TODO500A";
-            //TODO
-            /*
-                                                                <xsl:for-each
-                                                            select="ns:records/ns:record/ns:recordData/marc:record/marc:datafield[@tag='500']/marc:subfield[@code='a']">
-                                                        <xsl:variable name="p500a"
-                                                                      select="str:tokenize(normalize-space(.), ' ')"/>
-                                                        <xsl:if test="starts-with(.,'Premiere')">
-                                                            <xsl:value-of select="concat($p500a[1],' ', $p500a[2])"/>
-                                                        </xsl:if>
-                                                    </xsl:for-each>
-             */
+            Optional<String> place = xpath.selectStringList(marc21,
+                                                            "/record/datafield[@tag='500']/subfield[@code='a']/text()")
+                                          .stream()
+                                          .filter(str -> str.startsWith("Premiere ")).findFirst();
+            
+            return place.orElse("No place specified");
         }
     }
     
