@@ -54,6 +54,7 @@ pdfService:
   frontpageLogo: /home/pdf/services/conf/KBlogo.png
 
   copyrightFooterText: "Manuskriptkopien må ikke anvendes til opførelse og må ikke videre distribueres."
+  copyrightFooterFontsize: 14
 
   yearsSincePublicationToBeOutsideCopyright: 140
 

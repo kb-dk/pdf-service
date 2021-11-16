@@ -37,17 +37,11 @@ class ServiceConfigTest {
         // Pretty hacky, but it is only a sample unit test
         Path knownFile = Path.of(Resolver.resolveURL("logback-test.xml").getPath());
         String projectRoot = knownFile.getParent().getParent().getParent().toString();
-
+    
         Path sampleEnvironmentSetup = Path.of(projectRoot, "conf/pdf-service-environment.yaml");
         assertTrue(Files.exists(sampleEnvironmentSetup),
                    "The sample setup is expected to be present at '" + sampleEnvironmentSetup + "'");
-
+    
         ServiceConfig.initialize(projectRoot + File.separator + "conf" + File.separator + "pdf-service*.yaml");
-
-        // Defined in behaviour
-        assertEquals(10, ServiceConfig.getConfig().getInteger("config.limits.min"));
-
-        // Real value in environment
-        assertEquals("real_dbpassword", ServiceConfig.getConfig().getString("config.backend.password"));
     }
 }

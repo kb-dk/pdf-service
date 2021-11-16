@@ -108,13 +108,6 @@ paths:
           schema:
             type: string
             example: 130018852943
-        - name: pdflink2
-          in: query
-          description: Not used any more
-          required: false
-          schema:
-            type: string
-            example: TS_DRAlaes-A552.pdf
       responses:
         '200':
           description: A pdf with attached page

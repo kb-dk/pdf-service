@@ -21,19 +21,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Locale;
 
-public class PdfBoxCopyrightInserter {
+public class CopyrightFooterInserter {
     
-    private static final Logger log = LoggerFactory.getLogger(PdfBoxCopyrightInserter.class);
+    private static final Logger log = LoggerFactory.getLogger(CopyrightFooterInserter.class);
     
     public static InputStream insertCopyrightFooter(InputStream input)
             throws IOException {
         PDFParser parser;
-        log.debug("start of PdfBoxCopyrightInserter");
         try (final RandomAccessRead rabfis = new RandomAccessBufferedFileInputStream(input)) {
             parser = new PDFParser(rabfis);
             parser.parse();
         }
-        log.debug("After try RandomAccessBuffer");
         
         PDFTextStripper stripper = new PDFTextStripper();
         
@@ -66,43 +64,40 @@ public class PdfBoxCopyrightInserter {
                     //If we got here, we did not remove a page, and the removal should stop
                     foundRealPage = true;
                 }
-                
-                
-                PDRectangle cropbox = p.getMediaBox();
-                
-                
-                PDRectangle box = cropbox;
+    
+    
+                //TODO cropbox or mediabox?
+                //Mediabox can be larger for images, but cropbox should correspond to the page
+                //cropbox <= mediebox always, I think.
+                PDRectangle box = p.getMediaBox();
     
                 boolean landscape = box.getWidth() > box.getHeight();
                 float ratio = box.getHeight() / (landscape? PDRectangle.A4.getWidth() : PDRectangle.A4.getHeight());
-                //log.debug("box height {}, A4 height {}", box.getHeight(), PDRectangle.A4.getHeight());
-                //log.debug("box width {}, A4 width {}", box.getWidth(), PDRectangle.A4.getWidth());
-                float fontSize = 14;
-                float relative_fontsize = relative(p, ratio, fontSize);
+
+                float fontSize = relative(p, ratio, ServiceConfig.getCopyrightFooterFontSize().floatValue());
+             
                 float footer_height = getLineHeight(fontSize);
                 
-       
-                //log.debug("Before try");
                 try (var contentStream = new PDPageContentStream(doc,
                                                                  p,
                                                                  PDPageContentStream.AppendMode.APPEND,
                                                                  true,
                                                                  true)) {
-                    //log.debug("Handled page");
+                    //resetContext to ensure we are not scaled, rotated or anything else
                     contentStream.setRenderingMode(RenderingMode.FILL);
-                    final PDType1Font courier = PDType1Font.HELVETICA;
+                    final PDType1Font font = PDType1Font.HELVETICA;
                     
                     contentStream.moveTo(0,0);//Ensure we start at lowest left corner
                     contentStream.beginText();
                     
-                    
-                    contentStream.setFont(courier, relative_fontsize);
+                    contentStream.setFont(font, fontSize);
                     final String copyrightFooterText = ServiceConfig.getCopyrightFooterText();
-                    float text_width = calculateTextLengthPixels(copyrightFooterText, relative_fontsize, courier);
+                    float text_width = calculateTextLengthPixels(copyrightFooterText, fontSize, font);
                     
                     //Centered text
                     final float x = (box.getWidth()-text_width)/2;
-    
+                    
+                    //y=0 is lowest line, so start line at footer_height
                     contentStream.newLineAtOffset(x, footer_height);
                     
                     contentStream.showText(copyrightFooterText);

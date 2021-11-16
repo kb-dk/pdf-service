@@ -44,6 +44,10 @@ public class ServiceConfig {
         return getConfig().getString("pdfService.copyrightFooterText");
     }
     
+    public static Integer getCopyrightFooterFontSize(){
+        return getConfig().getInteger("pdfService.copyrightFooterFontsize");
+    }
+    
     public static List<String> getHeaderLines(){
         return getConfig().getList("pdfService.oldHeaderStrings");
     }

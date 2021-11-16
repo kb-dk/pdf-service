@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.1"
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-                xmlns:xs="https://www.w3.org/2001/XMLSchema"
+                xmlns:xs="http://www.w3.org/2001/XMLSchema"
                 xmlns:fo="http://www.w3.org/1999/XSL/Format"
-                exclude-result-prefixes="fo xs" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                xsi:schemaLocation="http://www.w3.org/1999/XSL/Format https://svn.apache.org/viewvc/xmlgraphics/fop/trunk/fop/src/foschema/fop.xsd?view=co">
+                exclude-result-prefixes="fo xs"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                xsi:schemaLocation="
+                http://www.w3.org/1999/XSL/Format https://svn.apache.org/viewvc/xmlgraphics/fop/trunk/fop/src/foschema/fop.xsd?view=co
+                http://www.w3.org/2001/XMLSchema http://www.w3.org/2001/XMLSchema.xsd">
 
     <xsl:param name="authors" as="xs:string"/>
     <xsl:param name="title" as="xs:string"/>
@@ -21,7 +24,10 @@
                   space-after="5mm" text-align="center" line-height="15px">DK
         </fo:block>
         <fo:block text-align="left" font-style="italic" font-size="10pt">
-            Dette manuskript er ophavsretligt beskyttet, og må kun benyttes til personlig brug. Du må dog også bruge manuskriptet i forbindelse med optagelsesprøve på de danske teaterskoler. Hvis du vil opføre manuskriptet, skal du have samtykke fra rettighedshaveren. Du kan i den forbindelse kontakte fagorganisationen Danske Dramatikere. Husk altid at kreditere ophavsmanden.
+            Dette manuskript er ophavsretligt beskyttet, og må kun benyttes til personlig brug. Du må dog også bruge
+            manuskriptet i forbindelse med optagelsesprøve på de danske teaterskoler. Hvis du vil opføre manuskriptet,
+            skal du have samtykke fra rettighedshaveren. Du kan i den forbindelse kontakte fagorganisationen Danske
+            Dramatikere. Husk altid at kreditere ophavsmanden.
         </fo:block>
         <fo:block space-after="2mm"/>
     </xsl:variable>
@@ -47,7 +53,9 @@
     </xsl:variable>
 
     <xsl:variable name="dk-after-cutoff-text">
-        Materialet er fri af ophavsret. Du kan kopiere, ændre, distribuere eller fremføre værket, også til kommercielle formål, uden at bede om tilladelse. Husk altid at kreditere ophavsmanden + cc logo – det sender jeg når det er endelig godkendt.
+        Materialet er fri af ophavsret. Du kan kopiere, ændre, distribuere eller fremføre værket, også til kommercielle
+        formål, uden at bede om tilladelse. Husk altid at kreditere ophavsmanden + cc logo – det sender jeg når det er
+        endelig godkendt.
     </xsl:variable>
 
     <xsl:variable name="uk-after-cutoff-text">
@@ -76,7 +84,7 @@
                             <xsl:attribute name="scaling">uniform</xsl:attribute>
                             <xsl:attribute name="text-align">center</xsl:attribute>
                             <xsl:attribute name="src">
-<!--                                src/main/resources/images/KBlogo.png-->
+                                <!--                                src/main/resources/images/KBlogo.png-->
                                 <xsl:value-of select="$logoPath"/>
                             </xsl:attribute>
                         </xsl:element>
@@ -196,8 +204,8 @@
                     <fo:block>
                         <xsl:choose>
                             <xsl:when test="$isWithinCopyright">
-                                    <xsl:copy-of select="$dk-fixed-text"/>
-                                    <xsl:copy-of select="$uk-fixed-text"/>
+                                <xsl:copy-of select="$dk-fixed-text"/>
+                                <xsl:copy-of select="$uk-fixed-text"/>
                             </xsl:when>
                             <xsl:otherwise>
                                 <!--today is after cutoff-->
