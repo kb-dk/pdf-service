@@ -1,7 +1,7 @@
 package dk.kb.pdfservice.webservice.exception;
 
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 
 /*
  * Custom web-exception class (404)
