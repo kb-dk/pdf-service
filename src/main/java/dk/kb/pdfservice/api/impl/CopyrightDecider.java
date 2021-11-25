@@ -4,6 +4,7 @@ import dk.kb.alma.gen.bibs.Bib;
 import dk.kb.pdfservice.config.ServiceConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Element;
 
 import javax.annotation.Nullable;
 import java.time.LocalDate;
@@ -29,15 +30,15 @@ public class CopyrightDecider {
                                 .isAfter(LocalDate.now(ZoneId.systemDefault()));
     }
     
-    public static LocalDate getPublicationDate(Bib bib, MarcClient marc21) {
+    public static LocalDate getPublicationDate(Bib bib, Element marc21) {
         
         final String dateOfPublication = bib.getDateOfPublication();
         
-        final String tag260c = marc21.getString("260","c").orElse(null);
+        final String tag260c = MarcClient.getString(marc21, "260","c").orElse(null);
         log.debug("tag260c {}", tag260c);
         
         
-        final List<String> tag500a = marc21.getStrings("500","a");
+        final List<String> tag500a = MarcClient.getStrings(marc21, "500","a");
         log.debug("tag500a {}", tag500a);
         final Optional<String> premiere = tag500a.stream().filter(str -> str.startsWith("Premiere")).findFirst();
         

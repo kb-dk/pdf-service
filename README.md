@@ -7,6 +7,9 @@
 <http://localhost:8080/pdf-service/api/getPdf?barcode=130018852943>
 
 
+Gamle filer: 
+<http://www5.kb.dk/e-mat/dod/115808025291_bw.pdf>
+<http://www5.kb.dk/e-mat/dod/115808025307_bw.pdf>
 
 <http://localhost:8080/pdf-service/api/getPdf?barcode=115808025307>
 
