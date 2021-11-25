@@ -1,6 +1,6 @@
 package dk.kb.pdfservice.webservice.exception;
 
-import jakarta.ws.rs.core.Response;
+import javax.ws.rs.core.Response;
 
 /*
  * Superclass for Exceptions that has a specific HTTP response code.
