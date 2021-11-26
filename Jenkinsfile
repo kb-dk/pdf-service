@@ -29,6 +29,8 @@ openshift.withCluster() { // Use "default" cluster or fallback to OpenShift clus
 
                 stage('first') {
                     sh 'locale -a'
+                    sh 'cat /etc/locale.gen | grep en_US.UTF-8'
+                    sh 'sudo locale-gen'
                     sh "printenv | sort"
                 }
 
