@@ -29,7 +29,7 @@ openshift.withCluster() { // Use "default" cluster or fallback to OpenShift clus
                 //Do not use concurrent builds
                 properties([disableConcurrentBuilds()])
 
-                def mvnCmd = "mvn -s /etc/m2/settings.xml --batch-mode -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8"
+                def mvnCmd = "mvn -s /etc/m2/settings.xml --batch-mode"
 
                 stage('first') {
 //                    sh '(locale -a | grep en_US.UTF-8 ) || localedef -f UTF-8 -i en_US en_US.UTF-8'
