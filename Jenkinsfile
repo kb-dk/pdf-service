@@ -28,9 +28,7 @@ openshift.withCluster() { // Use "default" cluster or fallback to OpenShift clus
                 def mvnCmd = "mvn -s /etc/m2/settings.xml --batch-mode -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8"
 
                 stage('first') {
-                    sh 'locale -a'
-                    sh 'cat /etc/locale.gen | grep en_US.UTF-8'
-                    sh 'sudo locale-gen'
+                    sh '(locale -a | grep en_US.UTF-8 ) || localedef -f UTF-8 -i en_US en_US.UTF-8'
                     sh "printenv | sort"
                 }
 
