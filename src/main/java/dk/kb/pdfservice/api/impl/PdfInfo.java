@@ -2,6 +2,10 @@ package dk.kb.pdfservice.api.impl;
 
 import java.time.LocalDate;
 
+/**
+ * Data transfer class from MarcClient
+ * @see MarcClient
+ */
 public class PdfInfo {
     
     private final String authors;
