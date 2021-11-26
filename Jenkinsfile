@@ -12,7 +12,7 @@ openshift.withCluster() { // Use "default" cluster or fallback to OpenShift clus
             inheritFrom: 'maven',
             cloud: 'openshift', //cloud must be openshift
             envVars: [
-                    envVar(name:"LC_ALL", value:"C.utf8")
+                    envVar(key:"LC_ALL", value:"C.utf8")
             ],
             volumes: [ //mount the settings.xml
                        secretVolume(mountPath: '/etc/m2', secretName: 'maven-settings')
