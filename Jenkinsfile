@@ -7,9 +7,13 @@ openshift.withCluster() { // Use "default" cluster or fallback to OpenShift clus
     echo "Hello from the project running Jenkins: ${openshift.project()}"
 
     //Create template with maven settings.xml, so we have credentials for nexus
+    //https://www.jenkins.io/doc/pipeline/steps/kubernetes/#podtemplate-define-a-podtemplate-to-use-in-the-kubernetes-plugin
     podTemplate(
             inheritFrom: 'maven',
             cloud: 'openshift', //cloud must be openshift
+            envVars: [
+                    envVar(name:"LC_ALL", value:"C.utf8")
+            ],
             volumes: [ //mount the settings.xml
                        secretVolume(mountPath: '/etc/m2', secretName: 'maven-settings')
             ]) {
