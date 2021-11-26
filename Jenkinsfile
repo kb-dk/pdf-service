@@ -25,7 +25,12 @@ openshift.withCluster() { // Use "default" cluster or fallback to OpenShift clus
                 //Do not use concurrent builds
                 properties([disableConcurrentBuilds()])
 
-                def mvnCmd = "mvn -s /etc/m2/settings.xml --batch-mode"
+                def mvnCmd = "mvn -s /etc/m2/settings.xml --batch-mode -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8"
+                sh "printenv | sort"
+
+                stage('first') {
+                    sh "printenv | sort"
+                }
 
                 stage('checkout') {
                     checkout scm
@@ -35,12 +40,12 @@ openshift.withCluster() { // Use "default" cluster or fallback to OpenShift clus
                     sh "${mvnCmd} -DskipTests clean package"
                 }
 
-                stage('Analyze build results') {            
-                    recordIssues aggregatingResults: true, 
-                        tools: [java(), 
+                stage('Analyze build results') {
+                    recordIssues aggregatingResults: true,
+                        tools: [java(),
                                 javaDoc(),
                                 mavenConsole(),
-                                taskScanner(highTags:'FIXME', normalTags:'TODO', includePattern: '**/*.java', excludePattern: 'target/**/*')]                
+                                taskScanner(highTags:'FIXME', normalTags:'TODO', includePattern: '**/*.java', excludePattern: 'target/**/*')]
                 }
 
                 stage('Create test project') {
@@ -48,7 +53,7 @@ openshift.withCluster() { // Use "default" cluster or fallback to OpenShift clus
 
                     openshift.withProject(projectName) {
 
-                        stage("Create build and deploy application") { 
+                        stage("Create build and deploy application") {
                             openshift.newBuild("--strategy source", "--binary", "-i kb-infra/kb-s2i-tomcat90", "--name pdf-service")
                             openshift.startBuild("pdf-service", "--from-dir=.", "--follow")
                             openshift.newApp("pdf-service:latest")
@@ -80,10 +85,10 @@ openshift.withCluster() { // Use "default" cluster or fallback to OpenShift clus
             currentBuild.result = 'FAILURE'
             throw e
         } finally {
-            configFileProvider([configFile(fileId: "notifier", variable: 'notifier')]) {  
-                def notifier = load notifier             
+            configFileProvider([configFile(fileId: "notifier", variable: 'notifier')]) {
+                def notifier = load notifier
                 notifier.notifyInCaseOfFailureOrImprovement(true, "#playground")
-            } 
+            }
         }
     }
 }
