@@ -16,6 +16,7 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,20 +26,19 @@ public class CopyrightFooterInserter {
     
     private static final Logger log = LoggerFactory.getLogger(CopyrightFooterInserter.class);
     
-    public static InputStream insertCopyrightFooter(InputStream input)
-            throws IOException {
+    public static InputStream cleanHeaderPages(InputStream input) throws IOException {
         PDFParser parser;
         try (final RandomAccessRead rabfis = new RandomAccessBufferedFileInputStream(input)) {
             parser = new PDFParser(rabfis);
             parser.parse();
         }
-        
+    
         PDFTextStripper stripper = new PDFTextStripper();
-        
+    
         boolean foundRealPage = false;
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         try (final PDDocument doc = parser.getPDDocument();) {
-            
+        
             //We assume that all previously inserted header pages contains the text "det kongelige bibliotek"
             //So we remove them, until we find a page that does NOT contain this string. Then the removal stops
             //and we assume that all the rest of the document are real pages
@@ -64,16 +64,48 @@ public class CopyrightFooterInserter {
                     //If we got here, we did not remove a page, and the removal should stop
                     foundRealPage = true;
                 }
+            }
+            log.debug("before doc.save(output)");
+            doc.save(new BufferedOutputStream(output));
+        }
+        return output.toInputStream();
+    }
     
     
+    public static InputStream insertCopyrightFooter(InputStream input)
+            throws IOException {
+        PDFParser parser;
+        try (final RandomAccessRead rabfis = new RandomAccessBufferedFileInputStream(input)) {
+            parser = new PDFParser(rabfis);
+            parser.parse();
+        }
+        
+        
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        try (final PDDocument doc = parser.getPDDocument();) {
+    
+            final PDType1Font font = PDType1Font.HELVETICA;
+            final String copyrightFooterText = ServiceConfig.getCopyrightFooterText();
+    
+            //Text width is linear with font-size so just calc it with font size 1
+            float textWidth1 = calculateTextLengthPixels(copyrightFooterText, 1, font);
+            
+            float textboxWidth1 = calculateTextLengthPixels("  "+copyrightFooterText+"  ", 1, font);
+    
+            for (PDPage p : doc.getPages()) {
+                
                 //TODO cropbox or mediabox?
                 //Mediabox can be larger for images, but cropbox should correspond to the page
                 //cropbox <= mediebox always, I think.
-                PDRectangle box = p.getMediaBox();
+                PDRectangle box = p.getCropBox();
     
                 boolean landscape = box.getWidth() > box.getHeight();
-                float ratio = box.getHeight() / (landscape? PDRectangle.A4.getWidth() : PDRectangle.A4.getHeight());
-
+                float ratio = box.getWidth() / (landscape? PDRectangle.A4.getHeight() : PDRectangle.A4.getWidth());
+                float boxHeight = box.getHeight();
+                float a4Height = PDRectangle.A4.getHeight();
+                float boxWidth = box.getWidth();
+                float a4Width = PDRectangle.A4.getWidth();
+                
                 float fontSize = relative(p, ratio, ServiceConfig.getCopyrightFooterFontSize().floatValue());
              
                 float footer_height = getLineHeight(fontSize);
@@ -83,19 +115,36 @@ public class CopyrightFooterInserter {
                                                                  PDPageContentStream.AppendMode.APPEND,
                                                                  true,
                                                                  true)) {
+                    contentStream.moveTo(0,0);//Ensure we start at lowest left corner
+    
                     //resetContext to ensure we are not scaled, rotated or anything else
                     contentStream.setRenderingMode(RenderingMode.FILL);
-                    final PDType1Font font = PDType1Font.HELVETICA;
                     
-                    contentStream.moveTo(0,0);//Ensure we start at lowest left corner
-                    contentStream.beginText();
                     
-                    contentStream.setFont(font, fontSize);
-                    final String copyrightFooterText = ServiceConfig.getCopyrightFooterText();
-                    float text_width = calculateTextLengthPixels(copyrightFooterText, fontSize, font);
+                    contentStream.saveGraphicsState();
+    
+                    contentStream.setNonStrokingColor(Color.YELLOW);
+                    
+                    final float textboxY = footer_height * .8f;
+                    final float textBoxH = footer_height * 1.1f;
+                    final float textboxW = textboxWidth1 * fontSize;
+                    final float textboxX = (box.getWidth()-textboxW)/2;
+                    
+                    
+                    contentStream.addRect(textboxX, textboxY, textboxW, textBoxH);
+                    contentStream.fill();
+                    
+                    contentStream.restoreGraphicsState();
+    
+    
+                    float text_width = textWidth1 * fontSize;
                     
                     //Centered text
                     final float x = (box.getWidth()-text_width)/2;
+    
+                    contentStream.beginText();
+                    
+                    contentStream.setFont(font, fontSize);
                     
                     //y=0 is lowest line, so start line at footer_height
                     contentStream.newLineAtOffset(x, footer_height);

@@ -102,7 +102,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                 throw new NotFoundServiceException("Failed to find pdf file '" + pdfFile + "'");
             }
             
-            String barcode = pdfFile.split("[-.]", 2)[0];
+            String barcode = pdfFile.split("[-._]", 2)[0];
             
             PdfInfo pdfInfo = MarcClient.getPdfInfo(barcode);
             
@@ -115,51 +115,50 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
             
             PDFMergerUtility pdfMergerUtility = new PDFMergerUtility();
             pdfMergerUtility.addSource(apronFile);
-            if (pdfInfo.isWithinCopyright()) {
-                try (InputStream origPdfStream = new BufferedInputStream(new FileInputStream(origPdfFile))) {
-                    InputStream resultingPdf = CopyrightFooterInserter.insertCopyrightFooter(origPdfStream);
+            try (InputStream origPdfStream = new BufferedInputStream(new FileInputStream(origPdfFile))) {
+                InputStream resultingPdf = CopyrightFooterInserter.cleanHeaderPages(origPdfStream);
+                if (!pdfInfo.isWithinCopyright()) {
+                    resultingPdf = CopyrightFooterInserter.insertCopyrightFooter(resultingPdf);
                     log.info("Finished inserting footers");
-                    pdfMergerUtility.addSource(resultingPdf);
                 }
-            } else {
-                pdfMergerUtility.addSource(origPdfFile);
+                pdfMergerUtility.addSource(resultingPdf);
             }
-            
-            try (final var completePDF = new org.apache.commons.io.output.ByteArrayOutputStream()) {
-                pdfMergerUtility.setDestinationStream(completePDF);
-                //TODO Configurable memory settings
-                //Just use 100MBs and unlimited temp files
-                pdfMergerUtility.mergeDocuments(MemoryUsageSetting.setupMixed(1024 * 1024 * 100));
-                log.debug("Finished merging documents for {}", pdfFile);
-                return output -> {
-                    httpServletResponse.setHeader("Content-disposition", "inline; filename=\"" + pdfFile + "\"");
-                    completePDF.flush(); //just in case it is not done automatically
-                    try (var resultInputStream = completePDF.toInputStream();) {
-                        IOUtils.copy(resultInputStream, output);
-                    }
-                    log.debug("Finished returning pdf {}", pdfFile);
-                };
                 
+                try (final var completePDF = new org.apache.commons.io.output.ByteArrayOutputStream()) {
+                    pdfMergerUtility.setDestinationStream(completePDF);
+                    //TODO Configurable memory settings
+                    //Just use 100MBs and unlimited temp files
+                    pdfMergerUtility.mergeDocuments(MemoryUsageSetting.setupMixed(1024 * 1024 * 100));
+                    log.debug("Finished merging documents for {}", pdfFile);
+                    return output -> {
+                        httpServletResponse.setHeader("Content-disposition", "inline; filename=\"" + pdfFile + "\"");
+                        completePDF.flush(); //just in case it is not done automatically
+                        try (var resultInputStream = completePDF.toInputStream();) {
+                            IOUtils.copy(resultInputStream, output);
+                        }
+                        log.debug("Finished returning pdf {}", pdfFile);
+                    };
+                    
+                }
+            } catch (Exception e) {
+                log.error("Exception for {}", pdfFile, e);
+                throw handleException(e);
             }
-        } catch (Exception e) {
-            log.error("Exception for {}", pdfFile, e);
-            throw handleException(e);
+        }
+        
+        
+        /**
+         * This method simply converts any Exception into a Service exception
+         *
+         * @param e: Any kind of exception
+         * @return A ServiceException
+         */
+        private ServiceException handleException (Exception e){
+            if (e instanceof ServiceException) {
+                return (ServiceException) e; // Do nothing - this is a declared ServiceException from within module.
+            } else {// Unforseen exception (should not happen). Wrap in internal service exception
+                log.error("ServiceException(HTTP 500):", e); //You probably want to log this.
+                return new InternalServiceException(e.getMessage());
+            }
         }
     }
-    
-    
-    /**
-     * This method simply converts any Exception into a Service exception
-     *
-     * @param e: Any kind of exception
-     * @return A ServiceException
-     */
-    private ServiceException handleException(Exception e) {
-        if (e instanceof ServiceException) {
-            return (ServiceException) e; // Do nothing - this is a declared ServiceException from within module.
-        } else {// Unforseen exception (should not happen). Wrap in internal service exception
-            log.error("ServiceException(HTTP 500):", e); //You probably want to log this.
-            return new InternalServiceException(e.getMessage());
-        }
-    }
-}
