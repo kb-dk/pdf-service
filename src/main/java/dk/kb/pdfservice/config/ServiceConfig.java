@@ -5,10 +5,10 @@ import dk.kb.util.yaml.YAML;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Sample configuration class using the Singleton pattern.
@@ -40,19 +40,19 @@ public class ServiceConfig {
         //Anything to shut down here??
     }
     
-    public static Path getFrontPageFopFile(){
+    public static Path getFrontPageFopFile() {
         return Path.of(getConfig().getString("pdfService.frontpageFOPfile"));
     }
     
-    public static String getCopyrightFooterText(){
+    public static String getCopyrightFooterText() {
         return getConfig().getString("pdfService.copyrightFooterText");
     }
     
-    public static Integer getCopyrightFooterFontSize(){
+    public static Integer getCopyrightFooterFontSize() {
         return getConfig().getInteger("pdfService.copyrightFooterFontsize");
     }
     
-    public static List<String> getHeaderLines(){
+    public static List<String> getHeaderLines() {
         return getConfig().getList("pdfService.oldHeaderStrings");
     }
     
@@ -65,9 +65,10 @@ public class ServiceConfig {
     }
     
     
-    public static Integer getYearsSincePublicationToBeOutsideCopyright(){
+    public static Integer getYearsSincePublicationToBeOutsideCopyright() {
         return getConfig().getInteger("pdfService.yearsSincePublicationToBeOutsideCopyright");
     }
+    
     /**
      * Direct access to the backing YAML-class is used for configurations with more flexible content
      * and/or if the service developer prefers key-based property access.
@@ -82,8 +83,26 @@ public class ServiceConfig {
     }
     
     
-    public static synchronized AlmaRestClient getAlmaRestClient(){
-        if (almaRestClient == null){
+    public static Color hexToColor(String value) {
+        String digits;
+        if (value.startsWith("#")) {
+            digits = value.substring(1, Math.min(value.length(), 7));
+        } else {
+            digits = value;
+        }
+        String hstr = "0x" + digits;
+        Color c;
+        try {
+            c = Color.decode(hstr);
+        } catch (NumberFormatException nfe) {
+            c = null;
+        }
+        return c;
+    }
+    
+    
+    public static synchronized AlmaRestClient getAlmaRestClient() {
+        if (almaRestClient == null) {
             log.debug("Creating new AlmaRestClient");
             YAML config = getConfig();
             almaRestClient = new AlmaRestClient(config.getString("alma.url"),
@@ -99,5 +118,5 @@ public class ServiceConfig {
         return almaRestClient;
     }
     
- 
+    
 }

@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.awt.color.ColorSpace;
 import java.io.IOException;
 
 public class CopyrightFooterInserter {
@@ -29,7 +30,11 @@ public class CopyrightFooterInserter {
         float textWidth1 = calculateTextLengthPixels(copyrightFooterText, 1, font);
         
         float textboxWidth1 = calculateTextLengthPixels("  " + copyrightFooterText + "  ", 1, font);
-        
+    
+        final Color textboxColor = ServiceConfig.hexToColor(ServiceConfig.getConfig()
+                                                                   .getString("pdfService.copyrightFooterBackground"));
+    
+    
         for (PDPage p : doc.getPages()) {
             
             //TODO cropbox or mediabox?
@@ -60,8 +65,8 @@ public class CopyrightFooterInserter {
                 
                 
                 contentStream.saveGraphicsState();
-                
-                contentStream.setNonStrokingColor(Color.YELLOW);
+    
+                contentStream.setNonStrokingColor(textboxColor);
                 
                 final float textboxY = footer_height * .8f;
                 final float textBoxH = footer_height * 1.1f;
