@@ -1,17 +1,17 @@
 # pdf-service
 
-<http://localhost:8080/pdf-service/api/getPdf?barcode=130022786122>
+<http://localhost:8080/pdf-service/api/getPdf/130022786122.pdf>
 
-<http://localhost:8080/pdf-service/api/getPdf?barcode=130018854342>
+<http://localhost:8080/pdf-service/api/getPdf/130018854342.pdf>
 
-<http://localhost:8080/pdf-service/api/getPdf?barcode=130018852943>
+<http://localhost:8080/pdf-service/api/getPdf/130018852943.pdf>
 
 
 Gamle filer: 
 <http://www5.kb.dk/e-mat/dod/115808025291_bw.pdf>
 <http://www5.kb.dk/e-mat/dod/115808025307_bw.pdf>
 
-<http://localhost:8080/pdf-service/api/getPdf?barcode=115808025307>
+<http://localhost:8080/pdf-service/api/getPdf/115808025307_bw.pdf>
 
 
 
