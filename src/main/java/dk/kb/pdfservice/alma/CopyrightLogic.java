@@ -56,7 +56,7 @@ public class CopyrightLogic {
     }
     
     @Nullable
-    protected static LocalDate parseDate(String dateField) {
+    public static LocalDate parseDate(String dateField) {
         Optional<LocalDate> firstYear =
                 extractPubYearFromD4_D4(dateField)
                         .or(() -> extractPubYearFromDateNamed(dateField))
