@@ -36,6 +36,10 @@ public class ServiceConfig {
         serviceConfig = YAML.resolveLayeredConfigs(configFile);
     }
     
+    public static void shutdown() {
+        //Anything to shut down here??
+    }
+    
     public static Path getFrontPageFopFile(){
         return Path.of(getConfig().getString("pdfService.frontpageFOPfile"));
     }
@@ -95,4 +99,5 @@ public class ServiceConfig {
         return almaRestClient;
     }
     
+ 
 }

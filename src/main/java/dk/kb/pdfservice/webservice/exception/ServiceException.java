@@ -1,5 +1,6 @@
 package dk.kb.pdfservice.webservice.exception;
 
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
 /*
@@ -8,7 +9,7 @@ import javax.ws.rs.core.Response;
  * Note that this class has 2 "modes": Plain text message or custom response object,
  * intended for use with OpenAPI-generated Dto response objects.
  */
-public class ServiceException extends RuntimeException {
+public class ServiceException extends WebApplicationException {
     private static final long serialVersionUID = 27182819L;
     private final Response.Status responseStatus;
     
