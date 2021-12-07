@@ -95,7 +95,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     @Override
     public StreamingOutput getPdf(String pdfFileString) {
         try {
-            
+            //TODO race conditions and caching. No need to generate pdf for EACH call?
             final File pdfFile = new File(ServiceConfig.getPdfSourcePath(), pdfFileString);
             
             if (!(
@@ -119,11 +119,11 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
             
             InputStream resultingPdf;
             try (PDDocument pdDocument = PdfUtils.openDocument(new FileInputStream(pdfFile))) {
-                
                 PdfTitlePageCleaner.cleanHeaderPages(pdDocument);
                 if (!pdfInfo.isWithinCopyright()) {
+                    log.info("Starting to insert footers for {}",pdfFile);
                     CopyrightFooterInserter.insertCopyrightFooter(pdDocument);
-                    log.info("Finished inserting footers");
+                    log.info("Finished inserting footers for {}", pdfFile);
                 }
                 resultingPdf = PdfUtils.dumpDocument(pdDocument);
             }
