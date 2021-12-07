@@ -5,9 +5,13 @@ import dk.kb.util.yaml.YAML;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.validation.constraints.NotNull;
 import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAmount;
 import java.util.List;
 
 /**
@@ -64,6 +68,20 @@ public class ServiceConfig {
         return getConfig().getString("pdfService.PDFsource");
     }
     
+    
+    public static String getPdfTempPath() {
+        return getConfig().getString("pdfService.PDFTempFolder");
+    }
+    
+    public static TemporalAmount getMaxAgeTempPdf() {
+        @NotNull Integer value = getConfig().getInteger(
+                "pdfService.maxAgeOfTempPdfsInMinutes.value");
+    
+        String unit = getConfig().getString(
+                "pdfService.maxAgeOfTempPdfsInMinutes.unit");
+        return Duration.of(value, ChronoUnit.valueOf(unit));
+    
+    }
     
     public static Integer getYearsSincePublicationToBeOutsideCopyright() {
         return getConfig().getInteger("pdfService.yearsSincePublicationToBeOutsideCopyright");

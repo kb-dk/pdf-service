@@ -49,6 +49,10 @@ alma:
 
 pdfService:
   PDFsource: "http://www5.kb.dk/e-mat/dod/"
+  PDFTempFolder: "temp/"
+  maxAgeOfTempPdfsInMinutes:
+    value: 1
+    unit: MINUTES
 
   frontpageFOPfile: /home/pdf/services/conf/frontpage.xsl
   frontpageLogo: /home/pdf/services/conf/KBlogo.png
