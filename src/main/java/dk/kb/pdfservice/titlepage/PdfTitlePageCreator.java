@@ -4,6 +4,7 @@ import dk.kb.pdfservice.alma.PdfInfo;
 import dk.kb.pdfservice.config.ServiceConfig;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.fop.apps.FOPException;
+import org.apache.fop.apps.FOUserAgent;
 import org.apache.fop.apps.Fop;
 import org.apache.fop.apps.FopFactory;
 import org.apache.fop.apps.FopFactoryBuilder;
@@ -22,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.util.Date;
 
 public class PdfTitlePageCreator {
     
@@ -31,12 +33,20 @@ public class PdfTitlePageCreator {
         
     
         FopFactoryBuilder builder = new FopFactoryBuilder(new File(".").toURI());
-        builder.setAccessibility(true);
+        builder.setAccessibility(false);
         FopFactory fopFactory = builder.build();
         
         
         try (ByteArrayOutputStream outStream = new ByteArrayOutputStream()) {
-            Fop fop = fopFactory.newFop(MimeConstants.MIME_PDF, outStream);
+            FOUserAgent agent = fopFactory.newFOUserAgent();
+            //How to override the FOP logging
+            //LoggingEventListener loggingEventListener = new LoggingEventListener();
+            //agent.getEventBroadcaster().addEventListener(loggingEventListener);
+            agent.setAuthor(pdfInfo.getAuthors());
+            agent.setTitle(pdfInfo.getTitle());
+            agent.setCreationDate(new Date(pdfInfo.getPublicationDate().toEpochDay()));
+            
+            Fop fop = fopFactory.newFop(MimeConstants.MIME_PDF, agent, outStream);
             
             TransformerFactory factory = TransformerFactory.newInstance();
             
