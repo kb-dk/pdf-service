@@ -16,7 +16,6 @@
     <xsl:param name="place" as="xs:string"/>
     <xsl:param name="size" as="xs:string"/>
     <xsl:param name="isWithinCopyright" as="xs:boolean"/>
-
     <xsl:param name="logoPath" as="xs:string"/>
 
     <xsl:variable name="dk-fixed-text">
@@ -84,7 +83,6 @@
                             <xsl:attribute name="scaling">uniform</xsl:attribute>
                             <xsl:attribute name="text-align">center</xsl:attribute>
                             <xsl:attribute name="src">
-                                <!--                                src/main/resources/images/KBlogo.png-->
                                 <xsl:value-of select="$logoPath"/>
                             </xsl:attribute>
                         </xsl:element>

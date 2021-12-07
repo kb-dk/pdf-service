@@ -39,6 +39,7 @@ public class PdfTitlePageCreator {
             Fop fop = fopFactory.newFop(MimeConstants.MIME_PDF, outStream);
             
             TransformerFactory factory = TransformerFactory.newInstance();
+            
             factory.setErrorListener(new ErrorListener() {
                 @Override
                 public void warning(TransformerException exception) {
@@ -56,9 +57,12 @@ public class PdfTitlePageCreator {
                     throw exception;
                 }
             });
-            
-            try (InputStream formatterStream = new FileInputStream(ServiceConfig.getFrontPageFopFile().toFile())) {
-                Transformer xslfoTransformer = factory.newTransformer(new StreamSource(formatterStream));
+    
+            File file = ServiceConfig.getFrontPageFopFile().toFile();
+            try (InputStream formatterStream = new FileInputStream(file)) {
+                
+                Transformer xslfoTransformer = factory.newTransformer(new StreamSource(formatterStream,file.toURI().toASCIIString()));
+                
                 xslfoTransformer.setParameter("authors", pdfInfo.getAuthors());
                 xslfoTransformer.setParameter("title", pdfInfo.getTitle());
                 xslfoTransformer.setParameter("altTitle", pdfInfo.getAlternativeTitle());
@@ -66,9 +70,8 @@ public class PdfTitlePageCreator {
                 xslfoTransformer.setParameter("place", pdfInfo.getPlace());
                 xslfoTransformer.setParameter("size", pdfInfo.getSize());
                 xslfoTransformer.setParameter("isWithinCopyright", pdfInfo.isWithinCopyright());
+                xslfoTransformer.setParameter("logoPath", ServiceConfig.getLogoPath());
                 
-                final String logoPath = ServiceConfig.getLogoPath();
-                xslfoTransformer.setParameter("logoPath", logoPath);
                 
                 xslfoTransformer.transform(new StreamSource(new StringReader("<xml/>")),
                                            new SAXResult(fop.getDefaultHandler()));

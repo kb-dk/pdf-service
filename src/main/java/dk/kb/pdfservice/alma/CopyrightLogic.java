@@ -52,7 +52,9 @@ public class CopyrightLogic {
         }
         
         log.debug("input date is {}", dateField);
-        return parseDate(dateField);
+        LocalDate parsedDate = parseDate(dateField);
+        log.info("Input date {} parsed to {}",dateField, parsedDate);
+        return parsedDate;
     }
     
     @Nullable
