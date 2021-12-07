@@ -1,4 +1,4 @@
-package dk.kb.pdfservice.api.impl;
+package dk.kb.pdfservice.alma;
 
 import dk.kb.alma.client.AlmaInventoryClient;
 import dk.kb.alma.gen.bibs.Bib;

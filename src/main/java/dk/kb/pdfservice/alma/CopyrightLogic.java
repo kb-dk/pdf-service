@@ -1,4 +1,4 @@
-package dk.kb.pdfservice.api.impl;
+package dk.kb.pdfservice.alma;
 
 import dk.kb.alma.gen.bibs.Bib;
 import dk.kb.pdfservice.config.ServiceConfig;
@@ -16,11 +16,11 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class CopyrightDecider {
+public class CopyrightLogic {
     
-    private static final Logger log = LoggerFactory.getLogger(CopyrightDecider.class);
+    private static final Logger log = LoggerFactory.getLogger(CopyrightLogic.class);
     
-    public static boolean isWithinCopyright(LocalDate dateOfPublication) {
+    protected static boolean isWithinCopyright(LocalDate dateOfPublication) {
         
         if (dateOfPublication == null) {
             //If we cannot parse a date, it is ALWAYS too young
@@ -30,11 +30,11 @@ public class CopyrightDecider {
                                 .isAfter(LocalDate.now(ZoneId.systemDefault()));
     }
     
-    public static LocalDate getPublicationDate(Bib bib, Element marc21) {
+    protected static LocalDate getPublicationDate(Bib bib, Element marc21) {
         
         final String dateOfPublication = bib.getDateOfPublication();
         
-        final String tag260c = MarcClient.getString(marc21, "260","c").orElse(null);
+        final String tag260c = MarcClient.getString(marc21, "260", "c").orElse(null);
         log.debug("tag260c {}", tag260c);
         
         

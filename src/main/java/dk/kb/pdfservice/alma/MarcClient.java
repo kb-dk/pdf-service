@@ -1,4 +1,4 @@
-package dk.kb.pdfservice.api.impl;
+package dk.kb.pdfservice.alma;
 
 import dk.kb.alma.gen.bibs.Bib;
 import dk.kb.util.xml.XPathSelector;
@@ -17,7 +17,7 @@ public class MarcClient {
     
     
     @Nonnull
-    static PdfInfo getPdfInfo(String actualBarcode) {
+    public static PdfInfo getPdfInfo(String actualBarcode) {
         Bib bib = AlmaLookupClient.getBib(actualBarcode);
         
         //Portfolios portFolios = almaInventoryClient.getBibPortfolios(mmsID);
@@ -31,8 +31,8 @@ public class MarcClient {
         String size = getSize(marc21);
         
         
-        final LocalDate publicationDate = CopyrightDecider.getPublicationDate(bib, marc21);
-        boolean isWithinCopyright = CopyrightDecider.isWithinCopyright(publicationDate);
+        final LocalDate publicationDate = CopyrightLogic.getPublicationDate(bib, marc21);
+        boolean isWithinCopyright = CopyrightLogic.isWithinCopyright(publicationDate);
         PdfInfo pdfInfo = new PdfInfo(authors,
                                       title,
                                       alternativeTitle,
@@ -108,7 +108,7 @@ public class MarcClient {
                      .collect(Collectors.joining(", "));
     }
     
-    protected static Optional<String> getString(Element marc21, String tag, String subfield) {
+    public static Optional<String> getString(Element marc21, String tag, String subfield) {
         XPathSelector xpath = XpathUtils.createXPathSelector();
         
         return Optional.ofNullable(xpath.selectString(marc21,
@@ -120,7 +120,7 @@ public class MarcClient {
                                                       null));
     }
     
-    protected static List<String> getStrings(Element marc21, String tag, String subfield) {
+    public static List<String> getStrings(Element marc21, String tag, String subfield) {
         XPathSelector xpath = XpathUtils.createXPathSelector();
         
         return xpath.selectStringList(marc21,

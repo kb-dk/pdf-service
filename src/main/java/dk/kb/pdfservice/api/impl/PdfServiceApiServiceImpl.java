@@ -1,14 +1,20 @@
 package dk.kb.pdfservice.api.impl;
 
+import dk.kb.pdfservice.alma.MarcClient;
+import dk.kb.pdfservice.alma.PdfInfo;
 import dk.kb.pdfservice.api.PdfServiceApi;
 import dk.kb.pdfservice.config.ServiceConfig;
+import dk.kb.pdfservice.footer.CopyrightFooterInserter;
+import dk.kb.pdfservice.titlepage.PdfTitlePageCleaner;
+import dk.kb.pdfservice.titlepage.PdfTitlePageCreator;
+import dk.kb.pdfservice.titlepage.PdfTitlePageInserter;
+import dk.kb.pdfservice.utils.PdfUtils;
 import dk.kb.pdfservice.webservice.exception.InternalServiceException;
 import dk.kb.pdfservice.webservice.exception.NotFoundServiceException;
 import dk.kb.pdfservice.webservice.exception.ServiceException;
 import org.apache.commons.io.IOUtils;
 import org.apache.cxf.jaxrs.ext.MessageContext;
-import org.apache.pdfbox.io.MemoryUsageSetting;
-import org.apache.pdfbox.multipdf.PDFMergerUtility;
+import org.apache.pdfbox.pdmodel.PDDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -26,7 +32,6 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Providers;
 import javax.xml.transform.TransformerException;
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -35,7 +40,6 @@ import java.util.Locale;
 /**
  * pdf-service
  *
- * <p>This pom can be inherited by projects wishing to integrate to the SBForge development platform.
  */
 public class PdfServiceApiServiceImpl implements PdfServiceApi {
     
@@ -80,7 +84,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     /**
      * Request a theater manuscript summary in pdf format.
      *
-     * @param pdfFile : a pdf file with a name like {barcode}-somthing.pdf
+     * @param pdfFileString : a pdf file with a name like {barcode}-somthing.pdf
      * @return <ul>
      *         <li>code = 200, message = "A pdf with attached page", response = String.class</li>
      *         </ul>
@@ -89,20 +93,20 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
      *         codes
      **/
     @Override
-    public StreamingOutput getPdf(String pdfFile) {
+    public StreamingOutput getPdf(String pdfFileString) {
         try {
             
-            final File origPdfFile = new File(ServiceConfig.getPdfSourcePath(), pdfFile);
+            final File pdfFile = new File(ServiceConfig.getPdfSourcePath(), pdfFileString);
             
             if (!(
-                    origPdfFile.exists() &&
-                    origPdfFile.isFile() &&
-                    origPdfFile.canRead() &&
-                    origPdfFile.getName().toLowerCase(Locale.ROOT).endsWith(".pdf"))) {
-                throw new NotFoundServiceException("Failed to find pdf file '" + pdfFile + "'");
+                    pdfFile.exists() &&
+                    pdfFile.isFile() &&
+                    pdfFile.canRead() &&
+                    pdfFile.getName().toLowerCase(Locale.ROOT).endsWith(".pdf"))) {
+                throw new NotFoundServiceException("Failed to find pdf file '" + pdfFileString + "'");
             }
             
-            String barcode = pdfFile.split("[-._]", 2)[0];
+            String barcode = pdfFileString.split("[-._]", 2)[0];
             
             PdfInfo pdfInfo = MarcClient.getPdfInfo(barcode);
             
@@ -110,55 +114,48 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
             try {
                 apronFile = PdfTitlePageCreator.produceHeaderPage(pdfInfo);
             } catch (TransformerException | SAXException e) {
-                throw new InternalServiceException("Failed to construct header page for '" + pdfFile + "'", e);
+                throw new InternalServiceException("Failed to construct header page for '" + pdfFileString + "'", e);
             }
             
-            PDFMergerUtility pdfMergerUtility = new PDFMergerUtility();
-            pdfMergerUtility.addSource(apronFile);
-            try (InputStream origPdfStream = new BufferedInputStream(new FileInputStream(origPdfFile))) {
-                InputStream resultingPdf = CopyrightFooterInserter.cleanHeaderPages(origPdfStream);
+            InputStream resultingPdf;
+            try (PDDocument pdDocument = PdfUtils.openDocument(new FileInputStream(pdfFile))) {
+                
+                PdfTitlePageCleaner.cleanHeaderPages(pdDocument);
                 if (!pdfInfo.isWithinCopyright()) {
-                    resultingPdf = CopyrightFooterInserter.insertCopyrightFooter(resultingPdf);
+                    CopyrightFooterInserter.insertCopyrightFooter(pdDocument);
                     log.info("Finished inserting footers");
                 }
-                pdfMergerUtility.addSource(resultingPdf);
+                resultingPdf = PdfUtils.dumpDocument(pdDocument);
             }
+            
+            try (final var completePDF = PdfTitlePageInserter.mergeFrontPageWithPdf(apronFile, resultingPdf);) {
+                log.debug("Finished merging documents for {}", pdfFileString);
+                return output -> {
+                    httpServletResponse.setHeader("Content-disposition", "inline; filename=\"" + pdfFileString + "\"");
+                    IOUtils.copy(completePDF, output);
+                    log.debug("Finished returning pdf {}", pdfFileString);
+                };
                 
-                try (final var completePDF = new org.apache.commons.io.output.ByteArrayOutputStream()) {
-                    pdfMergerUtility.setDestinationStream(completePDF);
-                    //TODO Configurable memory settings
-                    //Just use 100MBs and unlimited temp files
-                    pdfMergerUtility.mergeDocuments(MemoryUsageSetting.setupMixed(1024 * 1024 * 100));
-                    log.debug("Finished merging documents for {}", pdfFile);
-                    return output -> {
-                        httpServletResponse.setHeader("Content-disposition", "inline; filename=\"" + pdfFile + "\"");
-                        completePDF.flush(); //just in case it is not done automatically
-                        try (var resultInputStream = completePDF.toInputStream();) {
-                            IOUtils.copy(resultInputStream, output);
-                        }
-                        log.debug("Finished returning pdf {}", pdfFile);
-                    };
-                    
-                }
-            } catch (Exception e) {
-                log.error("Exception for {}", pdfFile, e);
-                throw handleException(e);
             }
-        }
-        
-        
-        /**
-         * This method simply converts any Exception into a Service exception
-         *
-         * @param e: Any kind of exception
-         * @return A ServiceException
-         */
-        private ServiceException handleException (Exception e){
-            if (e instanceof ServiceException) {
-                return (ServiceException) e; // Do nothing - this is a declared ServiceException from within module.
-            } else {// Unforseen exception (should not happen). Wrap in internal service exception
-                log.error("ServiceException(HTTP 500):", e); //You probably want to log this.
-                return new InternalServiceException(e.getMessage());
-            }
+        } catch (Exception e) {
+            log.error("Exception for {}", pdfFileString, e);
+            throw handleException(e);
         }
     }
+    
+    
+    /**
+     * This method simply converts any Exception into a Service exception
+     *
+     * @param e: Any kind of exception
+     * @return A ServiceException
+     */
+    private ServiceException handleException(Exception e) {
+        if (e instanceof ServiceException) {
+            return (ServiceException) e; // Do nothing - this is a declared ServiceException from within module.
+        } else {// Unforseen exception (should not happen). Wrap in internal service exception
+            log.error("ServiceException(HTTP 500):", e); //You probably want to log this.
+            return new InternalServiceException(e.getMessage());
+        }
+    }
+}

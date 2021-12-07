@@ -1,5 +1,6 @@
-package dk.kb.pdfservice.api.impl;
+package dk.kb.pdfservice.titlepage;
 
+import dk.kb.pdfservice.alma.PdfInfo;
 import dk.kb.pdfservice.config.ServiceConfig;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.fop.apps.FOPException;
@@ -9,7 +10,6 @@ import org.apache.fop.apps.FopFactoryBuilder;
 import org.apache.fop.apps.MimeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xml.sax.SAXException;
 
 import javax.xml.transform.ErrorListener;
 import javax.xml.transform.Transformer;
