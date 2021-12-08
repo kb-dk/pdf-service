@@ -119,13 +119,8 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         //This is the file to return to the use user. It might not exist yet
         File copyrightedPdfFile = new File(ServiceConfig.getPdfTempPath(), requestedPdfFile);
         
-    
         //1. Lock for this filename, so only one user can use it
         final ReadWriteLock readWriteLock = stripedLock.get(requestedPdfFile);
-        //Due to the stripedLock being a lazy construct, and the read and write locks do not maintain a
-        //reference back to the ReadWriteLock, the garbage collector could be a problem here
-        //Solved by not having read and write locks as separate variables, but only using the readWriteLock mother-object
-        
         
         //First we acquire the read lock, to be able to read the file
         readWriteLock.readLock().lock();
@@ -147,8 +142,8 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                     //If we got to here, everything worked
                 } finally {
                     downgradeToReadLock(readWriteLock);
+                    //w=0,r=1
                 }
-                //w=0,r=1
             }
             //w=0,r=1, no matter if we went through the if or not
             return returnPdfFile(copyrightedPdfFile);
