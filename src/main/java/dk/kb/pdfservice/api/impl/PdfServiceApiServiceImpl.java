@@ -48,7 +48,6 @@ import java.time.Instant;
 import java.time.temporal.TemporalAmount;
 import java.util.Locale;
 import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * pdf-service
@@ -100,8 +99,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
      * When fair=true locks favor granting access to the longest-waiting thread.
      */
     private static final Striped<ReadWriteLock> stripedLock
-            = StripedFactory.lazyWeakReadWriteLock(1023,
-                                                   () -> new ReentrantReadWriteLock(true));
+            = StripedFactory.readWriteLockLazyWeak(1023, true);
     
     
     /**
