@@ -1,6 +1,7 @@
 package dk.kb.pdfservice.api.impl;
 
 import com.google.common.util.concurrent.Striped;
+import com.google.common.util.concurrent.StripedFactory;
 import dk.kb.pdfservice.alma.MarcClient;
 import dk.kb.pdfservice.alma.PdfInfo;
 import dk.kb.pdfservice.api.PdfServiceApi;
@@ -14,6 +15,7 @@ import dk.kb.pdfservice.webservice.exception.InternalServiceException;
 import dk.kb.pdfservice.webservice.exception.NotFoundServiceException;
 import dk.kb.pdfservice.webservice.exception.ServiceException;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.slf4j.Logger;
@@ -45,8 +47,8 @@ import java.io.OutputStream;
 import java.time.Instant;
 import java.time.temporal.TemporalAmount;
 import java.util.Locale;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * pdf-service
@@ -90,13 +92,22 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     @Context
     private transient MessageContext messageContext;
     
-    private static final Striped<ReadWriteLock> stripedLock = Striped.readWriteLock(10);
+    /**
+     * Each key is mapped to as tripe. Num of stripes are the number of possible locks
+     * So this means that at most 1023 locks can be handled at the same time
+     * We do not use the special features of ReentrantLock, but it basically means that the same thread can lock a
+     * Reentrant Lock multiple times, and must unlock the same number of times to release it
+     * When fair=true locks favor granting access to the longest-waiting thread.
+     */
+    private static final Striped<ReadWriteLock> stripedLock
+            = StripedFactory.lazyWeakReadWriteLock(1023,
+                                                   () -> new ReentrantReadWriteLock(true));
     
     
     /**
-     * Request a theater manuscript summary in pdf format.
+     * Request pdf file with copyright info added
      *
-     * @param pdfFileString : a pdf file with a name like {barcode}-somthing.pdf
+     * @param requestedPdfFile : a pdf file with a name like {barcode}-something.pdf
      * @return <ul>
      *         <li>code = 200, message = "A pdf with attached page", response = String.class</li>
      *         </ul>
@@ -105,56 +116,108 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
      *         codes
      **/
     @Override
-    public StreamingOutput getPdf(String pdfFileString) {
+    public StreamingOutput getPdf(String requestedPdfFile) {
         
+        //This is the file to return to the use user. It might not exist yet
+        File copyrightedPdfFile = new File(ServiceConfig.getPdfTempPath(), requestedPdfFile);
+        
+    
         //1. Lock for this filename, so only one user can use it
-        Lock lock = stripedLock.get(pdfFileString).writeLock();
+        final ReadWriteLock readWriteLock = stripedLock.get(requestedPdfFile);
+        //Due to the stripedLock being a lazy construct, and the read and write locks do not maintain a
+        //reference back to the ReadWriteLock, the garbage collector could be a problem here
+        //Solved by not having read and write locks as separate variables, but only using the readWriteLock mother-object
         
-        lock.lock();
+        
+        //First we acquire the read lock, to be able to read the file
+        readWriteLock.readLock().lock();
+        //state: w=0,r=1
         try {
+            boolean useTempPdf = canUseTempPdf(copyrightedPdfFile);
             
-            File readyPdfFile = new File(ServiceConfig.getPdfTempPath(), pdfFileString);
-            //2. Check if file exists and is not to old
-            if ( isUsable(readyPdfFile)) {
-                Instant lastModifiedAt = Instant.ofEpochMilli(readyPdfFile.lastModified());
-                TemporalAmount maxAge = ServiceConfig.getMaxAgeTempPdf();
-                if (!lastModifiedAt.plus(maxAge).isBefore(Instant.now())) {
-                    //3. if good, return the ready file
-                    return returnPdfFile(readyPdfFile);
+            //The copyrighted PDF is not usable, so it must be regenerated
+            if (!useTempPdf) {
+    
+                upgradeToWriteLock(readWriteLock);
+                //state: w=1,r=0,
+                try {
+                    //recheck that somebody did not update the pdf beneath us while we were waiting for the write lock
+                    if (!canUseTempPdf(copyrightedPdfFile)) {
+                        //recreate the copyrighted PDF
+                        createCopyrightedPDF(requestedPdfFile, copyrightedPdfFile);
+                    }
+                    //If we got to here, everything worked
+                } finally {
+                    downgradeToReadLock(readWriteLock);
                 }
+                //w=0,r=1
             }
+            //w=0,r=1, no matter if we went through the if or not
+            return returnPdfFile(copyrightedPdfFile);
             
-            //4. otherwise create
-            final File sourcePdfFile = new File(ServiceConfig.getPdfSourcePath(), pdfFileString);
-            
-            if (!isUsable(sourcePdfFile)) {
-                throw new NotFoundServiceException("Failed to find pdf file '" + pdfFileString + "'");
-            }
-            
-            String barcode = pdfFileString.split("[-._]", 2)[0];
-            PdfInfo pdfInfo = MarcClient.getPdfInfo(barcode);
-            
-            try (InputStream apronFile = produceApron(pdfFileString, pdfInfo);
-                 InputStream requestedPDF = transformPdfFile(sourcePdfFile, pdfInfo);
-                 InputStream completePDF = PdfTitlePageInserter.mergeFrontPageWithPdf(apronFile, requestedPDF);
-                 OutputStream pdfFileOnDisk = new FileOutputStream(readyPdfFile)) {
-                log.debug("Finished merging documents for {}", pdfFileString);
-                IOUtils.copy(completePDF, pdfFileOnDisk);
-                log.info("Finished returning pdf {}", pdfFileString);
-            } catch (Exception e) {
-                log.error("Failed for {}", pdfFileString, e);
-                throw new WebApplicationException("Unknown failure for " + pdfFileString,
-                                                  e,
-                                                  Response.Status.INTERNAL_SERVER_ERROR);
-            }
-            return returnPdfFile(readyPdfFile);
         } catch (Exception e) {
-            log.error("Exception for {}", pdfFileString, e);
+            log.error("Exception for '{}'", requestedPdfFile, e);
             throw handleException(e);
         } finally {
-            lock.unlock();
+            //And we can release the readlock after the the method is complete
+            readWriteLock.readLock().unlock();
+            //w=0,r=0
         }
     }
+    
+    private void downgradeToReadLock(ReadWriteLock readWriteLock) {
+        //Downgrade by acquiring read lock before releasing write lock
+        readWriteLock.readLock().lock();
+        //Now we release the write lock
+        readWriteLock.writeLock().unlock();
+    }
+    
+    private void upgradeToWriteLock(ReadWriteLock readWriteLock) {
+        //Must release read lock before acquiring write lock
+        readWriteLock.readLock().unlock();
+        //acquire write lock. This CAN take a while
+        readWriteLock.writeLock().lock();
+    }
+    
+    private void createCopyrightedPDF(String pdfFileString, File readyPdfFile) {
+        //4. otherwise create
+        final File sourcePdfFile = new File(ServiceConfig.getPdfSourcePath(), pdfFileString);
+        
+        if (!isUsable(sourcePdfFile)) {
+            throw new NotFoundServiceException("Failed to find pdf file '" + pdfFileString + "'");
+        }
+        
+        String barcode = pdfFileString.split("[-._]", 2)[0];
+        PdfInfo pdfInfo = MarcClient.getPdfInfo(barcode);
+        
+        try (InputStream apronFile = produceApron(pdfFileString, pdfInfo);
+             InputStream requestedPDF = transformPdfFile(sourcePdfFile, pdfInfo);
+             InputStream completePDF = PdfTitlePageInserter.mergeFrontPageWithPdf(apronFile,
+                                                                                  requestedPDF);
+             OutputStream pdfFileOnDisk = new FileOutputStream(readyPdfFile)) {
+            log.debug("Finished merging documents for {}", pdfFileString);
+            IOUtils.copy(completePDF, pdfFileOnDisk);
+            log.info("Finished returning pdf {}", pdfFileString);
+        } catch (Exception e) {
+            log.error("Failed for {}", pdfFileString, e);
+            throw new WebApplicationException("Unknown failure for " + pdfFileString,
+                                              e,
+                                              Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
+    private boolean canUseTempPdf(File readyPdfFile) {
+        //2. Check if file exists
+        if (isUsable(readyPdfFile)) {
+            Instant pdfLastModified = Instant.ofEpochMilli(readyPdfFile.lastModified());
+            TemporalAmount maxAllowedAge = ServiceConfig.getMaxAgeTempPdf();
+            //Check if the file is not too old
+            //3. if good, return the ready file
+            return !pdfLastModified.plus(maxAllowedAge).isBefore(Instant.now());
+        }
+        return false;
+    }
+    
     
     private boolean isUsable(File readyPdfFile) {
         return readyPdfFile.exists() &&
@@ -164,12 +227,19 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     }
     
     @Nonnull
-    private StreamingOutput returnPdfFile(File readyPdfFile) {
+    private StreamingOutput returnPdfFile(File readyPdfFile) throws IOException {
+        //buffer the file here. This allows us to release any locks BEFORE the StreamingOutput is completely read
+        final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        try (InputStream pdfFile = new FileInputStream(readyPdfFile)) {
+            IOUtils.copy(pdfFile, buffer);
+        }
         //TODO log the return of the file
         return output -> {
             httpServletResponse.setHeader("Content-disposition", "inline; filename=\"" + readyPdfFile.getName() + "\"");
-            try (InputStream pdfFile = new FileInputStream(readyPdfFile)) {
-                IOUtils.copy(pdfFile, output);
+            try {
+                IOUtils.copy(buffer.toInputStream(), output);
+            } finally {
+                buffer.close();
             }
         };
     }
