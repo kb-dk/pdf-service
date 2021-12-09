@@ -10,6 +10,7 @@ import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.Period;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAmount;
 import java.util.List;
@@ -44,30 +45,10 @@ public class ServiceConfig {
         //Anything to shut down here??
     }
     
-    public static Path getFrontPageFopFile() {
-        return Path.of(getConfig().getString("pdfService.frontpageFOPfile"));
-    }
-    
-    public static String getCopyrightFooterText() {
-        return getConfig().getString("pdfService.copyrightFooterText");
-    }
-    
-    public static Integer getCopyrightFooterFontSize() {
-        return getConfig().getInteger("pdfService.copyrightFooterFontsize");
-    }
-    
-    public static List<String> getHeaderLines() {
-        return getConfig().getList("pdfService.oldHeaderStrings");
-    }
-    
-    public static String getLogoPath() {
-        return getConfig().getString("pdfService.frontpageLogo");
-    }
     
     public static String getPdfSourcePath() {
         return getConfig().getString("pdfService.PDFsource");
     }
-    
     
     public static String getPdfTempPath() {
         return getConfig().getString("pdfService.PDFTempFolder");
@@ -76,16 +57,73 @@ public class ServiceConfig {
     public static TemporalAmount getMaxAgeTempPdf() {
         @NotNull Integer value = getConfig().getInteger(
                 "pdfService.maxAgeOfTempPdfsInMinutes.value");
-    
+        
         String unit = getConfig().getString(
                 "pdfService.maxAgeOfTempPdfsInMinutes.unit");
         return Duration.of(value, ChronoUnit.valueOf(unit));
-    
+        
     }
     
-    public static Integer getYearsSincePublicationToBeOutsideCopyright() {
-        return getConfig().getInteger("pdfService.yearsSincePublicationToBeOutsideCopyright");
+    
+    //OldHeaders
+    public static List<String> getHeaderLines() {
+        return getConfig().getList("pdfService.oldHeaderStrings");
     }
+    
+    
+    //Copyright determination
+    public static TemporalAmount getTimeSincePublicationToBeOutsideCopyright() {
+        @NotNull Integer value = getConfig().getInteger(
+                "pdfService.TimeSincePublicationToBeOutsideCopyright.value");
+        
+        String unit = getConfig().getString(
+                "pdfService.TimeSincePublicationToBeOutsideCopyright.unit");
+        ChronoUnit chronoUnit = ChronoUnit.valueOf(unit);
+        switch (chronoUnit){
+            case DAYS:
+                return Period.of(0,0,value);
+            case WEEKS:
+                return Period.of(0,0,value*7);
+            case MONTHS:
+                return Period.of(0,value, 0);
+            case YEARS:
+                return Period.of(value,0,0);
+            case DECADES:
+                return Period.of(value*10,0,0);
+            case CENTURIES:
+                return Period.of(value*100,0,0);
+            case MILLENNIA:
+                return Period.of(value*1000,0,0);
+            default:
+                return Duration.of(value, chronoUnit);
+        }
+    }
+    
+    
+    //FrontPage
+    public static Path getFrontPageFopFile() {
+        return Path.of(getConfig().getString("pdfService.frontpage.FOPfile")).toAbsolutePath();
+    }
+    
+    public static Path getFrontPageLogoPath() {
+        return Path.of(getConfig().getString("pdfService.frontpage.Logo")).toAbsolutePath();
+    }
+    
+    
+    //Copyright Footer
+    public static String getCopyrightFooterText() {
+        return getConfig().getString("pdfService.copyrightFooter.Text");
+    }
+    
+    public static Integer getCopyrightFooterFontSize() {
+        return getConfig().getInteger("pdfService.copyrightFooter.Fontsize");
+    }
+    
+    public static Color getCopyrightFooterBackgroundColor() {
+        return Color.decode(ServiceConfig.getConfig()
+                                         .getString("pdfService.copyrightFooter.BackgroundColor"));
+    }
+    
     
     /**
      * Direct access to the backing YAML-class is used for configurations with more flexible content
@@ -98,24 +136,6 @@ public class ServiceConfig {
             throw new IllegalStateException("The configuration should have been loaded, but was not");
         }
         return serviceConfig;
-    }
-    
-    
-    public static Color hexToColor(String value) {
-        String digits;
-        if (value.startsWith("#")) {
-            digits = value.substring(1, Math.min(value.length(), 7));
-        } else {
-            digits = value;
-        }
-        String hstr = "0x" + digits;
-        Color c;
-        try {
-            c = Color.decode(hstr);
-        } catch (NumberFormatException nfe) {
-            c = null;
-        }
-        return c;
     }
     
     

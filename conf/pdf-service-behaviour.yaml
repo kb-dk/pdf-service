@@ -32,8 +32,9 @@ alma:
   max_retries: 3
   # Not that HTTP 429 (Rate Limit) from ALMA will NOT be affected by this value, and these will always be retried forever
 
-  #cache alma responses for this duration
-  cache_timeout: 3600000
+  #cache alma responses for this duration. Milliseconds
+  # Cache for 1 minute, to handle repeated calls
+  cache_timeout: 60000
 
   #Timeouts in milliseconds
   connect_timeout: 30000
@@ -48,22 +49,43 @@ alma:
     sleep_variation_millis: 3000
 
 pdfService:
-  PDFsource: "http://www5.kb.dk/e-mat/dod/"
+  #  Where original PDFs are read from
+  PDFsource: "/data1/e-mat/dod"
+  #  Where generated PDFs are stored
   PDFTempFolder: "temp/"
+  # If copyrighted PDF is older than this age, request ALMA data and create it again
+  # This ensures that updates to ALMA will tage effect (after a while)
+  # Note that if this age is SHORTER than the alma.cache_timeout, the cached ALMA record
+  # will be used, which defeats the purpose....
   maxAgeOfTempPdfsInMinutes:
-    value: 1
+    value: 5
     unit: MINUTES
+    # unit can be one of NANOS, MICROS, MILLIS, SECONDS, MINUTES, HOURS, HALF_DAYS
 
-  frontpageFOPfile: /home/pdf/services/conf/frontpage.xsl
-  frontpageLogo: /home/pdf/services/conf/KBlogo.png
-
-  copyrightFooterText: "Manuskriptkopien må ikke anvendes til opførelse og må ikke videre distribueres."
-  copyrightFooterFontsize: 14
-  copyrightFooterBackground: FFFF00
-
-  yearsSincePublicationToBeOutsideCopyright: 140
-
+  # When inserting new front page, we search for old frontpages to remove
+  # If a page contains any of these strings (case insensitive), it is regarded
+  # as a frontpage and removed
+  # As soon as we find a page that is NOT a frontpage, we stop the search. So there
+  # should be no problem with removing pages deep in document
   oldHeaderStrings:
     - "det kongelige bibliotek"
     - "det kgl. bibliotek"
     - "digitaliseret af"
+
+  # How long must pass since publication for at work to be outside copyright
+  TimeSincePublicationToBeOutsideCopyright:
+    value: 140
+    unit: YEARS
+
+  # The frontpage to use
+  frontpage:
+    FOPfile: /home/pdf/services/conf/frontpage.xsl
+    Logo: /home/pdf/services/conf/KBlogo.png
+
+  # Details of the footer to insert, if the document is under copyright
+  copyrightFooter:
+    Text: "Manuskriptkopien må ikke anvendes til opførelse og må ikke videre distribueres."
+    Fontsize: 14
+    # See https://www.rapidtables.com/web/color/html-color-codes.html for possible values
+    BackgroundColor: '#FFFF00'
+

@@ -26,7 +26,7 @@ public class CopyrightLogic {
             //If we cannot parse a date, it is ALWAYS too young
             return true;
         }
-        return dateOfPublication.plusYears(ServiceConfig.getYearsSincePublicationToBeOutsideCopyright())
+        return dateOfPublication.plus(ServiceConfig.getTimeSincePublicationToBeOutsideCopyright())
                                 .isAfter(LocalDate.now(ZoneId.systemDefault()));
     }
     

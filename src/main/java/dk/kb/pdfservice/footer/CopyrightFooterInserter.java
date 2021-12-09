@@ -31,8 +31,7 @@ public class CopyrightFooterInserter {
         
         float textboxWidth1 = calculateTextLengthPixels("  " + copyrightFooterText + "  ", 1, font);
     
-        final Color textboxColor = ServiceConfig.hexToColor(ServiceConfig.getConfig()
-                                                                   .getString("pdfService.copyrightFooterBackground"));
+        final Color textboxColor = ServiceConfig.getCopyrightFooterBackgroundColor();
     
     
         for (PDPage p : doc.getPages()) {
