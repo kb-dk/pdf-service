@@ -19,55 +19,28 @@
     <xsl:param name="logoPath" as="xs:string"/>
 
     <xsl:variable name="dk-fixed-text">
-        <fo:block font-size="16pt" font-weight="bold" font-style="italic" space-before="15mm"
-                  space-after="5mm" text-align="center" line-height="15px">DK
-        </fo:block>
-        <fo:block text-align="left" font-style="italic" font-size="10pt">
-            Dette manuskript er ophavsretligt beskyttet, og må kun benyttes til personlig brug. Du må dog også bruge
-            manuskriptet i forbindelse med optagelsesprøve på de danske teaterskoler. Hvis du vil opføre manuskriptet,
-            skal du have samtykke fra rettighedshaveren. Du kan i den forbindelse kontakte fagorganisationen Danske
-            Dramatikere. Husk altid at kreditere ophavsmanden.
-        </fo:block>
-        <fo:block space-after="2mm"/>
+        Dette manuskript er ophavsretligt beskyttet, og må kun benyttes til personlig brug. Du må dog også bruge
+        manuskriptet i forbindelse med optagelsesprøve på de danske teaterskoler. Hvis du vil opføre manuskriptet,
+        skal du have samtykke fra rettighedshaveren. Du kan i den forbindelse kontakte fagorganisationen Danske
+        Dramatikere. Husk altid at kreditere ophavsmanden.
     </xsl:variable>
 
     <xsl:variable name="uk-fixed-text">
-        <fo:block font-size="16pt" font-weight="bold" font-style="italic" space-before="15mm"
-                  space-after="5mm" text-align="center" line-height="15px">UK
-        </fo:block>
-        <fo:block text-align="left" font-style="italic" font-size="10pt">
-            This manuscript may be copyrighted. The copyright protection period is 70 years after
-            the death of the author. Any translators have copyright to the translated version of
-            the script. Works where the copyright has expired are free of copyright.
-            <fo:block space-after="2mm"/>
-            If the manuscript is copyrighted, it may only be used for private use. However, you may
-            also use
-            the manuscript in connection with the entrance examination at the Danish theater
-            schools.
-            <fo:block space-after="2mm"/>
-            If you want to write the manuscript, you must have the consent of the copyright holder.
-            You can in that regard
-            contact the rights organization Danske Dramatikere.
-        </fo:block>
+        The manuscript is copyrighted and may only be used for private use. However, you may
+        also use the manuscript in connection with the entrance examination at the Danish theater
+        schools. If you want to use the manuscript to put on a play, you must have the consent of the copyright holder.
+        In that regard, you can contact the rights organization Danske Dramatikere.
+        Always remember to credit the original author(s).
     </xsl:variable>
 
     <xsl:variable name="dk-after-cutoff-text">
-        <fo:block font-size="16pt" font-weight="bold" font-style="italic" space-before="15mm"
-                  space-after="5mm" text-align="center" line-height="15px">DK
-        </fo:block>
-        <fo:block text-align="left" font-style="italic" font-size="10pt">
-            Materialet er fri af ophavsret. Du kan kopiere, ændre, distribuere eller fremføre værket, også til kommercielle formål, uden at bede om tilladelse. Husk altid at kreditere ophavsmanden + cc logo – det sender jeg når det er endelig godkendt.
-        </fo:block>
+        Materialet er fri af ophavsret. Du kan kopiere, ændre, distribuere eller fremføre værket, også til
+        kommercielle formål, uden at bede om tilladelse. Husk altid at kreditere ophavsmanden
     </xsl:variable>
 
     <xsl:variable name="uk-after-cutoff-text">
-        <fo:block font-size="16pt" font-weight="bold" font-style="italic" space-before="15mm"
-                  space-after="5mm" text-align="center" line-height="15px">UK
-        </fo:block>
-        <fo:block text-align="left" font-style="italic" font-size="10pt">
-            The work is free of copyright. Always remember to credit the author, even if the work is
-            free of copyright.
-        </fo:block>
+        The work is free of copyright. You can copy, change, distribute or present the work, even for commercial
+        purposes, without asking for permission. Always remember to credit the author.
     </xsl:variable>
 
     <xsl:template match="/">
@@ -210,13 +183,39 @@
                     <fo:block>
                         <xsl:choose>
                             <xsl:when test="$isWithinCopyright">
-                                <xsl:copy-of select="$dk-fixed-text"/>
-                                <xsl:copy-of select="$uk-fixed-text"/>
+                                <fo:block font-size="16pt" font-weight="bold" font-style="italic" space-before="15mm"
+                                          space-after="5mm" text-align="center" line-height="15px">
+                                    DK
+                                </fo:block>
+                                <fo:block text-align="left" font-style="italic" font-size="10pt">
+                                    <xsl:copy-of select="$dk-fixed-text"/>
+                                </fo:block>
+                                <fo:block space-after="2mm"/>
+                                <fo:block font-size="16pt" font-weight="bold" font-style="italic" space-before="15mm"
+                                          space-after="5mm" text-align="center" line-height="15px">
+                                    UK
+                                </fo:block>
+                                <fo:block text-align="left" font-style="italic" font-size="10pt">
+                                    <xsl:copy-of select="$uk-fixed-text"/>
+                                </fo:block>
                             </xsl:when>
                             <xsl:otherwise>
                                 <!--today is after cutoff-->
-                                <xsl:copy-of select="$dk-after-cutoff-text"/>
-                                <xsl:copy-of select="$uk-after-cutoff-text"/>
+                                <fo:block font-size="16pt" font-weight="bold" font-style="italic" space-before="15mm"
+                                          space-after="5mm" text-align="center" line-height="15px">
+                                    DK
+                                </fo:block>
+                                <fo:block text-align="left" font-style="italic" font-size="10pt">
+                                    <xsl:copy-of select="$dk-after-cutoff-text"/>
+                                </fo:block>
+                                <fo:block space-after="2mm"/>
+                                <fo:block font-size="16pt" font-weight="bold" font-style="italic" space-before="15mm"
+                                          space-after="5mm" text-align="center" line-height="15px">
+                                    UK
+                                </fo:block>
+                                <fo:block text-align="left" font-style="italic" font-size="10pt">
+                                    <xsl:copy-of select="$uk-after-cutoff-text"/>
+                                </fo:block>
                             </xsl:otherwise>
                         </xsl:choose>
                     </fo:block>
