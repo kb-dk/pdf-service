@@ -52,14 +52,22 @@
     </xsl:variable>
 
     <xsl:variable name="dk-after-cutoff-text">
-        Materialet er fri af ophavsret. Du kan kopiere, ændre, distribuere eller fremføre værket, også til kommercielle
-        formål, uden at bede om tilladelse. Husk altid at kreditere ophavsmanden + cc logo – det sender jeg når det er
-        endelig godkendt.
+        <fo:block font-size="16pt" font-weight="bold" font-style="italic" space-before="15mm"
+                  space-after="5mm" text-align="center" line-height="15px">DK
+        </fo:block>
+        <fo:block text-align="left" font-style="italic" font-size="10pt">
+            Materialet er fri af ophavsret. Du kan kopiere, ændre, distribuere eller fremføre værket, også til kommercielle formål, uden at bede om tilladelse. Husk altid at kreditere ophavsmanden + cc logo – det sender jeg når det er endelig godkendt.
+        </fo:block>
     </xsl:variable>
 
     <xsl:variable name="uk-after-cutoff-text">
-        The work is free of copyright. Always remember to credit the author, even if the work is
-        free of copyright.
+        <fo:block font-size="16pt" font-weight="bold" font-style="italic" space-before="15mm"
+                  space-after="5mm" text-align="center" line-height="15px">UK
+        </fo:block>
+        <fo:block text-align="left" font-style="italic" font-size="10pt">
+            The work is free of copyright. Always remember to credit the author, even if the work is
+            free of copyright.
+        </fo:block>
     </xsl:variable>
 
     <xsl:template match="/">
