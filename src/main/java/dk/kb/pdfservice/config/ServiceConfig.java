@@ -46,8 +46,8 @@ public class ServiceConfig {
     }
     
     
-    public static String getPdfSourcePath() {
-        return getConfig().getString("pdfService.PDFsource");
+    public static List<String> getPdfSourcePath() {
+        return getConfig().getList("pdfService.PDFsource");
     }
     
     public static String getPdfTempPath() {

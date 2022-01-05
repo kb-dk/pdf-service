@@ -46,6 +46,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.Instant;
 import java.time.temporal.TemporalAmount;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.locks.ReadWriteLock;
 
@@ -117,7 +118,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     public StreamingOutput getPdf(String requestedPdfFile) {
         
         //This is the file to return to the use user. It might not exist yet
-        File copyrightedPdfFile = new File(ServiceConfig.getPdfTempPath(), requestedPdfFile);
+        File copyrightedPdfFile = getTempFile(requestedPdfFile);
         
         //1. Lock for this filename, so only one user can use it
         final ReadWriteLock readWriteLock = stripedLock.get(requestedPdfFile);
@@ -130,7 +131,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
             
             //The copyrighted PDF is not usable, so it must be regenerated
             if (!useTempPdf) {
-    
+                
                 upgradeToWriteLock(readWriteLock);
                 //state: w=1,r=0,
                 try {
@@ -158,6 +159,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         }
     }
     
+    
     private void downgradeToReadLock(ReadWriteLock readWriteLock) {
         //Downgrade by acquiring read lock before releasing write lock
         readWriteLock.readLock().lock();
@@ -174,13 +176,9 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     
     private void createCopyrightedPDF(String pdfFileString, File readyPdfFile) {
         //4. otherwise create
-        final File sourcePdfFile = new File(ServiceConfig.getPdfSourcePath(), pdfFileString);
+        final File sourcePdfFile = getPdfFile(pdfFileString);
         
-        if (!isUsable(sourcePdfFile)) {
-            throw new NotFoundServiceException("Failed to find pdf file '" + pdfFileString + "'");
-        }
-        
-        String barcode = pdfFileString.split("[-._]", 2)[0];
+        String barcode = sourcePdfFile.getName().split("[-._]", 2)[0];
         PdfInfo pdfInfo = MarcClient.getPdfInfo(barcode);
         
         try (InputStream apronFile = produceApron(pdfFileString, pdfInfo);
@@ -199,7 +197,28 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         }
     }
     
+    @Nonnull
+    private File getPdfFile(String pdfFileString) {
+        List<String> pdfSourcePaths = ServiceConfig.getPdfSourcePath();
+        return pdfSourcePaths.stream()
+                             .map(File::new)
+                             .filter(File::isDirectory)
+                             .map(dir -> new File(dir, new File(pdfFileString).getName()))
+                             .filter(this::isUsable)
+                             .findFirst()
+                             .orElseThrow(() -> new NotFoundServiceException("Failed to find pdf file '"
+                                                                             + pdfFileString
+                                                                             + "'"));
+    }
+    
+    
+    private File getTempFile(String requestedPdfFile) {
+        File file = new File(requestedPdfFile);
+        return new File(ServiceConfig.getPdfTempPath(), file.getName());
+    }
+    
     private boolean canUseTempPdf(File readyPdfFile) {
+        
         //2. Check if file exists
         if (isUsable(readyPdfFile)) {
             Instant pdfLastModified = Instant.ofEpochMilli(readyPdfFile.lastModified());
@@ -213,7 +232,8 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     
     
     private boolean isUsable(File readyPdfFile) {
-        return readyPdfFile.exists() &&
+        return readyPdfFile != null &&
+               readyPdfFile.exists() &&
                readyPdfFile.isFile() &&
                readyPdfFile.canRead() &&
                readyPdfFile.getName().toLowerCase(Locale.ROOT).endsWith(".pdf");

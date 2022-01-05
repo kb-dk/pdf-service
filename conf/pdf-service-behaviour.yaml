@@ -50,7 +50,8 @@ alma:
 
 pdfService:
   #  Where original PDFs are read from
-  PDFsource: "/data1/e-mat/dod"
+  PDFsource:
+    - "/data1/e-mat/dod"
   #  Where generated PDFs are stored
   PDFTempFolder: "temp/"
   # If copyrighted PDF is older than this age, request ALMA data and create it again
