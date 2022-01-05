@@ -1,5 +1,64 @@
 # pdf-service
 
+Se mere om hvad dette er på
+<https://sbprojects.statsbiblioteket.dk/display/SSYS/Overdragelse+af+DOD+PDF+Service+til+applikationsdrift>
+
+Hvorfor:
+
+Ideen er at lave en service, der skal stå i stedet for http://www5.kb.dk/e-mat/dod/
+
+Det er den der bruges i ALMA når digitaliserede værker gøres tilgængelig.
+
+Den service jeg har lavet kan
+
+1. Fjerne eventuelle eksisternede forsider
+2. Indsætte en moderne og korrekt forside med copyright informationer
+3. Indsætte en side-footer med en copyright advarsel
+
+
+Anvendelse:
+
+Den tager pdf på helt samme måde som e-mat, dvs.
+
+http://www5.kb.dk/e-mat/dod/115808025291_bw.pdf
+->
+http://localhost:8080/pdf-service/api/getPdf/115808025307_bw.pdf
+
+Jeg kan lave den sti om til at være whatever der passer bedst for jer
+
+
+Det er uklart om det er meningen at denne service skal gå ind og overtage http://www5.kb.dk/e-mat/dod/ eller nogen går ind og retter alle de ALMA poster der henviser til http://www5.kb.dk/e-mat/dod/
+Jeg mener at huske at det at fikse en httpd til at proxy for en tomcat er noget I har gjort ofte, så det bliver nok første løsning der bliver valgt.
+
+
+Behov:
+
+Den benytter sig af tre ting
+
+1. Den læser pdf filerne lokalt, så serveren skal have et mount hvor den kan læse
+   webext-10.kb.dk:/data1/e-mat/dod
+
+2. Et temp storage hvor den kan lægge producerede PDFer
+   Det er ikke nødvendigt at dynamisk producere hver PDF igen og igen, når hverken den originale scanning eller ALMA posten ændrer sig, så jeg cacher producerede PDFer. Dvs. der skal være noget HDD plads til det.
+   Man kan konfigurere hvor længe de skal holde osv.
+
+3. En ALMA api key med rettigheder til
+* https://developers.exlibrisgroup.com/alma/apis/bibs/
+  Readonly. Til at slå copyright informationer op for PDF filen
+
+* https://developers.exlibrisgroup.com/alma/apis/conf/
+  Readonly. Til at logge om den kører mod Sandbox eller Prod
+
+Denne service KAN fungere med ALMA sandbox
+
+
+
+
+
+
+
+
+
 <http://localhost:8080/pdf-service/api/getPdf/130022786122.pdf>
 
 <http://localhost:8080/pdf-service/api/getPdf/130018854342.pdf>
