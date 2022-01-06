@@ -81,7 +81,6 @@ pdfService:
   # The frontpage to use
   frontpage:
     FOPfile: /home/pdf/services/conf/frontpage.xsl
-    Logo: /home/pdf/services/conf/KBlogo.png
 
   # Details of the footer to insert, if the document is under copyright
   copyrightFooter:

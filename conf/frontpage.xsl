@@ -16,7 +16,6 @@
     <xsl:param name="place" as="xs:string"/>
     <xsl:param name="size" as="xs:string"/>
     <xsl:param name="isWithinCopyright" as="xs:boolean"/>
-    <xsl:param name="logoPath" as="xs:string"/>
 
     <xsl:variable name="dk-fixed-text">
         Dette manuskript er ophavsretligt beskyttet, og må kun benyttes til personlig brug. Du må dog også bruge
@@ -75,18 +74,14 @@
             <fo:page-sequence master-reference="simpleA4">
                 <fo:flow flow-name="xsl-region-body">
                     <fo:block>
-                        <xsl:element name="external-graphic" namespace="http://www.w3.org/1999/XSL/Format">
-                            <xsl:attribute name="height">270pt</xsl:attribute>
-                            <xsl:attribute name="border-width">thin</xsl:attribute>
-                            <xsl:attribute name="content-width">scale-to-fit</xsl:attribute>
-                            <xsl:attribute name="content-height">200pt</xsl:attribute>
-                            <xsl:attribute name="width">100%</xsl:attribute>
-                            <xsl:attribute name="scaling">uniform</xsl:attribute>
-                            <xsl:attribute name="text-align">center</xsl:attribute>
-                            <xsl:attribute name="src">
-                                <xsl:value-of select="$logoPath"/>
-                            </xsl:attribute>
-                        </xsl:element>
+                        <fo:external-graphic border-width="thin"
+                                             content-width="scale-to-fit"
+                                             content-height="200pt"
+                                             width="100%"
+                                             height="270pt"
+                                             scaling="uniform"
+                                             text-align="center"
+                                             src="conf/KBlogo.png"/>
                     </fo:block>
 
                     <fo:block font-size="24pt" font-weight="bold" space-after="5mm" text-align="center">

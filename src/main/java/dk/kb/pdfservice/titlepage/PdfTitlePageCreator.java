@@ -80,7 +80,6 @@ public class PdfTitlePageCreator {
                 xslfoTransformer.setParameter("place", pdfInfo.getPlace());
                 xslfoTransformer.setParameter("size", pdfInfo.getSize());
                 xslfoTransformer.setParameter("isWithinCopyright", pdfInfo.isWithinCopyright());
-                xslfoTransformer.setParameter("logoPath", ServiceConfig.getFrontPageLogoPath());
                 
                 
                 xslfoTransformer.transform(new StreamSource(new StringReader("<xml/>")),

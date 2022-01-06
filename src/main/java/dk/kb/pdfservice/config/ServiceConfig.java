@@ -105,11 +105,6 @@ public class ServiceConfig {
         return Path.of(getConfig().getString("pdfService.frontpage.FOPfile")).toAbsolutePath();
     }
     
-    public static Path getFrontPageLogoPath() {
-        return Path.of(getConfig().getString("pdfService.frontpage.Logo")).toAbsolutePath();
-    }
-    
-    
     //Copyright Footer
     public static String getCopyrightFooterText() {
         return getConfig().getString("pdfService.copyrightFooter.Text");
