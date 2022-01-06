@@ -1,5 +1,11 @@
 # pdf-service
 
+//TODO kend DOD filer fra DRA-læs
+
+//DOD marc 595
+
+
+
 Se mere om hvad dette er på
 <https://sbprojects.statsbiblioteket.dk/display/SSYS/Overdragelse+af+DOD+PDF+Service+til+applikationsdrift>
 
