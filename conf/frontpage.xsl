@@ -23,6 +23,8 @@
         manuskriptet i forbindelse med optagelsesprøve på de danske teaterskoler. Hvis du vil opføre manuskriptet,
         skal du have samtykke fra rettighedshaveren. Du kan i den forbindelse kontakte fagorganisationen Danske
         Dramatikere. Husk altid at kreditere ophavsmanden.
+
+
     </xsl:variable>
 
     <xsl:variable name="uk-fixed-text">
@@ -35,12 +37,30 @@
 
     <xsl:variable name="dk-after-cutoff-text">
         Materialet er fri af ophavsret. Du kan kopiere, ændre, distribuere eller fremføre værket, også til
-        kommercielle formål, uden at bede om tilladelse. Husk altid at kreditere ophavsmanden
+        kommercielle formål, uden at bede om tilladelse. Husk altid at kreditere ophavsmanden.
+        <fo:basic-link external-destination="https://creativecommons.org/publicdomain/mark/1.0/deed.da">
+            <fo:external-graphic border-width="thin"
+                                 content-width="scale-to-fit"
+                                 content-height="30pt"
+                                 width="100%"
+                                 scaling="uniform"
+                                 text-align="center"
+                                 src="conf/public-domain-logo.png"/>
+        </fo:basic-link>
     </xsl:variable>
 
     <xsl:variable name="uk-after-cutoff-text">
         The work is free of copyright. You can copy, change, distribute or present the work, even for commercial
         purposes, without asking for permission. Always remember to credit the author.
+        <fo:basic-link external-destination="https://creativecommons.org/publicdomain/mark/1.0/deed.en">
+            <fo:external-graphic border-width="thin"
+                                 content-width="scale-to-fit"
+                                 content-height="30pt"
+                                 width="100%"
+                                 scaling="uniform"
+                                 text-align="center"
+                                 src="conf/public-domain-logo.png"/>
+        </fo:basic-link>
     </xsl:variable>
 
     <xsl:template match="/">
