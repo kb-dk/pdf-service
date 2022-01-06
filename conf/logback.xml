@@ -1,8 +1,25 @@
 <included>
     <contextName>pdf-service</contextName>
 
-    <property name="LOGFILE" value="${catalina.home}/logs/${CONTEXT_NAME}-app.log" />
 
+    <!-- This logger logs one line per download of a file. This log file will be used to generate the yearly report
+       so it should NOT be rolled over-->
+    <!--Sample log line-->
+    <!--2022-01-06 13:14:16 INFO  DownloadLogger - IP [0:0:0:0:0:0:0:1] downloaded 130018854342.pdf-->
+
+    <property name="DOWNLOADLOGFILE" value="${catalina.home}/logs/${CONTEXT_NAME}-downloads.log"/>
+    <appender name="DOWNLOADLOGGER" class="ch.qos.logback.core.FileAppender">
+        <file>${DOWNLOADLOGFILE}</file>
+        <append>true</append>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <logger name="DownloadLogger" level="INFO" additivity="false">
+        <appender-ref ref="DOWNLOADLOGGER"/>
+    </logger>
+
+    <property name="LOGFILE" value="${catalina.home}/logs/${CONTEXT_NAME}-app.log"/>
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOGFILE}</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -12,7 +29,6 @@
             <!-- keep 30 days' worth of history -->
             <maxHistory>30</maxHistory>
         </rollingPolicy>
-
         <append>true</append>
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36}\(%file:%line\) - %msg%n</pattern>
@@ -28,10 +44,10 @@
     </appender>
 
 
-    <logger name="dk.kb" level="DEBUG" />
+    <logger name="dk.kb" level="DEBUG"/>
 
     <root level="INFO">
-      <appender-ref ref="FILE" />
+        <appender-ref ref="FILE"/>
     </root>
 
 </included>

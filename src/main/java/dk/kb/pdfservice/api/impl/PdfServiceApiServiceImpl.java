@@ -57,6 +57,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     
+    private final Logger downloadLogger = LoggerFactory.getLogger("DownloadLogger");
     
     /* How to access the various web contexts. See https://cxf.apache.org/docs/jax-rs-basics.html#JAX-RSBasics-Contextannotations */
     @Context
@@ -253,6 +254,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                 IOUtils.copy(buffer.toInputStream(), output);
             } finally {
                 buffer.close();
+                downloadLogger.info("IP {} downloaded {}",httpServletRequest.getRemoteAddr(),readyPdfFile.getName());
             }
         };
     }
