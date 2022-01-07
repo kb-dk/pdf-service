@@ -53,14 +53,14 @@ pdfService:
   PDFsource:
     - "/data1/e-mat/dod"
   #  Where generated PDFs are stored
-  PDFTempFolder: "temp/"
+  PDFTempFolder: "/home/dodpdfsv/temp/"
   # If copyrighted PDF is older than this age, request ALMA data and create it again
   # This ensures that updates to ALMA will tage effect (after a while)
   # Note that if this age is SHORTER than the alma.cache_timeout, the cached ALMA record
   # will be used, which defeats the purpose....
   maxAgeOfTempPdfsInMinutes:
     value: 5
-    unit: MINUTES
+    unit: SECONDS
     # unit can be one of NANOS, MICROS, MILLIS, SECONDS, MINUTES, HOURS, HALF_DAYS
 
   # When inserting new front page, we search for old frontpages to remove
@@ -80,7 +80,9 @@ pdfService:
 
   # The frontpage to use
   frontpage:
-    FOPfile: /home/pdf/services/conf/frontpage.xsl
+    FOPfile: /home/dodpdfsv/services/conf/frontpage.xsl
+    #Relative URLs in this FOPfile will be resolved from the folder containing the FOPfile
+    # So you can refer to KBLogo.png simply as "KBLogo.png" without any path
 
   # Details of the footer to insert, if the document is under copyright
   copyrightFooter:

@@ -30,9 +30,10 @@ public class PdfTitlePageCreator {
     private static final Logger log = LoggerFactory.getLogger(PdfTitlePageCreator.class);
     
     public static InputStream produceHeaderPage(PdfInfo pdfInfo) throws TransformerException, FOPException, IOException {
-        
+        File formatterFile = ServiceConfig.getFrontPageFopFile().toFile();
     
-        FopFactoryBuilder builder = new FopFactoryBuilder(new File(".").toURI());
+    
+        FopFactoryBuilder builder = new FopFactoryBuilder(formatterFile.getAbsoluteFile().getParentFile().toURI());
         builder.setAccessibility(false);
         FopFactory fopFactory = builder.build();
         
@@ -68,10 +69,9 @@ public class PdfTitlePageCreator {
                 }
             });
     
-            File file = ServiceConfig.getFrontPageFopFile().toFile();
-            try (InputStream formatterStream = new FileInputStream(file)) {
+            try (InputStream formatterStream = new FileInputStream(formatterFile)) {
                 
-                Transformer xslfoTransformer = factory.newTransformer(new StreamSource(formatterStream,file.toURI().toASCIIString()));
+                Transformer xslfoTransformer = factory.newTransformer(new StreamSource(formatterStream,formatterFile.toURI().toASCIIString()));
                 
                 xslfoTransformer.setParameter("authors", pdfInfo.getAuthors());
                 xslfoTransformer.setParameter("title", pdfInfo.getTitle());

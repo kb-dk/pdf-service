@@ -42,7 +42,7 @@
                                      content-width="scale-to-fit"
                                      content-height="30pt"
                                      scaling="uniform"
-                                     src="conf/public-domain-logo.png"/>
+                                     src="public-domain-logo.png"/>
             </fo:basic-link>
         </fo:block>
     </xsl:variable>
@@ -57,7 +57,7 @@
                                      content-width="scale-to-fit"
                                      content-height="30pt"
                                      scaling="uniform"
-                                     src="conf/public-domain-logo.png"/>
+                                     src="public-domain-logo.png"/>
             </fo:basic-link>
         </fo:block>
     </xsl:variable>
@@ -81,7 +81,7 @@
                                              height="270pt"
                                              scaling="uniform"
                                              text-align="center"
-                                             src="conf/KBlogo.png"/>
+                                             src="KBlogo.png"/>
                     </fo:block>
 
                     <fo:block font-size="24pt" font-weight="bold" space-after="5mm" text-align="center">
