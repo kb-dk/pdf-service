@@ -1,0 +1,29 @@
+ | xargs -r -IBARCODE bash -c "curl \
+	--header 'Authorization:apikey l8xx...' \
+	--include \
+	--no-progress-meter \
+	'https://api-eu.hosted.exlibrisgroup.com/almaws/v1/items/?item_barcode=BARCODE' \
+| grep '^Location:' \
+| cut -d'/' -f5 \
+| xargs -r -iMMSID curl \
+	--header 'Authorization:apikey l8xx...' \
+	--no-progress-meter \
+	'https://api-eu.hosted.exlibrisgroup.com/almaws/v1/bibs/MMSID' \
+| xmllint --format - > BARCODE.txt "
+
+
+
+
+Har startet et job på abr-pc
+
+x* er 1000 linier fra unikke DOD barcodes
+
+ls -1 x* | xargs -r -P 8 -i bash -c "cat {} | ./getMarcData.sh"
+
+
+Når det er færdigt kan vi analysere metadata for ALLE posterne og se hvilke trends der viser sig
+
+Udtræk værdien af et felt således
+
+find -name '*.txt' |  xargs -r -i bash -c "echo -n '{}: '; xmllint --xpath '/bib/record/datafield[@tag=\"999\"]/subfield[@code=\"a\"]/text()' '{}' | sort -u | tr '\n' '\t'; echo ''"
+
