@@ -1,11 +1,10 @@
 package dk.kb.pdfservice.alma;
 
-import dk.kb.pdfservice.alma.MarcClient;
-
 import java.time.LocalDate;
 
 /**
  * Data transfer class from MarcClient
+ *
  * @see MarcClient
  */
 public class PdfInfo {
@@ -18,19 +17,25 @@ public class PdfInfo {
     private final String size;
     private final LocalDate publicationDate;
     private final boolean isWithinCopyright;
+    private final DocumentType documentType;
+    
     
     public PdfInfo(String authors,
                    String title,
                    String alternativeTitle,
                    String udgavebetegnelse,
-                   String place, String size, LocalDate publicationDate, boolean isWithinCopyright) {
-        this.authors
-                               = authors;
+                   String place,
+                   String size,
+                   DocumentType documentType,
+                   LocalDate publicationDate,
+                   boolean isWithinCopyright) {
+        this.authors           = authors;
         this.title             = title;
         this.alternativeTitle  = alternativeTitle;
         this.udgavebetegnelse  = udgavebetegnelse;
         this.place             = place;
         this.size              = size;
+        this.documentType      = documentType;
         this.publicationDate   = publicationDate;
         this.isWithinCopyright = isWithinCopyright;
     }
@@ -78,6 +83,7 @@ public class PdfInfo {
                ", size='" + size + '\'' +
                ", publicationDate=" + publicationDate +
                ", isWithinCopyright=" + isWithinCopyright +
+               ", documentType=" + documentType +
                '}';
     }
 }

@@ -2,6 +2,7 @@ package dk.kb.pdfservice.api.impl;
 
 import com.google.common.util.concurrent.Striped;
 import com.google.common.util.concurrent.StripedFactory;
+import dk.kb.pdfservice.alma.DocumentType;
 import dk.kb.pdfservice.alma.MarcClient;
 import dk.kb.pdfservice.alma.PdfInfo;
 import dk.kb.pdfservice.api.PdfServiceApi;
@@ -195,6 +196,8 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         }
     }
     
+  
+    
     @Nonnull
     private File getPdfFile(String pdfFileString) {
         List<String> pdfSourcePaths = ServiceConfig.getPdfSourcePath();
@@ -244,7 +247,6 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         try (InputStream pdfFile = new FileInputStream(readyPdfFile)) {
             IOUtils.copy(pdfFile, buffer);
         }
-        //TODO log the return of the file
         return output -> {
             httpServletResponse.setHeader("Content-disposition", "inline; filename=\"" + readyPdfFile.getName() + "\"");
             try {

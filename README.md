@@ -79,17 +79,23 @@ fundet sted.
 * <http://devel12.statsbiblioteket.dk:8211/pdf-service/api/getPdf/130018852943.pdf>
 * <https://soeg.kb.dk/discovery/fulldisplay?docid=alma99122277948105763&context=L&vid=45KBDK_KGL:KGL&lang=da>
 
+599 __ |a DRA20110309 |5 dra
+
 ### Kjeld & Dirch : - En kærlighedshistorie
 
 * <http://localhost:8080/pdf-service/api/getPdf/130018854342.pdf>
 * <http://devel12.statsbiblioteket.dk:8211/pdf-service/api/getPdf/130018854342.pdf>
 * <https://soeg.kb.dk/discovery/fulldisplay?docid=alma99122165828205763&context=L&vid=45KBDK_KGL:KGL&lang=da>
 
+599 __ |a DRA20110623 |5 dra
+
 ### Lang dags rejse mod nat
 
 * <http://localhost:8080/pdf-service/api/getPdf/130022786122.pdf>
 * <http://devel12.statsbiblioteket.dk:8211/pdf-service/api/getPdf/130022786122.pdf>
 * <https://soeg.kb.dk/discovery/fulldisplay?docid=alma99122805851105763&context=L&vid=45KBDK_KGL:KGL&lang=da>
+
+595 __ |a gave |5 dra
 
 DOD post
 --------
