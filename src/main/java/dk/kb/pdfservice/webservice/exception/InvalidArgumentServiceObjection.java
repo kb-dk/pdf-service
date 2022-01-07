@@ -5,7 +5,7 @@ import javax.ws.rs.core.Response;
 /*
  * Custom web-exception class (400)
  */
-public class InvalidArgumentServiceException extends ServiceException {
+public class InvalidArgumentServiceObjection extends ServiceObjection {
     
     //Constant fields for the OpenApi
     public static final String description = "InvalidArgumentServiceException";
@@ -14,27 +14,27 @@ public class InvalidArgumentServiceException extends ServiceException {
     private static final long serialVersionUID = 27182823L;
     private static final Response.Status responseStatus = Response.Status.BAD_REQUEST; // 400
     
-    public InvalidArgumentServiceException() {
+    public InvalidArgumentServiceObjection() {
         super(responseStatus);
     }
     
-    public InvalidArgumentServiceException(String message) {
+    public InvalidArgumentServiceObjection(String message) {
         super(message, responseStatus);
     }
     
-    public InvalidArgumentServiceException(String message, Throwable cause) {
+    public InvalidArgumentServiceObjection(String message, Throwable cause) {
         super(message, cause, responseStatus);
     }
     
-    public InvalidArgumentServiceException(Throwable cause) {
+    public InvalidArgumentServiceObjection(Throwable cause) {
         super(cause, responseStatus);
     }
     
-    public InvalidArgumentServiceException(String mimeType, Object entity) {
+    public InvalidArgumentServiceObjection(String mimeType, Object entity) {
         super(mimeType, entity, responseStatus);
     }
     
-    public InvalidArgumentServiceException(String mimeType, Object entity, Throwable cause) {
+    public InvalidArgumentServiceObjection(String mimeType, Object entity, Throwable cause) {
         super(mimeType, entity, cause, responseStatus);
     }
     

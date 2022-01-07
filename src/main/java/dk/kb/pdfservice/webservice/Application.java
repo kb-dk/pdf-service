@@ -15,7 +15,7 @@ public class Application extends javax.ws.rs.core.Application {
         return new HashSet<>(Arrays.asList(
                 JacksonJsonProvider.class,
                 PdfServiceApiServiceImpl.class,
-                ServiceExceptionMapper.class
+                ServiceObjectionMapper.class
                                           ));
     }
     

@@ -9,29 +9,29 @@ import javax.ws.rs.core.Response;
  * Note that this class has 2 "modes": Plain text message or custom response object,
  * intended for use with OpenAPI-generated Dto response objects.
  */
-public class ServiceException extends WebApplicationException {
+public class ServiceObjection extends WebApplicationException {
     private static final long serialVersionUID = 27182819L;
     private final Response.Status responseStatus;
     
     private String mimeType = "text/plain";
     private Object entity = null;
     
-    public ServiceException(Response.Status responseStatus) {
+    public ServiceObjection(Response.Status responseStatus) {
         super();
         this.responseStatus = responseStatus;
     }
     
-    public ServiceException(String message, Response.Status responseStatus) {
+    public ServiceObjection(String message, Response.Status responseStatus) {
         super(message);
         this.responseStatus = responseStatus;
     }
     
-    public ServiceException(String message, Throwable cause, Response.Status responseStatus) {
+    public ServiceObjection(String message, Throwable cause, Response.Status responseStatus) {
         super(message, cause);
         this.responseStatus = responseStatus;
     }
     
-    public ServiceException(Throwable cause, Response.Status responseStatus) {
+    public ServiceObjection(Throwable cause, Response.Status responseStatus) {
         super(cause);
         this.responseStatus = responseStatus;
     }
@@ -43,7 +43,7 @@ public class ServiceException extends WebApplicationException {
      * @param entity         the entity to translate into the HTTP response body (normally an OpenAPI generated Dto).
      * @param responseStatus HTTP response code.
      */
-    public ServiceException(String mimeType, Object entity, Response.Status responseStatus) {
+    public ServiceObjection(String mimeType, Object entity, Response.Status responseStatus) {
         super();
         this.responseStatus = responseStatus;
         this.mimeType       = mimeType;
@@ -58,7 +58,7 @@ public class ServiceException extends WebApplicationException {
      * @param cause          the originating Exception.
      * @param responseStatus HTTP response code.
      */
-    public ServiceException(String mimeType, Object entity, Throwable cause, Response.Status responseStatus) {
+    public ServiceObjection(String mimeType, Object entity, Throwable cause, Response.Status responseStatus) {
         super(cause);
         this.responseStatus = responseStatus;
         this.mimeType       = mimeType;

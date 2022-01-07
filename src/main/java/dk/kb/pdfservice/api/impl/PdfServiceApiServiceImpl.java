@@ -11,9 +11,9 @@ import dk.kb.pdfservice.titlepage.PdfTitlePageCleaner;
 import dk.kb.pdfservice.titlepage.PdfTitlePageCreator;
 import dk.kb.pdfservice.titlepage.PdfTitlePageInserter;
 import dk.kb.pdfservice.utils.PdfUtils;
-import dk.kb.pdfservice.webservice.exception.InternalServiceException;
-import dk.kb.pdfservice.webservice.exception.NotFoundServiceException;
-import dk.kb.pdfservice.webservice.exception.ServiceException;
+import dk.kb.pdfservice.webservice.exception.InternalServiceObjection;
+import dk.kb.pdfservice.webservice.exception.NotFoundServiceObjection;
+import dk.kb.pdfservice.webservice.exception.ServiceObjection;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.cxf.jaxrs.ext.MessageContext;
@@ -27,11 +27,9 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
@@ -49,6 +47,8 @@ import java.time.temporal.TemporalAmount;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.locks.ReadWriteLock;
+
+import static dk.kb.pdfservice.utils.Objections.object;
 
 /**
  * pdf-service
@@ -111,7 +111,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
      * @return <ul>
      *         <li>code = 200, message = "A pdf with attached page", response = String.class</li>
      *         </ul>
-     * @throws ServiceException when other http codes should be returned
+     * @throws ServiceObjection when other http codes should be returned
      * @implNote return will always produce a HTTP 200 code. Throw ServiceException if you need to return other
      *         codes
      **/
@@ -152,7 +152,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
             
         } catch (Exception e) {
             log.error("Exception for '{}'", requestedPdfFile, e);
-            throw handleException(e);
+            return object(() -> handleObjections(e));
         } finally {
             //And we can release the readlock after the the method is complete
             readWriteLock.readLock().unlock();
@@ -184,17 +184,14 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         
         try (InputStream apronFile = produceApron(pdfFileString, pdfInfo);
              InputStream requestedPDF = transformPdfFile(sourcePdfFile, pdfInfo);
-             InputStream completePDF = PdfTitlePageInserter.mergeFrontPageWithPdf(apronFile,
-                                                                                  requestedPDF);
+             InputStream completePDF = PdfTitlePageInserter.mergeFrontPageWithPdf(apronFile, requestedPDF);
              OutputStream pdfFileOnDisk = new FileOutputStream(readyPdfFile)) {
             log.debug("Finished merging documents for {}", pdfFileString);
             IOUtils.copy(completePDF, pdfFileOnDisk);
             log.info("Finished returning pdf {}", pdfFileString);
-        } catch (Exception e) {
+        } catch (IOException e) {
             log.error("Failed for {}", pdfFileString, e);
-            throw new WebApplicationException("Unknown failure for " + pdfFileString,
-                                              e,
-                                              Response.Status.INTERNAL_SERVER_ERROR);
+            object(() -> new InternalServiceObjection("Unknown failure for " + pdfFileString, e));
         }
     }
     
@@ -207,7 +204,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                              .map(dir -> new File(dir, new File(pdfFileString).getName()))
                              .filter(this::isUsable)
                              .findFirst()
-                             .orElseThrow(() -> new NotFoundServiceException("Failed to find pdf file '"
+                             .orElseThrow(() -> new NotFoundServiceObjection("Failed to find pdf file '"
                                                                              + pdfFileString
                                                                              + "'"));
     }
@@ -254,7 +251,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                 IOUtils.copy(buffer.toInputStream(), output);
             } finally {
                 buffer.close();
-                downloadLogger.info("IP {} downloaded {}",httpServletRequest.getRemoteAddr(),readyPdfFile.getName());
+                downloadLogger.info("IP {} downloaded {}", httpServletRequest.getRemoteAddr(), readyPdfFile.getName());
             }
         };
     }
@@ -264,7 +261,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         try {
             apronFile = PdfTitlePageCreator.produceHeaderPage(pdfInfo);
         } catch (TransformerException | SAXException e) {
-            throw new InternalServiceException("Failed to construct header page for '" + pdfFileString + "'", e);
+            throw new InternalServiceObjection("Failed to construct header page for '" + pdfFileString + "'", e);
         }
         return apronFile;
     }
@@ -290,12 +287,12 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
      * @param e: Any kind of exception
      * @return A ServiceException
      */
-    private ServiceException handleException(Exception e) {
-        if (e instanceof ServiceException) {
-            return (ServiceException) e; // Do nothing - this is a declared ServiceException from within module.
+    private ServiceObjection handleObjections(Exception e) {
+        if (e instanceof ServiceObjection) {
+            return (ServiceObjection) e; // Do nothing - this is a declared ServiceException from within module.
         } else {// Unforseen exception (should not happen). Wrap in internal service exception
-            log.error("ServiceException(HTTP 500):", e); //You probably want to log this.
-            return new InternalServiceException(e.getMessage());
+            log.error("ServiceObjection(HTTP 500):", e); //You probably want to log this.
+            return new InternalServiceObjection(e.getMessage());
         }
     }
 }

@@ -6,7 +6,7 @@ import javax.ws.rs.core.Response;
 /*
  * Custom web-exception class (404)
  */
-public class NotFoundServiceException extends ServiceException {
+public class NotFoundServiceObjection extends ServiceObjection {
     
     //Constant fields for the OpenApi
     public static final String description = "NotFoundServiceException";
@@ -15,27 +15,27 @@ public class NotFoundServiceException extends ServiceException {
     private static final long serialVersionUID = 27182821L;
     private static final Response.Status responseStatus = Response.Status.NOT_FOUND; //404
     
-    public NotFoundServiceException() {
+    public NotFoundServiceObjection() {
         super(responseStatus);
     }
     
-    public NotFoundServiceException(String message) {
+    public NotFoundServiceObjection(String message) {
         super(message, responseStatus);
     }
     
-    public NotFoundServiceException(String message, Throwable cause) {
+    public NotFoundServiceObjection(String message, Throwable cause) {
         super(message, cause, responseStatus);
     }
     
-    public NotFoundServiceException(Throwable cause) {
+    public NotFoundServiceObjection(Throwable cause) {
         super(cause, responseStatus);
     }
     
-    public NotFoundServiceException(String mimeType, Object entity) {
+    public NotFoundServiceObjection(String mimeType, Object entity) {
         super(mimeType, entity, responseStatus);
     }
     
-    public NotFoundServiceException(String mimeType, Object entity, Throwable cause) {
+    public NotFoundServiceObjection(String mimeType, Object entity, Throwable cause) {
         super(mimeType, entity, cause, responseStatus);
     }
 }

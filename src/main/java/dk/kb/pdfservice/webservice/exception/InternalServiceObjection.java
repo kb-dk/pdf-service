@@ -5,7 +5,7 @@ import javax.ws.rs.core.Response;
 /*
  * Custom web-exception class (500)
  */
-public class InternalServiceException extends ServiceException {
+public class InternalServiceObjection extends ServiceObjection {
     
     //Constant fields for the OpenApi
     public static final String description = "InternalServiceException";
@@ -15,27 +15,27 @@ public class InternalServiceException extends ServiceException {
     private static final long serialVersionUID = 27182820L;
     private static final Response.Status responseStatus = Response.Status.INTERNAL_SERVER_ERROR; //500
     
-    public InternalServiceException() {
+    public InternalServiceObjection() {
         super(responseStatus);
     }
     
-    public InternalServiceException(String message) {
+    public InternalServiceObjection(String message) {
         super(message, responseStatus);
     }
     
-    public InternalServiceException(String message, Throwable cause) {
+    public InternalServiceObjection(String message, Throwable cause) {
         super(message, cause, responseStatus);
     }
     
-    public InternalServiceException(Throwable cause) {
+    public InternalServiceObjection(Throwable cause) {
         super(cause, responseStatus);
     }
     
-    public InternalServiceException(String mimeType, Object entity) {
+    public InternalServiceObjection(String mimeType, Object entity) {
         super(mimeType, entity, responseStatus);
     }
     
-    public InternalServiceException(String mimeType, Object entity, Throwable cause) {
+    public InternalServiceObjection(String mimeType, Object entity, Throwable cause) {
         super(mimeType, entity, cause, responseStatus);
     }
     
