@@ -182,7 +182,6 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         
         String barcode = sourcePdfFile.getName().split("[-._]", 2)[0];
         PdfInfo pdfInfo = MarcClient.getPdfInfo(barcode);
-        
         try (InputStream apronFile = produceApron(pdfFileString, pdfInfo);
              InputStream requestedPDF = transformPdfFile(sourcePdfFile, pdfInfo);
              InputStream completePDF = PdfTitlePageInserter.mergeFrontPageWithPdf(apronFile, requestedPDF);
@@ -196,7 +195,6 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         }
     }
     
-  
     
     @Nonnull
     private File getPdfFile(String pdfFileString) {
@@ -272,7 +270,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         InputStream requestedPDF;
         try (PDDocument pdDocument = PdfUtils.openDocument(new FileInputStream(pdfFile))) {
             PdfTitlePageCleaner.cleanHeaderPages(pdDocument);
-            if (pdfInfo.isWithinCopyright()) {
+            if (pdfInfo.getDocumentType() == DocumentType.C) {
                 log.info("Starting to insert footers for {}", pdfFile);
                 CopyrightFooterInserter.insertCopyrightFooter(pdDocument);
                 log.info("Finished inserting footers for {}", pdfFile);

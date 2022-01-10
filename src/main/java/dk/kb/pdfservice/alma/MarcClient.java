@@ -30,10 +30,11 @@ public class MarcClient {
         String place = getPlace(marc21);
         String size = getSize(marc21);
         
-        DocumentType documentType = getDocumentTtype(marc21);
         
         final LocalDate publicationDate = CopyrightLogic.getPublicationDate(bib, marc21);
         boolean isWithinCopyright = CopyrightLogic.isWithinCopyright(publicationDate);
+        DocumentType documentType = getDocumentType(marc21, isWithinCopyright);
+        
         PdfInfo pdfInfo = new PdfInfo(authors,
                                       title,
                                       alternativeTitle,
@@ -46,68 +47,30 @@ public class MarcClient {
         return pdfInfo;
     }
     
-    private static DocumentType getDocumentTtype(Element marc21) {
+    private static DocumentType getDocumentType(Element marc21, boolean isWithinCopyright) {
         
-        //CASE A
-        // - DOD-brugerbestillinger,
-        // - danske monografier (= KULA-178, i gang), jf. notat operationel retningslinje 100 år
-        //Ex: http://www5.kb.dk/e-mat/dod/130021854310-color.pdf
-    
-        //mmsID 99122825358505763
-        //595a er sat, men den har ikke det førnævnte prefix
-        //595a 99123791670405763
-    
-        //Fra Electronic udgaven kan man se
-        //999	__ |a Digi202106
-        //999	__ |a EDOD
-        
-        // Kan måske kendes på
-        //MARC21 999a==DOD
-        //Eller 997a==DOD
-        List<String> tag999a = getStrings(marc21, "999", "a");
         List<String> tag997a = getStrings(marc21, "997", "a");
         
-        
-        if (tag999a.contains("DOD") || tag997a.contains("DOD")) {
-            return DocumentType.DOD_USER_REQUEST;
+        if (tag997a.contains("DOD")) {
+            return DocumentType.A;
         }
-        
-  
-        //CASE B
-        // - Projektdigitaliseringer uden for ophavsret,
-        // dvs. ældre end 140 år, fx 1600-talsbøger og teatersufflørarkivet der er ældre end 140 år
-        //  eller ophavsmand har været død i mere end 70 år(= DKM-153, i gang).
-        // Eks: http://www5.kb.dk/e-mat/dod/130018794536-color.pdf
-        //mmsID 99122714285905763
-        //595a er sat, men den har ikke det førnævnte prefix
-        //595a 99123793160805763
-        // Kan måske kendes på
-        //MARC21 999a==1600talsKUM
-        if (tag999a.contains("1600talsKUM")) {
-            return DocumentType.PROJECTDIGITISATIONS_OUTSIDE_COPYRIGHT;
+        if (tag997a.contains("DRA")) {
+            if (isWithinCopyright) {
+                return DocumentType.C;
+            } else {
+                return DocumentType.B;
+            }
         }
-        
-        // - Teatermanuskripter uden for ophavsret. JEG TROR IKKE DISSE FINDES. OLDEST SO FAR IS 1888
-        
-        
-        //CASE C
-        // - Teatermanuskripter inden for ophavsret,
-        //      dvs. yngre end 140 år eller ophavsmand har været død i mindre end 70 år
-        //      (endnu ikke projektmodnet og prioriteret) =KULA-170
-        //      Gælder også for oversatte teatermanuskripter hvor forlægget er public domain men hvor oversættelsen ikke er.
-        // Kan måske kendes på
-        //997	__ |a DRA
-        //997	__ |a EJD
-        //998	__ |a dra
-        //NOTE THESE ALSO HAVE 997a==DOD so the order of the checks matter
-        
-        //CASE D
-        // CC0 mærkning af Grundtvigs værker (aftalebundet) (tekstportal)
-        //TODO eksempel her?
-        return null;
+        if (tag997a.contains("KBD")) {
+            if (isWithinCopyright) {
+                return DocumentType.A;
+            } else {
+                return DocumentType.B;
+            }
+        }
+        return DocumentType.Unknown;
     }
     
-
     
     private static String getSize(Element marc21) {
         // Forlæggets fysiske størrelse:

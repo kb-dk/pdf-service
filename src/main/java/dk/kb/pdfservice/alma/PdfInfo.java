@@ -72,6 +72,10 @@ public class PdfInfo {
         return isWithinCopyright;
     }
     
+    public DocumentType getDocumentType() {
+        return documentType;
+    }
+    
     @Override
     public String toString() {
         return "PdfInfo{" +

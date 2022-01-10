@@ -79,7 +79,7 @@ public class PdfTitlePageCreator {
                 xslfoTransformer.setParameter("edition", pdfInfo.getUdgavebetegnelse());
                 xslfoTransformer.setParameter("place", pdfInfo.getPlace());
                 xslfoTransformer.setParameter("size", pdfInfo.getSize());
-                xslfoTransformer.setParameter("isWithinCopyright", pdfInfo.isWithinCopyright());
+                xslfoTransformer.setParameter("documentType", pdfInfo.getDocumentType().name());
                 
                 
                 xslfoTransformer.transform(new StreamSource(new StringReader("<xml/>")),

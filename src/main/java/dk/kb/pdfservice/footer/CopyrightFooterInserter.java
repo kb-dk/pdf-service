@@ -15,6 +15,8 @@ import java.awt.*;
 import java.awt.color.ColorSpace;
 import java.io.IOException;
 
+import static org.apache.pdfbox.pdmodel.common.PDRectangle.A4;
+
 public class CopyrightFooterInserter {
     
     private static final Logger log = LoggerFactory.getLogger(CopyrightFooterInserter.class);
@@ -39,14 +41,13 @@ public class CopyrightFooterInserter {
             //TODO cropbox or mediabox?
             //Mediabox can be larger for images, but cropbox should correspond to the page
             //cropbox <= mediebox always, I think.
-            PDRectangle box = p.getCropBox();
+            PDRectangle page = p.getCropBox();
             
-            boolean landscape = box.getWidth() > box.getHeight();
-            float ratio = box.getWidth() / (landscape ? PDRectangle.A4.getHeight() : PDRectangle.A4.getWidth());
-            float boxHeight = box.getHeight();
-            float a4Height = PDRectangle.A4.getHeight();
-            float boxWidth = box.getWidth();
-            float a4Width = PDRectangle.A4.getWidth();
+            float ratio = (float) Math.sqrt(page.getWidth() * page.getHeight() / (A4.getHeight() * A4.getWidth()));
+            float boxHeight = page.getHeight();
+            float a4Height = A4.getHeight();
+            float boxWidth = page.getWidth();
+            float a4Width = A4.getWidth();
             
             float fontSize = relative(p, ratio, ServiceConfig.getCopyrightFooterFontSize().floatValue());
             
@@ -70,7 +71,7 @@ public class CopyrightFooterInserter {
                 final float textboxY = footer_height * .8f;
                 final float textBoxH = footer_height * 1.1f;
                 final float textboxW = textboxWidth1 * fontSize;
-                final float textboxX = (box.getWidth() - textboxW) / 2;
+                final float textboxX = (page.getWidth() - textboxW) / 2;
                 
                 
                 contentStream.addRect(textboxX, textboxY, textboxW, textBoxH);
@@ -82,7 +83,7 @@ public class CopyrightFooterInserter {
                 float text_width = textWidth1 * fontSize;
                 
                 //Centered text
-                final float x = (box.getWidth() - text_width) / 2;
+                final float x = (page.getWidth() - text_width) / 2;
                 
                 contentStream.beginText();
                 

@@ -18,15 +18,19 @@ public class PdfTitlePageInserter {
             throws IOException {
         final var completePDF = new ByteArrayOutputStream();
         PDFMergerUtility pdfMergerUtility = new PDFMergerUtility();
-        pdfMergerUtility.addSource(apronFile);
-        pdfMergerUtility.addSource(resultingPdf);
-        pdfMergerUtility.setDestinationStream(completePDF);
-        //TODO Configurable memory settings
-        //Just use 100MBs and unlimited temp files
-        pdfMergerUtility.mergeDocuments(MemoryUsageSetting.setupMixed(1024 * 1024 * 100));
-        completePDF.flush(); //just in case it is not done automatically
-        
-        return completePDF.toInputStream();
+        if (apronFile.available() >0) {
+            pdfMergerUtility.addSource(apronFile);
+            pdfMergerUtility.addSource(resultingPdf);
+            pdfMergerUtility.setDestinationStream(completePDF);
+            //TODO Configurable memory settings
+            //Just use 100MBs and unlimited temp files
+            pdfMergerUtility.mergeDocuments(MemoryUsageSetting.setupMixed(1024 * 1024 * 100));
+            completePDF.flush(); //just in case it is not done automatically
+    
+            return completePDF.toInputStream();
+        } else {
+            return resultingPdf;
+        }
         
     }
     
