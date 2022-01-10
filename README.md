@@ -10,7 +10,15 @@ Noget af kravene styres af
 * <https://kbintern.sharepoint.com/:w:/s/Afd-Digital-kulturarv/ETQMQ8i4EedLnRLhpvsAMaMBL6qUckzlKMroQpBUClI49Q?e=bfZqU4>
   //TODO håndter de 4 forskellige situationer (ABCD)
 
-//TODO kend DOD filer fra DRA-læs
+
+
+Her er sandkasse eksempler på DRALAES fra Anna/Jeppe:
+
+130023138892
+130022785800
+130007257539
+130023745268
+
 
 Hvorfor:
 --------
@@ -68,6 +76,14 @@ Denne service KAN fungere med ALMA sandbox
 
 Test URLs
 ==========
+
+Type A
+http://localhost:8080/pdf-service/api/getPdf/130021854310-color.pdf
+http://devel12.statsbiblioteket.dk:8211/pdf-service/api/getPdf/130021854310-color.pdf
+Type B
+
+http://localhost:8080/pdf-service/api/getPdf/130018794536-color.pdf
+http://devel12.statsbiblioteket.dk:8211/pdf-service/api/getPdf/130018794536-color.pdf
 
 Test-manus som er afleveret digitalt før GoAnyWhere har vi liggende samlet på pre-ingest. De er alle printede og har
 fået fysiske poster. Tue bør afgøre om det gør dem uegnede til denne test. Men posterne er der og ”digitaliseringen” har

@@ -25,7 +25,7 @@
                   space-after="5mm" text-align="center" line-height="15px">
             DK
         </fo:block>
-        <fo:block text-align="left"  font-size="14pt">
+        <fo:block text-align="left" font-size="14pt">
             Værket kan være ophavsretligt beskyttet, og så må du kun bruge PDF-filen til personlig brug. Hvis
             ophavsmanden er død for mere end 70 år siden, er værket fri af ophavsret (public domain), og så kan du bruge
             værket frit. Hvis der er flere ophavsmænd, gælder den længstlevendes dødsår. Husk altid at kreditere
@@ -36,7 +36,7 @@
                   space-after="5mm" text-align="center" line-height="15px">
             UK
         </fo:block>
-        <fo:block text-align="left"  font-size="14pt">
+        <fo:block text-align="left" font-size="14pt">
             The work may be copyrighted in which case the PDF file may only be used for personal use. If the author died
             more than 70 years ago, the work becomes public domain and can then be freely used. If there are several
             authors, the year of death of the longest living person applies. Always remember to credit the author
@@ -48,24 +48,32 @@
                   space-after="5mm" text-align="center" line-height="15px">
             DK
         </fo:block>
-        <fo:block text-align="left"  font-size="14pt">
+        <fo:block text-align="left" font-size="14pt">
             Dette manuskript er ophavsretligt beskyttet, og må kun benyttes til personlig brug. Du må dog også bruge
-            manuskriptet i forbindelse med optagelsesprøve på de danske teaterskoler. Hvis du vil opføre manuskriptet,
-            skal du have samtykke fra rettighedshaveren. Du kan i den forbindelse kontakte fagorganisationen Danske
-            Dramatikere. Husk altid at kreditere ophavsmanden.
+            manuskriptet i forbindelse med optagelsesprøve på de danske teaterskoler.
+        </fo:block>
+        <fo:block text-align="left" font-size="14pt">
+            Hvis du vil opføre manuskriptet, skal du have samtykke fra rettighedshaveren. Du kan i den forbindelse
+            kontakte fagorganisationen Danske Dramatikere.
+        </fo:block>
+        <fo:block text-align="left" font-size="14pt">
+            Husk altid at kreditere ophavsmanden.
         </fo:block>
         <fo:block space-after="10mm"/>
         <fo:block font-size="18pt" font-weight="bold"
                   space-after="5mm" text-align="center" line-height="15px">
             UK
         </fo:block>
-        <fo:block text-align="left"  font-size="14pt">
-            The manuscript is copyrighted and may only be used for private use. However, you may
-            also use the manuscript in connection with the entrance examination at the Danish theater
-            schools. If you want to use the manuscript to put on a play, you must have the consent of the copyright
-            holder.
-            In that regard, you can contact the rights organization Danske Dramatikere.
-            Always remember to credit the original author(s).
+        <fo:block text-align="left" font-size="14pt">
+            This manuscript is copyright protected and may only be used for personal use. However, you may also use the
+            manuscript in connection with the entrance exam at the Danish theater schools.
+        </fo:block>
+        <fo:block text-align="left" font-size="14pt">
+            If you want to perform the manuscript publicly, you must have the consent of the copyright holder. In this
+            connection, you can contact the Danish Writers Guild.
+        </fo:block>
+        <fo:block text-align="left" font-size="14pt">
+            Always remember to credit the author.
         </fo:block>
     </xsl:variable>
 
@@ -74,7 +82,7 @@
                   space-after="5mm" text-align="center" line-height="15px">
             DK
         </fo:block>
-        <fo:block text-align="left"  font-size="14pt">
+        <fo:block text-align="left" font-size="14pt">
             Materialet er fri af ophavsret. Du kan kopiere, ændre, distribuere eller fremføre værket, også til
             kommercielle formål, uden at bede om tilladelse. Husk altid at kreditere ophavsmanden.
         </fo:block>
@@ -83,18 +91,18 @@
                   space-after="5mm" text-align="center" line-height="15px">
             UK
         </fo:block>
-        <fo:block text-align="left"  font-size="14pt">
+        <fo:block text-align="left" font-size="14pt">
             The work is free of copyright. You can copy, change, distribute or present the work, even for commercial
             purposes, without asking for permission. Always remember to credit the author.
         </fo:block>
         <fo:block text-align="center" space-before="3cm">
             <fo:basic-link external-destination="https://creativecommons.org/publicdomain/mark/1.0/deed.da">
                 <fo:external-graphic border-width="thick"
-                                     border="solid"
+                                     border="none"
                                      content-width="scale-to-fit"
-                                     content-height="20pt"
+                                     content-height="30pt"
                                      scaling="uniform"
-                                     src="public-domain-logo.png"/>
+                                     src="publicdomain.svg"/>
             </fo:basic-link>
         </fo:block>
     </xsl:variable>
@@ -110,7 +118,7 @@
                 </fo:simple-page-master>
             </fo:layout-master-set>
             <fo:page-sequence master-reference="simpleA4">
-                <fo:flow flow-name="xsl-region-body" >
+                <fo:flow flow-name="xsl-region-body">
                     <fo:block font-size="24pt" font-weight="bold" space-after="5mm" text-align="center">
                         Digitaliseret af | Digitised by
                     </fo:block>
