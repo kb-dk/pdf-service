@@ -106,8 +106,8 @@ public class ServiceConfig {
     }
     
     //Copyright Footer
-    public static String getCopyrightFooterText() {
-        return getConfig().getString("pdfService.copyrightFooter.Text");
+    public static List<String> getCopyrightFooterText() {
+        return getConfig().getList("pdfService.copyrightFooter.Text");
     }
     
     public static Integer getCopyrightFooterFontSize() {

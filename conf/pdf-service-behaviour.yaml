@@ -86,7 +86,9 @@ pdfService:
 
   # Details of the footer to insert, if the document is under copyright
   copyrightFooter:
-    Text: "Manuskriptkopien må ikke anvendes til opførelse og må ikke videre distribueres."
+    Text:
+      - "The manuscript copy may not be used for public performance and may not be distributed."
+      - "Manuskriptkopien må ikke anvendes til opførelse og må ikke videre distribueres"
     Fontsize: 14
     # See https://www.rapidtables.com/web/color/html-color-codes.html for possible values
     BackgroundColor: '#FFFF00'

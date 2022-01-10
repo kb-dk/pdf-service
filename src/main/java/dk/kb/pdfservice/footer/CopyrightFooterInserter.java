@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
-import java.awt.color.ColorSpace;
 import java.io.IOException;
 
 import static org.apache.pdfbox.pdmodel.common.PDRectangle.A4;
@@ -26,17 +25,14 @@ public class CopyrightFooterInserter {
             throws IOException {
         
         final PDType1Font font = PDType1Font.HELVETICA;
-        final String copyrightFooterText = ServiceConfig.getCopyrightFooterText();
+        final java.util.List<String> copyrightFooterTexts = ServiceConfig.getCopyrightFooterText();
         
-        //Text width is linear with font-size so just calc it with font size 1
-        float textWidth1 = calculateTextLengthPixels(copyrightFooterText, 1, font);
         
-        float textboxWidth1 = calculateTextLengthPixels("  " + copyrightFooterText + "  ", 1, font);
-    
         final Color textboxColor = ServiceConfig.getCopyrightFooterBackgroundColor();
-    
-    
+        
+        
         for (PDPage p : doc.getPages()) {
+            
             
             //TODO cropbox or mediabox?
             //Mediabox can be larger for images, but cropbox should correspond to the page
@@ -58,42 +54,51 @@ public class CopyrightFooterInserter {
                                                              PDPageContentStream.AppendMode.APPEND,
                                                              true,
                                                              true)) {
-                contentStream.moveTo(0, 0);//Ensure we start at lowest left corner
-                
-                //resetContext to ensure we are not scaled, rotated or anything else
-                contentStream.setRenderingMode(RenderingMode.FILL);
-                
-                
-                contentStream.saveGraphicsState();
     
-                contentStream.setNonStrokingColor(textboxColor);
-                
-                final float textboxY = footer_height * .8f;
-                final float textBoxH = footer_height * 1.1f;
-                final float textboxW = textboxWidth1 * fontSize;
-                final float textboxX = (page.getWidth() - textboxW) / 2;
-                
-                
-                contentStream.addRect(textboxX, textboxY, textboxW, textBoxH);
-                contentStream.fill();
-                
-                contentStream.restoreGraphicsState();
-                
-                
-                float text_width = textWidth1 * fontSize;
-                
-                //Centered text
-                final float x = (page.getWidth() - text_width) / 2;
-                
-                contentStream.beginText();
-                
-                contentStream.setFont(font, fontSize);
-                
-                //y=0 is lowest line, so start line at footer_height
-                contentStream.newLineAtOffset(x, footer_height);
-                
-                contentStream.showText(copyrightFooterText);
-                contentStream.endText();
+                int footerTextLineNumber =0;
+                for (String copyrightFooterText : copyrightFooterTexts) {
+    
+                    //Text width is linear with font-size so just calc it with font size 1
+                    float textWidth1 = calculateTextLengthPixels(copyrightFooterText, 1, font);
+                    
+                    float textboxWidth1 = calculateTextLengthPixels("  " + copyrightFooterText + "  ", 1, font);
+                    
+                    contentStream.moveTo(0, 0);//Ensure we start at lowest left corner
+                    
+                    //resetContext to ensure we are not scaled, rotated or anything else
+                    contentStream.setRenderingMode(RenderingMode.FILL);
+                    
+                    
+                    contentStream.saveGraphicsState();
+                    
+                    contentStream.setNonStrokingColor(textboxColor);
+    
+                    final float textboxY = footer_height * .8f + (footerTextLineNumber++ * footer_height);
+                    final float textboxW = textboxWidth1 * fontSize;
+                    final float textboxX = (page.getWidth() - textboxW) / 2;
+                    
+                    
+                    contentStream.addRect(textboxX, textboxY, textboxW, footer_height);
+                    contentStream.fill();
+                    
+                    contentStream.restoreGraphicsState();
+                    
+                    
+                    float text_width = textWidth1 * fontSize;
+                    
+                    //Centered text
+                    final float x = (page.getWidth() - text_width) / 2;
+                    
+                    contentStream.beginText();
+                    
+                    contentStream.setFont(font, fontSize);
+                    
+                    //y=0 is lowest line, so start line at footer_height
+                    contentStream.newLineAtOffset(x, footer_height * footerTextLineNumber);
+                    
+                    contentStream.showText(copyrightFooterText);
+                    contentStream.endText();
+                }
             }
         }
     }
