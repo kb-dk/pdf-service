@@ -44,6 +44,38 @@
     </xsl:variable>
 
 
+    <xsl:variable name="typeB-text">
+        <fo:block font-size="18pt" font-weight="bold"
+                  space-after="5mm" text-align="center" line-height="15px">
+            DK
+        </fo:block>
+        <fo:block text-align="left" font-size="14pt">
+            Materialet er fri af ophavsret. Du kan kopiere, ændre, distribuere eller fremføre værket, også til
+            kommercielle formål, uden at bede om tilladelse. Husk altid at kreditere ophavsmanden.
+        </fo:block>
+        <fo:block space-after="10mm"/>
+        <fo:block font-size="18pt" font-weight="bold"
+                  space-after="5mm" text-align="center" line-height="15px">
+            UK
+        </fo:block>
+        <fo:block text-align="left" font-size="14pt">
+            The work is free of copyright. You can copy, change, distribute or present the work, even for commercial
+            purposes, without asking for permission. Always remember to credit the author.
+        </fo:block>
+        <fo:block text-align="center" space-before="3cm">
+            <fo:basic-link external-destination="https://creativecommons.org/publicdomain/mark/1.0/deed.da">
+                <fo:external-graphic border-width="thick"
+                                     border="none"
+                                     content-width="scale-to-fit"
+                                     content-height="30pt"
+                                     scaling="uniform"
+                                     src="publicdomain.svg"/>
+            </fo:basic-link>
+        </fo:block>
+    </xsl:variable>
+
+
+
     <xsl:variable name="typeC-text">
         <fo:block font-size="18pt" font-weight="bold"
                   space-after="5mm" text-align="center" line-height="15px">
@@ -75,36 +107,6 @@
         </fo:block>
         <fo:block text-align="left" font-size="14pt">
             Always remember to credit the author.
-        </fo:block>
-    </xsl:variable>
-
-    <xsl:variable name="typeB-text">
-        <fo:block font-size="18pt" font-weight="bold"
-                  space-after="5mm" text-align="center" line-height="15px">
-            DK
-        </fo:block>
-        <fo:block text-align="left" font-size="14pt">
-            Materialet er fri af ophavsret. Du kan kopiere, ændre, distribuere eller fremføre værket, også til
-            kommercielle formål, uden at bede om tilladelse. Husk altid at kreditere ophavsmanden.
-        </fo:block>
-        <fo:block space-after="10mm"/>
-        <fo:block font-size="18pt" font-weight="bold"
-                  space-after="5mm" text-align="center" line-height="15px">
-            UK
-        </fo:block>
-        <fo:block text-align="left" font-size="14pt">
-            The work is free of copyright. You can copy, change, distribute or present the work, even for commercial
-            purposes, without asking for permission. Always remember to credit the author.
-        </fo:block>
-        <fo:block text-align="center" space-before="3cm">
-            <fo:basic-link external-destination="https://creativecommons.org/publicdomain/mark/1.0/deed.da">
-                <fo:external-graphic border-width="thick"
-                                     border="none"
-                                     content-width="scale-to-fit"
-                                     content-height="30pt"
-                                     scaling="uniform"
-                                     src="publicdomain.svg"/>
-            </fo:basic-link>
         </fo:block>
     </xsl:variable>
 
