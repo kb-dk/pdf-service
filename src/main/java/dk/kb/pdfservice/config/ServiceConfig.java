@@ -114,9 +114,22 @@ public class ServiceConfig {
         return getConfig().getInteger("pdfService.copyrightFooter.Fontsize");
     }
     
+    public static Color getCopyrightFooterColor() {
+        return Color.decode(ServiceConfig.getConfig()
+                                         .getString("pdfService.copyrightFooter.Color"));
+    }
+    
+    public static float getCopyrightFooterTransparency(){
+        return ServiceConfig.getConfig().getFloat("pdfService.copyrightFooter.Transparency");
+    }
+    
     public static Color getCopyrightFooterBackgroundColor() {
         return Color.decode(ServiceConfig.getConfig()
-                                         .getString("pdfService.copyrightFooter.BackgroundColor"));
+                                         .getString("pdfService.copyrightFooter.Background.Color"));
+    }
+    
+    public static float getCopyrightFooterBackgroundTransparency(){
+        return ServiceConfig.getConfig().getFloat("pdfService.copyrightFooter.Background.Transparency");
     }
     
     

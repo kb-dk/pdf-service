@@ -7,6 +7,9 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
+import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
+import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.apache.pdfbox.pdmodel.graphics.state.RenderingMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,8 +32,11 @@ public class CopyrightFooterInserter {
         
         
         final Color textboxColor = ServiceConfig.getCopyrightFooterBackgroundColor();
-        
-        
+        final Color textColor = ServiceConfig.getCopyrightFooterColor();
+        float textAlpha = ServiceConfig.getCopyrightFooterTransparency();
+        float backgroundAlpha = ServiceConfig.getCopyrightFooterBackgroundTransparency();
+    
+    
         for (PDPage p : doc.getPages()) {
             
             
@@ -54,6 +60,9 @@ public class CopyrightFooterInserter {
                                                              PDPageContentStream.AppendMode.APPEND,
                                                              true,
                                                              true)) {
+                
+                contentStream.setRenderingMode(RenderingMode.FILL);
+    
     
                 int footerTextLineNumber =0;
                 for (String copyrightFooterText : copyrightFooterTexts) {
@@ -62,28 +71,28 @@ public class CopyrightFooterInserter {
                     float textWidth1 = calculateTextLengthPixels(copyrightFooterText, 1, font);
                     
                     float textboxWidth1 = calculateTextLengthPixels("  " + copyrightFooterText + "  ", 1, font);
-                    
-                    contentStream.moveTo(0, 0);//Ensure we start at lowest left corner
-                    
-                    //resetContext to ensure we are not scaled, rotated or anything else
-                    contentStream.setRenderingMode(RenderingMode.FILL);
-                    
-                    
-                    contentStream.saveGraphicsState();
-                    
-                    contentStream.setNonStrokingColor(textboxColor);
     
-                    final float textboxY = footer_height * .8f + (footerTextLineNumber++ * footer_height);
-                    final float textboxW = textboxWidth1 * fontSize;
-                    final float textboxX = (page.getWidth() - textboxW) / 2;
-                    
-                    
-                    contentStream.addRect(textboxX, textboxY, textboxW, footer_height);
-                    contentStream.fill();
-                    
-                    contentStream.restoreGraphicsState();
-                    
-                    
+                    contentStream.moveTo(0, 0);//Ensure we start at lowest left corner
+                    //contentStream.saveGraphicsState();
+                    {
+                        contentStream.setNonStrokingColor(textboxColor);
+                        PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+                        graphicsState.setNonStrokingAlphaConstant(backgroundAlpha);
+                        contentStream.setGraphicsStateParameters(graphicsState);
+    
+                        final float textboxY = footer_height * .8f + (footerTextLineNumber++ * footer_height);
+                        final float textboxW = textboxWidth1 * fontSize;
+                        final float textboxX = (page.getWidth() - textboxW) / 2;
+                        contentStream.addRect(textboxX, textboxY, textboxW, footer_height);
+                        contentStream.fill();
+                    }
+                    //contentStream.restoreGraphicsState();
+    
+                    contentStream.setNonStrokingColor(textColor);
+                    PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+                    graphicsState.setNonStrokingAlphaConstant(textAlpha);
+                    contentStream.setGraphicsStateParameters(graphicsState);
+    
                     float text_width = textWidth1 * fontSize;
                     
                     //Centered text
