@@ -87,16 +87,18 @@ pdfService:
   # Details of the footer to insert, if the document is under copyright
   copyrightFooter:
     Text:
-      - "The manuscript copy may not be used for public performance and may not be distributed."
       - "Manuskriptkopien må ikke anvendes til opførelse og må ikke videre distribueres"
+      - "The manuscript copy may not be used for public performance and may not be distributed."
     Fontsize: 14
+    #Font is Helvetica, which is unfortunately not configurable
 
     # See https://www.rapidtables.com/web/color/html-color-codes.html for possible values
-    Color: '#000000'
+    Color: '#000000' # Black
     Transparency: 0.5 # Between 0.0 and 1.0. 1.0 is totally covering, i.e. not transparent. 0.0 is invisible
 
     Background:
+      # In order for the footer to be visible on darker backgrounds
       # See https://www.rapidtables.com/web/color/html-color-codes.html for possible values
-      Color: '#FFFFFF'
-      Transparency: 0.5 # Between 0.0 and 1.0. 1.0 is totally covering, i.e. not transparent. 0.0 is invisible
+      Color: '#FFFFFF' # White
+      Transparency: 0.3 # Between 0.0 and 1.0. 1.0 is totally covering, i.e. not transparent. 0.0 is invisible
 
