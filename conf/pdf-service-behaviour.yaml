@@ -89,7 +89,7 @@ pdfService:
     Text:
       - "Manuskriptkopien må ikke anvendes til opførelse og må ikke videre distribueres"
       - "The manuscript copy may not be used for public performance and may not be distributed."
-    Fontsize: 14
+    Fontsize: 12
     #Font is Helvetica, which is unfortunately not configurable
 
     # See https://www.rapidtables.com/web/color/html-color-codes.html for possible values

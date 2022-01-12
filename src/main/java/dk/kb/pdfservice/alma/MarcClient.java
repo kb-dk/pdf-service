@@ -54,6 +54,7 @@ public class MarcClient {
         if (tag997a.contains("DOD")) {
             return DocumentType.A;
         }
+        
         if (tag997a.contains("DRA")) {
             if (isWithinCopyright) {
                 return DocumentType.C;
@@ -61,6 +62,7 @@ public class MarcClient {
                 return DocumentType.B;
             }
         }
+        
         if (tag997a.contains("KBD")) {
             if (isWithinCopyright) {
                 return DocumentType.A;
@@ -68,6 +70,9 @@ public class MarcClient {
                 return DocumentType.B;
             }
         }
+        
+        //TODO What should DocumentType default to?
+        //As A starts with the words "The work may be copyrighted" it seems to natural choice
         return DocumentType.Unknown;
     }
     
