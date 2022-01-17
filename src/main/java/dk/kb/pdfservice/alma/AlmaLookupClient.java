@@ -16,6 +16,10 @@ public class AlmaLookupClient {
     
     
     public static Bib getBib(String actualBarcode) {
+    
+        //TODO perhaps perform an SRU search, possible for the entire URL here
+        //TODO an SRU search would be slower, but it would get the MARC21 directly rather than through a second call
+    
         AlmaInventoryClient almaInventoryClient = new AlmaInventoryClient(ServiceConfig.getAlmaRestClient());
         Item item = almaInventoryClient.getItem(actualBarcode);
         
