@@ -1,7 +1,11 @@
 package dk.kb.pdfservice.webservice.exception;
 
+import dk.kb.pdfservice.config.ServiceConfig;
+
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.nio.charset.StandardCharsets;
 
 /*
  * Superclass for Exceptions that has a specific HTTP response code.
@@ -13,7 +17,7 @@ public class ServiceObjection extends WebApplicationException {
     private static final long serialVersionUID = 27182819L;
     private final Response.Status responseStatus;
     
-    private String mimeType = "text/plain";
+    private MediaType mimeType = MediaType.TEXT_PLAIN_TYPE.withCharset(StandardCharsets.UTF_8.name());
     private Object entity = null;
     
     public ServiceObjection(Response.Status responseStatus) {
@@ -43,7 +47,7 @@ public class ServiceObjection extends WebApplicationException {
      * @param entity         the entity to translate into the HTTP response body (normally an OpenAPI generated Dto).
      * @param responseStatus HTTP response code.
      */
-    public ServiceObjection(String mimeType, Object entity, Response.Status responseStatus) {
+    public ServiceObjection(MediaType mimeType, Object entity, Response.Status responseStatus) {
         super();
         this.responseStatus = responseStatus;
         this.mimeType       = mimeType;
@@ -58,7 +62,7 @@ public class ServiceObjection extends WebApplicationException {
      * @param cause          the originating Exception.
      * @param responseStatus HTTP response code.
      */
-    public ServiceObjection(String mimeType, Object entity, Throwable cause, Response.Status responseStatus) {
+    public ServiceObjection(MediaType mimeType, Object entity, Throwable cause, Response.Status responseStatus) {
         super(cause);
         this.responseStatus = responseStatus;
         this.mimeType       = mimeType;
@@ -69,11 +73,16 @@ public class ServiceObjection extends WebApplicationException {
         return responseStatus;
     }
     
-    public String getMimeType() {
+    public MediaType getMimeType() {
         return mimeType;
     }
     
     public Object getEntity() {
         return entity == null ? getMessage() : entity;
+    }
+    
+    @Override
+    public String getMessage() {
+        return super.getMessage()+"\n" + ServiceConfig.getErrorMessage();
     }
 }

@@ -133,6 +133,10 @@ public class ServiceConfig {
     }
     
     
+    public static String getErrorMessage(){
+        return ServiceConfig.getConfig().getString("pdfService.errorMessage");
+    }
+    
     /**
      * Direct access to the backing YAML-class is used for configurations with more flexible content
      * and/or if the service developer prefers key-based property access.

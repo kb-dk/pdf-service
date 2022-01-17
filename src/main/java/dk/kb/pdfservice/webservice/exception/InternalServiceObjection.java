@@ -1,5 +1,6 @@
 package dk.kb.pdfservice.webservice.exception;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 /*
@@ -31,13 +32,6 @@ public class InternalServiceObjection extends ServiceObjection {
         super(cause, responseStatus);
     }
     
-    public InternalServiceObjection(String mimeType, Object entity) {
-        super(mimeType, entity, responseStatus);
-    }
-    
-    public InternalServiceObjection(String mimeType, Object entity, Throwable cause) {
-        super(mimeType, entity, cause, responseStatus);
-    }
     
 }
 

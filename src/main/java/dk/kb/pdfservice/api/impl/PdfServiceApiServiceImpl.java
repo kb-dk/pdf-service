@@ -15,6 +15,7 @@ import dk.kb.pdfservice.utils.PdfUtils;
 import dk.kb.pdfservice.webservice.exception.InternalServiceObjection;
 import dk.kb.pdfservice.webservice.exception.NotFoundServiceObjection;
 import dk.kb.pdfservice.webservice.exception.ServiceObjection;
+import dk.kb.util.other.NamedThread;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.cxf.jaxrs.ext.MessageContext;
@@ -118,46 +119,48 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
      **/
     @Override
     public StreamingOutput getPdf(String requestedPdfFile) {
+        try (NamedThread namedThread = NamedThread.postfix(requestedPdfFile)) {
+    
+            //This is the file to return to the use user. It might not exist yet
+            File copyrightedPdfFile = getTempFile(requestedPdfFile);
+    
+            //1. Lock for this filename, so only one user can use it
+            final ReadWriteLock readWriteLock = stripedLock.get(requestedPdfFile);
+    
+            //First we acquire the read lock, to be able to read the file
+            readWriteLock.readLock().lock();
+            //state: w=0,r=1
+            try {
+                boolean useTempPdf = canUseTempPdf(copyrightedPdfFile);
         
-        //This is the file to return to the use user. It might not exist yet
-        File copyrightedPdfFile = getTempFile(requestedPdfFile);
-        
-        //1. Lock for this filename, so only one user can use it
-        final ReadWriteLock readWriteLock = stripedLock.get(requestedPdfFile);
-        
-        //First we acquire the read lock, to be able to read the file
-        readWriteLock.readLock().lock();
-        //state: w=0,r=1
-        try {
-            boolean useTempPdf = canUseTempPdf(copyrightedPdfFile);
+                //The copyrighted PDF is not usable, so it must be regenerated
+                if (!useTempPdf) {
             
-            //The copyrighted PDF is not usable, so it must be regenerated
-            if (!useTempPdf) {
-                
-                upgradeToWriteLock(readWriteLock);
-                //state: w=1,r=0,
-                try {
-                    //recheck that somebody did not update the pdf beneath us while we were waiting for the write lock
-                    if (!canUseTempPdf(copyrightedPdfFile)) {
-                        //recreate the copyrighted PDF
-                        createCopyrightedPDF(requestedPdfFile, copyrightedPdfFile);
+                    upgradeToWriteLock(readWriteLock);
+                    //state: w=1,r=0,
+                    try {
+                        //recheck that somebody did not update the pdf beneath us while we were waiting for the write lock
+                        if (!canUseTempPdf(copyrightedPdfFile)) {
+                            //recreate the copyrighted PDF
+                            createCopyrightedPDF(requestedPdfFile, copyrightedPdfFile);
+                        }
+                        //If we got to here, everything worked
+                    } finally {
+                        downgradeToReadLock(readWriteLock);
+                        //w=0,r=1
                     }
-                    //If we got to here, everything worked
-                } finally {
-                    downgradeToReadLock(readWriteLock);
-                    //w=0,r=1
                 }
+                //w=0,r=1, no matter if we went through the if or not
+                return returnPdfFile(copyrightedPdfFile);
+        
+            } catch (Exception e) {
+                log.error("Exception", e);
+                return object(() -> handleObjections(e, requestedPdfFile));
+            } finally {
+                //And we can release the readlock after the the method is complete
+                readWriteLock.readLock().unlock();
+                //w=0,r=0
             }
-            //w=0,r=1, no matter if we went through the if or not
-            return returnPdfFile(copyrightedPdfFile);
-            
-        } catch (Exception e) {
-            log.error("Exception for '{}'", requestedPdfFile, e);
-            return object(() -> handleObjections(e));
-        } finally {
-            //And we can release the readlock after the the method is complete
-            readWriteLock.readLock().unlock();
-            //w=0,r=0
         }
     }
     
@@ -284,15 +287,16 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     /**
      * This method simply converts any Exception into a Service exception
      *
-     * @param e: Any kind of exception
+     * @param e : Any kind of exception
+     * @param requestedPdfFile
      * @return A ServiceException
      */
-    private ServiceObjection handleObjections(Exception e) {
+    private ServiceObjection handleObjections(Exception e, String requestedPdfFile) {
         if (e instanceof ServiceObjection) {
             return (ServiceObjection) e; // Do nothing - this is a declared ServiceException from within module.
         } else {// Unforseen exception (should not happen). Wrap in internal service exception
-            log.error("ServiceObjection(HTTP 500):", e); //You probably want to log this.
-            return new InternalServiceObjection(e.getMessage());
+            //log.error("ServiceObjection(HTTP 500): for requested file {}", requestedPdfFile, e); //You probably want to log this.
+            return new InternalServiceObjection("Exception "+e.getClass().getName()+"("+e.getMessage()+") when trying to prepare "+requestedPdfFile+".");
         }
     }
 }

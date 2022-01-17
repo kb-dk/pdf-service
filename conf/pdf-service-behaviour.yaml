@@ -84,6 +84,10 @@ pdfService:
     #Relative URLs in this FOPfile will be resolved from the folder containing the FOPfile
     # So you can refer to KBLogo.png simply as "KBLogo.png" without any path
 
+
+
+  errorMessage: "Denne post kunne ikke fremvises. Hvis du mener det er en fejl, kan du henvende dig til Spørg Biblioteket med et link til den post du prøver at tilgå: https://www.kb.dk/spoerg-biblioteket"
+
   # Details of the footer to insert, if the document is under copyright
   copyrightFooter:
     Text:
