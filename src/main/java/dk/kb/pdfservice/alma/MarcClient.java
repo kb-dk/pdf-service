@@ -19,7 +19,6 @@ public class MarcClient {
     @Nonnull
     public static PdfInfo getPdfInfo(String actualBarcode) {
         Bib bib = AlmaLookupClient.getBib(actualBarcode);
-        
         //Portfolios portFolios = almaInventoryClient.getBibPortfolios(mmsID);
         
         Element marc21 = bib.getAnies().get(0);

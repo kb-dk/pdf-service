@@ -118,9 +118,9 @@ public class CopyrightLogic {
         final Matcher matcher = pattern.matcher(tag260c);
         if (matcher.matches()) {
             int firstYear = Integer.parseInt(matcher.group("year")); //year must be there
-            Month firstMonth = parseMonth(getGroupOrDefault(matcher, "month", null));
+            Month firstMonth = parseMonth(getGroupOrDefault(matcher, "month", "01"));
             if (firstMonth == null) {
-                return Optional.empty();
+                firstMonth = Month.JANUARY;
             }
             int firstDay = Integer.parseInt(getGroupOrDefault(matcher, "day", "1"));
             return Optional.of(LocalDate.of(firstYear, firstMonth, firstDay));
