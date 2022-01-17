@@ -61,6 +61,16 @@ public class CopyrightLogic {
      */
     private static final Pattern yearFromD4Pattern = Pattern.compile(PREFIX + "(?<year>\\d{4})" + POSTFIX);
     
+    /**
+     * Extract year from format YYYY. Returns 1. of jan of the year
+     * [175-?]
+     */
+    private static final Pattern yearFromD3Pattern = Pattern.compile(PREFIX + "\\[(?<year>\\d{3})-\\?\\]" + POSTFIX);
+    
+    private static final Pattern yearFromD2Pattern = Pattern.compile(PREFIX + "\\[(?<year>\\d{2})--\\?\\]" + POSTFIX);
+    
+    private static final Pattern yearFromSAPattern = Pattern.compile(PREFIX + "\\[(?<year>\\d{0})s\\.a\\.]" + POSTFIX);
+    
     
     protected static boolean isWithinCopyright(LocalDate dateOfPublication) {
         
@@ -107,7 +117,10 @@ public class CopyrightLogic {
                         .or(() -> parsePublicationDateWithPattern(dateField, yearFromNamedMonthPattern))
                         .or(() -> parsePublicationDateWithPattern(dateField, yearFromYMDPattern))
                         .or(() -> parsePublicationDateWithPattern(dateField, yearFromDMYPattern))
-                        .or(() -> parsePublicationDateWithPattern(dateField, yearFromD4Pattern));
+                        .or(() -> parsePublicationDateWithPattern(dateField, yearFromD4Pattern))
+                        .or(() -> parsePublicationDateWithPattern(dateField, yearFromD3Pattern))
+                        .or(() -> parsePublicationDateWithPattern(dateField, yearFromD2Pattern))
+                        .or(() -> parsePublicationDateWithPattern(dateField, yearFromSAPattern));
         
         return firstYear.orElse(null);
     }
@@ -117,7 +130,7 @@ public class CopyrightLogic {
         //17. maj 2012
         final Matcher matcher = pattern.matcher(tag260c);
         if (matcher.matches()) {
-            int firstYear = Integer.parseInt(matcher.group("year")); //year must be there
+            int firstYear = getFirstYear(matcher);
             Month firstMonth = parseMonth(getGroupOrDefault(matcher, "month", "01"));
             if (firstMonth == null) {
                 firstMonth = Month.JANUARY;
@@ -126,6 +139,19 @@ public class CopyrightLogic {
             return Optional.of(LocalDate.of(firstYear, firstMonth, firstDay));
         }
         return Optional.empty();
+    }
+    
+    private static int getFirstYear(Matcher matcher) {
+        String yearRaw = matcher.group("year");
+        if (yearRaw == null || yearRaw.isEmpty()){
+            //It no year specified, return current year
+            return LocalDate.now(ZoneId.systemDefault()).getYear();
+        } else {
+            //Ensure that the year is 4 digits long
+            String year4Digits = (yearRaw + "99").substring(0, 4);
+            int yearInt = Integer.parseInt(year4Digits); //year must be there
+            return yearInt;
+        }
     }
     
     private static String getGroupOrDefault(Matcher matcher, String group, String defaultValue) {

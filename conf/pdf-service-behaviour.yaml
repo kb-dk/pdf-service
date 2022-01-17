@@ -71,10 +71,18 @@ pdfService:
   oldHeaderStrings:
     - "det kongelige bibliotek"
     - "det kgl. bibliotek"
-    - "digitaliseret af"
-    - "for oplysninger om ophavsret og brugerrettigheder, se venligst www.kb.dk"
 
-  # How long must pass since publication for at work to be outside copyright
+    - "digitaliseret af"
+    - "L)iAiNli8St-s1: Af" #Thank you 130020902524.pdf
+    - "lDiziHAlise^ af" # Thank you 130020159147.pdf
+
+    - "oplysninger om ophavsret og brugerrettigheder, se venligst"
+    - "Os)I/5MNZS»' OM Os)^AV§nsl: c>Z bruZe^ettiZ^Scjer; SS vsnIiZ3H" # Thank you 130020902567.pdf
+    - "l^c»' op I/s ni UZE!' om opIiAVZ^ oz bi'UZe^ettjZliecjes', se venIiZS^" # 130020159147.pdf
+#TODO match on apron image instead of this crap
+
+
+# How long must pass since publication for at work to be outside copyright
   TimeSincePublicationToBeOutsideCopyright:
     value: 140
     unit: YEARS
