@@ -77,7 +77,7 @@ public class AlmaZ93Client {
     public List<Document> search(String pdfFile)
             throws ZoomException, IOException, ParserConfigurationException, SAXException {
         try (Connection con = new Connection(host, port)) {
-            con.setSyntax("unimarc");
+            con.setSyntax("marc21");
             con.setDatabaseName(databaseName);
             con.connect();
             
@@ -85,7 +85,9 @@ public class AlmaZ93Client {
                 List<Document> results = new ArrayList<>();
                 for (int i = 0; i < set.getHitCount(); i++) {
                     try (Record rec = set.getRecord(i)) {
-                        results.add(XML.fromXML(parseMarc(rec.getContent()), true));
+                        byte[] content = rec.getContent();
+                        results.add(XML.fromXML(parseMarc(content), false));
+                        log.trace(rec.render());
                     }
                 }
                 return results;
@@ -93,7 +95,7 @@ public class AlmaZ93Client {
         }
     }
     
-    public String parseMarc(byte[] marc) throws IOException {
+    protected String parseMarc(byte[] marc) throws IOException {
         try (ByteArrayInputStream in = new ByteArrayInputStream(marc);
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             try (MarcXchangeWriter writer = new MarcXchangeWriter(out)) {

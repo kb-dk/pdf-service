@@ -82,9 +82,8 @@ public class CopyrightLogic {
                                 .isAfter(LocalDate.now(ZoneId.systemDefault()));
     }
     
-    protected static LocalDate getPublicationDate(Bib bib, Element marc21) {
+    protected static LocalDate getPublicationDate(Element marc21) {
         
-        final String dateOfPublication = bib.getDateOfPublication();
         
         final Optional<String> tag260c = MarcClient.getString(marc21, "260", "c");
         log.debug("tag260c {}", tag260c);
@@ -97,7 +96,7 @@ public class CopyrightLogic {
                                                  .findFirst()
                                                  .map(a -> a.split(" ", 3)[1]);
         
-        final String dateField = premiere.orElse(tag260c.orElse(dateOfPublication));
+        final String dateField = premiere.orElse(tag260c.orElse(null));
         
         log.debug("input date is {}", dateField);
         LocalDate parsedDate;

@@ -183,8 +183,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         //4. otherwise create
         final File sourcePdfFile = getPdfFile(pdfFileString);
         
-        String barcode = sourcePdfFile.getName().split("[-._]", 2)[0];
-        PdfInfo pdfInfo = MarcClient.getPdfInfo(barcode);
+        PdfInfo pdfInfo = MarcClient.getPdfInfo(pdfFileString);
         try (InputStream apronFile = produceApron(pdfFileString, pdfInfo);
              InputStream requestedPDF = transformPdfFile(sourcePdfFile, pdfInfo);
              InputStream completePDF = PdfTitlePageInserter.mergeFrontPageWithPdf(apronFile, requestedPDF);

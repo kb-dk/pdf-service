@@ -1,8 +1,9 @@
 package dk.kb.pdfservice.alma;
 
-import dk.kb.alma.gen.bibs.Bib;
 import dk.kb.util.xml.XPathSelector;
 import dk.kb.util.xml.XpathUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 
 import javax.annotation.Nonnull;
@@ -15,13 +16,11 @@ import java.util.stream.Stream;
 
 public class MarcClient {
     
+    private static final Logger log = LoggerFactory.getLogger(MarcClient.class);
     
     @Nonnull
     public static PdfInfo getPdfInfo(String actualBarcode) {
-        Bib bib = AlmaLookupClient.getBib(actualBarcode);
-        //Portfolios portFolios = almaInventoryClient.getBibPortfolios(mmsID);
-        
-        Element marc21 = bib.getAnies().get(0);
+        Element marc21 = AlmaLookupClient.getMarc21_2(actualBarcode);
         String authors = getAuthors(marc21);
         String title = getTitle(marc21);
         String alternativeTitle = getAlternativeTitle(marc21);
@@ -30,7 +29,7 @@ public class MarcClient {
         String size = getSize(marc21);
         
         
-        final LocalDate publicationDate = CopyrightLogic.getPublicationDate(bib, marc21);
+        final LocalDate publicationDate = CopyrightLogic.getPublicationDate(marc21);
         boolean isWithinCopyright = CopyrightLogic.isWithinCopyright(publicationDate);
         DocumentType documentType = getDocumentType(marc21, isWithinCopyright);
         
@@ -48,7 +47,13 @@ public class MarcClient {
     
     private static DocumentType getDocumentType(Element marc21, boolean isWithinCopyright) {
         
+        List<String> tag999a = getStrings(marc21, "999", "a");
+        log.debug("tag 999a: {}", tag999a);
+        
+        //TODO test 999a first. If not set, fall back to 997
+        
         List<String> tag997a = getStrings(marc21, "997", "a");
+        log.debug("tag 997a: {}", tag997a);
         
         if (tag997a.contains("DOD")) {
             return DocumentType.A;
@@ -143,12 +148,13 @@ public class MarcClient {
     public static Optional<String> getString(Element marc21, String tag, String subfield) {
         XPathSelector xpath = XpathUtils.createXPathSelector();
         
+        String xpathExpr = "//record/datafield[@tag='"
+                           + tag
+                           + "']/subfield[@code='"
+                           + subfield
+                           + "']";
         return Optional.ofNullable(xpath.selectString(marc21,
-                                                      "/record/datafield[@tag='"
-                                                      + tag
-                                                      + "']/subfield[@code='"
-                                                      + subfield
-                                                      + "']",
+                                                      xpathExpr,
                                                       null));
     }
     
@@ -156,7 +162,7 @@ public class MarcClient {
         XPathSelector xpath = XpathUtils.createXPathSelector();
         
         return xpath.selectStringList(marc21,
-                                      "/record/datafield[@tag='"
+                                      "//record/datafield[@tag='"
                                       + tag
                                       + "']/subfield[@code='"
                                       + subfield

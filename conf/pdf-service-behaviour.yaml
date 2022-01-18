@@ -11,6 +11,12 @@
 
 alma:
 
+  z9350:
+    host: "kbdk-kgl-psb.alma.exlibrisgroup.com" # sandbox
+    #host: kbdk-kgl.alma.exlibrisgroup.com # production
+    port: 1921
+    database: "45KBDK_KGL"
+
   apikey: SHOULD SET IN librarylending-environment.yaml or librarylending-local.yaml
 
 

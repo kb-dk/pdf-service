@@ -137,6 +137,18 @@ public class ServiceConfig {
         return ServiceConfig.getConfig().getString("pdfService.errorMessage");
     }
     
+    public static String getAlmaZ9350Host(){
+        return ServiceConfig.getConfig().getString("alma.z9350.host");
+    }
+    
+    public static Integer getAlmaZ9350Port(){
+        return ServiceConfig.getConfig().getInteger("alma.z9350.port");
+    }
+    
+    public static String getAlmaZ9350Database(){
+        return ServiceConfig.getConfig().getString("alma.z9350.database");
+    }
+    
     /**
      * Direct access to the backing YAML-class is used for configurations with more flexible content
      * and/or if the service developer prefers key-based property access.
