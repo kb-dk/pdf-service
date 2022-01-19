@@ -59,6 +59,10 @@
     <dependencies>
 
         <dependency>
+            <groupId>dk.kb.util</groupId>
+            <artifactId>kb-util</artifactId>
+            <version>1.4.5-SNAPSHOT</version>        </dependency>
+        <dependency>
             <groupId>dk.kb.alma</groupId>
             <artifactId>alma-client</artifactId>
             <version>0.37-SNAPSHOT</version>
@@ -75,6 +79,8 @@
             <version>4.0.2</version>
             <scope>provided</scope>
         </dependency>
+
+
 
 
 

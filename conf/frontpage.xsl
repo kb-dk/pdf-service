@@ -75,7 +75,6 @@
     </xsl:variable>
 
 
-
     <xsl:variable name="typeC-text">
         <fo:block font-size="18pt" font-weight="bold"
                   space-after="5mm" text-align="center" line-height="15px">
@@ -209,36 +208,39 @@
                                     </fo:table-row>
                                 </xsl:if>
 
-                                <fo:table-row>
-                                    <fo:table-cell border="solid 0px black"
-                                                   text-align="left" font-weight="normal">
-                                        <fo:block>
-                                            Udgivet år og sted | Publication time and place:
-                                        </fo:block>
-                                    </fo:table-cell>
-                                    <fo:table-cell border="solid 0px black"
-                                                   text-align="left" font-weight="normal">
-                                        <fo:block>
-                                            <xsl:value-of select="$place"/>
-                                        </fo:block>
-                                    </fo:table-cell>
-                                </fo:table-row>
+                                <xsl:if test="$place !=''">
+                                    <fo:table-row>
+                                        <fo:table-cell border="solid 0px black"
+                                                       text-align="left" font-weight="normal">
+                                            <fo:block>
+                                                Udgivet år og sted | Publication time and place:
+                                            </fo:block>
+                                        </fo:table-cell>
+                                        <fo:table-cell border="solid 0px black"
+                                                       text-align="left" font-weight="normal">
+                                            <fo:block>
+                                                <xsl:value-of select="$place"/>
+                                            </fo:block>
+                                        </fo:table-cell>
+                                    </fo:table-row>
+                                </xsl:if>
 
-
-                                <fo:table-row>
-                                    <fo:table-cell border="solid 0px black"
-                                                   text-align="left" font-weight="normal">
-                                        <fo:block>
-                                            Fysiske størrelse | Physical extent:
-                                        </fo:block>
-                                    </fo:table-cell>
-                                    <fo:table-cell border="solid 0px black"
-                                                   text-align="left" font-weight="normal">
-                                        <fo:block>
-                                            <xsl:value-of select="$size"/>
-                                        </fo:block>
-                                    </fo:table-cell>
-                                </fo:table-row>
+                                <xsl:if test="$size !=''">
+                                    <fo:table-row>
+                                        <fo:table-cell border="solid 0px black"
+                                                       text-align="left" font-weight="normal">
+                                            <fo:block>
+                                                Fysiske størrelse | Physical extent:
+                                            </fo:block>
+                                        </fo:table-cell>
+                                        <fo:table-cell border="solid 0px black"
+                                                       text-align="left" font-weight="normal">
+                                            <fo:block>
+                                                <xsl:value-of select="$size"/>
+                                            </fo:block>
+                                        </fo:table-cell>
+                                    </fo:table-row>
+                                </xsl:if>
 
                             </fo:table-body>
                         </fo:table>

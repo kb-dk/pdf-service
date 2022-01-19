@@ -1,13 +1,16 @@
 package dk.kb.pdfservice.alma;
 
 import dk.kb.alma.gen.bibs.Bib;
+import dk.kb.util.other.StringListUtils;
 import dk.kb.util.xml.XPathSelector;
 import dk.kb.util.xml.XpathUtils;
 import org.w3c.dom.Element;
 
 import javax.annotation.Nonnull;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -46,6 +49,115 @@ public class MarcClient {
         return pdfInfo;
     }
     
+    private static String getAuthors(Element marc21) {
+        
+        /*
+        Forfatter(e):
+            hentes fra Marc21 100 a,
+            245 c  komma separeret
+            og 700 a + d ( kan forekomme flere gange),?
+            og opdelt i flere linier hvis længere end ?-
+            [ ] - hvis ingen værdi(er).
+            
+            Her kan forekomme dublet oplysninger p.g.a. registrerings praksis gennem tiderne
+         */
+        
+        List<String> tag100a = getStrings(marc21, "100", "a");
+        List<String> tag245c = getStrings(marc21, "245", "c");
+        //TODO pair 700a+d
+        List<String> tag700a = getStrings(marc21, "700", "a");
+        List<String> tag700d = getStrings(marc21, "700", "d");
+        
+        return Stream.of(tag100a, tag700a, tag245c, tag700d)
+                     .flatMap(Collection::stream)
+                     .filter(Objects::nonNull)
+                     .collect(Collectors.joining("; "));
+    }
+    
+    
+    private static String getTitle(Element marc21) {
+        //* Titel:
+        //  * hentes fra Marc21 245a + b
+        //  * opdelt i flere linjer hvis længere end ?
+        
+        List<String> tag245a = getStrings(marc21, "245", "a");
+        List<String> tag245b = getStrings(marc21, "245", "b");
+        return Stream.of(tag245a, tag245b)
+                     .flatMap(Collection::stream)
+                     .filter(Objects::nonNull)
+                     .collect(Collectors.joining("; "));
+    }
+    
+    
+    private static String getAlternativeTitle(Element marc21) {
+        //Alternativ Titel:  hentes fra Marc21 246 a  -  hvis ikke noget = ingenting
+        List<String> tag246a = getStrings(marc21, "246", "a");
+        return Stream.of(tag246a)
+                     .flatMap(Collection::stream)
+                     .filter(Objects::nonNull)
+                     .collect(Collectors.joining("; "));
+        
+    }
+    
+    private static String getUdgavebetegnelse(Element marc21) {
+        //* Udgavebetegnelse:
+        //  * 250a
+        //  * hvis ikke noget = ingenting (ikke relevant for teatermanuskripter)
+        List<String> tag250a = getStrings(marc21, "250", "a");
+        return Stream.of(tag250a)
+                     .flatMap(Collection::stream)
+                     .filter(Objects::nonNull)
+                     .collect(Collectors.joining("; "));
+    }
+    
+    private static String getPlace(Element marc21) {
+        
+        //  * hentes fra Marc21 260a + b + c eller 500a (hvis man kan afgrænse til *premiere*, da man ved overførslen til ALMA slog mange felter sammen til dette felt),
+        //   * 710a (udfaset felt, der stadig er data i) eller
+        //   * felt 96 (i 96 kan dog også være rettighedsbegrænsninger indskrevet).
+        
+        List<String> tag260a = getStrings(marc21, "260", "a");
+        List<String> tag260b = getStrings(marc21, "260", "b");
+        List<String> tag260c = getStrings(marc21, "260", "c");
+        
+        List<String> tag500a = getStrings(marc21, "500", "a")
+                .stream()
+                .filter(string -> string.toLowerCase(Locale.getDefault()).startsWith("premiere"))
+                .collect(Collectors.toList());
+        
+        List<String> tag710a = getStrings(marc21, "710", "a");
+        
+        List<String> tag96a = getStrings(marc21, "96", "a");
+        
+        final List<String> stringList = Stream.of(tag260a,
+                                                  tag260b,
+                                                  tag260c,
+                                                  tag500a,
+                                                  tag710a,
+                                                  tag96a)
+                                              .flatMap(Collection::stream)
+                                              .filter(Objects::nonNull)
+                                              .map(string -> string
+                                                      .replaceFirst("\\.$", "")
+                                                      .trim())
+                                              .collect(Collectors.toList());
+        final List<String> removeSubstrings = StringListUtils.removeSubstrings(stringList);
+        return String.join("; ",
+                           removeSubstrings);
+    }
+    
+    
+    private static String getSize(Element marc21) {
+        // Forlæggets fysiske størrelse:
+        // hentes fra Marc21 300a
+        List<String> tag300a = getStrings(marc21, "300", "a");
+        return Stream.of(tag300a)
+                     .flatMap(Collection::stream)
+                     .filter(Objects::nonNull)
+                     .collect(Collectors.joining(", "));
+    }
+    
+    
     private static DocumentType getDocumentType(Element marc21, boolean isWithinCopyright) {
         
         List<String> tag997a = getStrings(marc21, "997", "a");
@@ -75,70 +187,6 @@ public class MarcClient {
         return DocumentType.Unknown;
     }
     
-    
-    private static String getSize(Element marc21) {
-        // Forlæggets fysiske størrelse:
-        // hentes fra Marc21 300a
-        return getString(marc21, "300", "a").orElse("");
-    }
-    
-    private static String getPlace(Element marc21) {
-        //  * hentes fra Marc21 260a + b + c eller 500a (hvis man kan afgrænse til *premiere*, da man ved overførslen til ALMA slog mange felter sammen til dette felt),
-        //  * 710 (udfaset felt, der stadig er data i) eller
-        //  * felt 96 (i 96 kan dog også være rettighedsbegrænsninger indskrevet).
-        
-        String tag260a = getString(marc21, "260", "a").orElse(null);
-        if (tag260a != null) {
-            String tag260b = getString(marc21, "260", "b").orElse(null);
-            String tag260c = getString(marc21, "260", "c").orElse(null);
-            return Stream.of(tag260a, tag260b, tag260c).filter(Objects::nonNull).collect(Collectors.joining(" "));
-        } else {
-            Optional<String> place = getStrings(marc21, "500", "a")
-                    .stream()
-                    .filter(str -> str.startsWith("Premiere ")).findFirst();
-            
-            return place.orElse("No place specified");
-        }
-    }
-    
-    private static String getUdgavebetegnelse(Element marc21) {
-        //* Udgavebetegnelse:
-        //  * 250a
-        //  * hvis ikke noget = ingenting (ikke relevant for teatermanuskripter)
-        String tag250a = getString(marc21, "250", "a").orElse(null);
-        return Stream.of(tag250a).filter(Objects::nonNull).collect(Collectors.joining(", "));
-    }
-    
-    private static String getAlternativeTitle(Element marc21) {
-        return getString(marc21, "246", "a").orElse("");
-    }
-    
-    private static String getTitle(Element marc21) {
-        //* Titel:
-        //  * hentes fra Marc21 245a + b
-        //  * opdelt i flere linjer hvis længere end ?
-        
-        String tag245a = getString(marc21, "245", "a").orElse(null);
-        String tag245b = getString(marc21, "245", "b").orElse(null);
-        return Stream.of(tag245a, tag245b).filter(Objects::nonNull).collect(Collectors.joining(", "));
-    }
-    
-    private static String getAuthors(Element marc21) {
-        //* Forfatter(e):
-        //  * hentes fra Marc21 100a,
-        //  * 700a + d ( kan forekomme flere gange),
-        //  * 245c - komma separeret og opdelt i flere linier hvis længere end ?
-        //  * [] - hvis ingen værdi(er).
-        String tag100a = getString(marc21, "100", "a").orElse(null);
-        String tag700a = getString(marc21, "700", "a").orElse(null);
-        String tag245c = getString(marc21, "245", "c").orElse(null);
-        if (tag100a == null && tag700a == null && tag245c == null) {
-            return "[]";
-        }
-        return Stream.of(tag100a, tag700a, tag245c)
-                     .filter(Objects::nonNull)
-                     .collect(Collectors.joining(", "));
-    }
     
     public static Optional<String> getString(Element marc21, String tag, String subfield) {
         XPathSelector xpath = XpathUtils.createXPathSelector();
