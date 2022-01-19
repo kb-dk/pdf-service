@@ -90,7 +90,7 @@ public class MarcClient {
     
     
     private static String getAlternativeTitle(Element marc21) {
-        //Alternativ Titel:  hentes fra Marc21 246 a  -  hvis ikke noget = ingenting
+        //Alternativ Titel:  hentes fra Marc21 246a -  hvis ikke noget = ingenting
         List<String> tag246a = getStrings(marc21, "246", "a");
         return Stream.of(tag246a)
                      .flatMap(Collection::stream)
@@ -112,38 +112,59 @@ public class MarcClient {
     
     private static String getPlace(Element marc21) {
         
-        //  * hentes fra Marc21 260a + b + c eller 500a (hvis man kan afgrænse til *premiere*, da man ved overførslen til ALMA slog mange felter sammen til dette felt),
+        //  * hentes fra Marc21 260a + b + c eller 500a (hvis man kan afgrænse til *premiere*,
+        //          da man ved overførslen til ALMA slog mange felter sammen til dette felt),
         //   * 710a (udfaset felt, der stadig er data i) eller
         //   * felt 96 (i 96 kan dog også være rettighedsbegrænsninger indskrevet).
         
+        //Alle 260a felter
         List<String> tag260a = getStrings(marc21, "260", "a");
+    
+        //Alle 260b felter
         List<String> tag260b = getStrings(marc21, "260", "b");
+    
+        //Alle 260c felter
         List<String> tag260c = getStrings(marc21, "260", "c");
         
+        //Alle 500a felter der starter med premiere (case insensive)
         List<String> tag500a = getStrings(marc21, "500", "a")
                 .stream()
                 .filter(string -> string.toLowerCase(Locale.getDefault()).startsWith("premiere"))
                 .collect(Collectors.toList());
         
+        //Alle 710a felter
         List<String> tag710a = getStrings(marc21, "710", "a");
         
-        List<String> tag96a = getStrings(marc21, "96", "a");
+        //Alle 096a felter
+        List<String> tag096a = getStrings(marc21, "096", "a");
         
-        final List<String> stringList = Stream.of(tag260a,
+        final List<String> allFields = Stream.of(tag260a,
                                                   tag260b,
                                                   tag260c,
                                                   tag500a,
                                                   tag710a,
-                                                  tag96a)
+                                                  tag096a)
+                                              //Producer en lang liste af ALLE de ovennævnte felter
                                               .flatMap(Collection::stream)
+                                              //Fjerner tomme felter
                                               .filter(Objects::nonNull)
+                                              //Fjerner afsluttende ., fordi de ser dumme ud
                                               .map(string -> string
                                                       .replaceFirst("\\.$", "")
                                                       .trim())
-                                              .collect(Collectors.toList());
-        final List<String> removeSubstrings = StringListUtils.removeSubstrings(stringList);
-        return String.join("; ",
-                           removeSubstrings);
+                                             //Samler resultatet som en liste
+                                             .collect(Collectors.toList());
+        
+        //Magi der fjerner tekster, der er indeholdt i andre tekster. F.eks har post 130022785800-color.pdf
+        // "Premiere 12.04.2018 på Folketeatret, Snoreloftet" og "Folketeatret"
+        //Fordi "Folketeatret" allerede står i den længere tekst, bliver den fjernet fra listen
+        final List<String> uniqueFields = StringListUtils.removeSubstrings(allFields);
+        
+        //Addendum til ovenstående eksempel: Der stod faktisk "Folketeatret.", og det indgår IKKE
+        // i den længere tekst. Det er en anden grund til at jeg fjerner afsluttende .
+        
+        //Sammensæt med ; som adskillelse, fordi jeg syntes det ser pænere ud end ,
+        return String.join("; ", uniqueFields);
     }
     
     
