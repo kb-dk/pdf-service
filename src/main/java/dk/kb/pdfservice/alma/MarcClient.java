@@ -8,6 +8,7 @@ import org.w3c.dom.Element;
 
 import javax.annotation.Nonnull;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -64,11 +65,10 @@ public class MarcClient {
         
         List<String> tag100a = getStrings(marc21, "100", "a");
         List<String> tag245c = getStrings(marc21, "245", "c");
-        //TODO pair 700a+d
-        List<String> tag700a = getStrings(marc21, "700", "a");
-        List<String> tag700d = getStrings(marc21, "700", "d");
         
-        return Stream.of(tag100a, tag700a, tag245c, tag700d)
+        List<String> tag700ad = getStrings(marc21, "700", "a","d");
+        
+        return Stream.of(tag100a, tag245c, tag700ad)
                      .flatMap(Collection::stream)
                      .filter(Objects::nonNull)
                      .collect(Collectors.joining("; "));
@@ -80,9 +80,9 @@ public class MarcClient {
         //  * hentes fra Marc21 245a + b
         //  * opdelt i flere linjer hvis længere end ?
         
-        List<String> tag245a = getStrings(marc21, "245", "a");
-        List<String> tag245b = getStrings(marc21, "245", "b");
-        return Stream.of(tag245a, tag245b)
+        List<String> tag245ab = getStrings(marc21, "245", "a","b");
+        
+        return Stream.of(tag245ab)
                      .flatMap(Collection::stream)
                      .filter(Objects::nonNull)
                      .collect(Collectors.joining("; "));
@@ -118,13 +118,8 @@ public class MarcClient {
         //   * felt 96 (i 96 kan dog også være rettighedsbegrænsninger indskrevet).
         
         //Alle 260a felter
-        List<String> tag260a = getStrings(marc21, "260", "a");
-    
-        //Alle 260b felter
-        List<String> tag260b = getStrings(marc21, "260", "b");
-    
-        //Alle 260c felter
-        List<String> tag260c = getStrings(marc21, "260", "c");
+        List<String> tag260abc = getStrings(marc21, "260", "a","b","c");
+        
         
         //Alle 500a felter der starter med premiere (case insensive)
         List<String> tag500a = getStrings(marc21, "500", "a")
@@ -138,20 +133,18 @@ public class MarcClient {
         //Alle 096a felter
         List<String> tag096a = getStrings(marc21, "096", "a");
         
-        final List<String> allFields = Stream.of(tag260a,
-                                                  tag260b,
-                                                  tag260c,
-                                                  tag500a,
-                                                  tag710a,
-                                                  tag096a)
-                                              //Producer en lang liste af ALLE de ovennævnte felter
-                                              .flatMap(Collection::stream)
-                                              //Fjerner tomme felter
-                                              .filter(Objects::nonNull)
-                                              //Fjerner afsluttende ., fordi de ser dumme ud
-                                              .map(string -> string
-                                                      .replaceFirst("\\.$", "")
-                                                      .trim())
+        final List<String> allFields = Stream.of(tag260abc,
+                                                 tag500a,
+                                                 tag710a,
+                                                 tag096a)
+                                             //Producer en lang liste af ALLE de ovennævnte felter
+                                             .flatMap(Collection::stream)
+                                             //Fjerner tomme felter
+                                             .filter(Objects::nonNull)
+                                             //Fjerner afsluttende ., fordi de ser dumme ud
+                                             .map(string -> string
+                                                     .replaceFirst("\\.$", "")
+                                                     .trim())
                                              //Samler resultatet som en liste
                                              .collect(Collectors.toList());
         
@@ -230,6 +223,21 @@ public class MarcClient {
                                       + "']/subfield[@code='"
                                       + subfield
                                       + "']/text()");
+    }
+    
+    public static List<String> getStrings(Element marc21, String tag, String... subfields) {
+        XPathSelector xpath = XpathUtils.createXPathSelector();
+        
+        
+        final String xpathExpr = "/record/datafield[@tag='"
+                                 + tag
+                                 + "']/subfield["
+                                 + Arrays.stream(subfields)
+                                         .map(subfield -> "@code='" + subfield + "'")
+                                         .collect(Collectors.joining(" or "))
+                                 + "]/text()";
+        return xpath.selectStringList(marc21,
+                                      xpathExpr);
     }
     
 }
