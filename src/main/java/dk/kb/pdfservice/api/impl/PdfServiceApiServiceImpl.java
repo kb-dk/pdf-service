@@ -254,6 +254,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                 IOUtils.copy(buffer.toInputStream(), output);
             } finally {
                 buffer.close();
+                //TODO perhaps log Author info here?
                 downloadLogger.info("IP {} downloaded {}", httpServletRequest.getRemoteAddr(), readyPdfFile.getName());
             }
         };
