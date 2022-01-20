@@ -8,6 +8,7 @@ import org.w3c.dom.Element;
 
 import javax.annotation.Nonnull;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -66,7 +67,7 @@ public class MarcClient {
         List<String> tag100a = getStrings(marc21, "100", "a");
         List<String> tag245c = getStrings(marc21, "245", "c");
         
-        List<String> tag700ad = getStrings(marc21, "700", "a","d");
+        List<String> tag700ad = getStrings(marc21, "700", "a", "d");
         
         return Stream.of(tag100a, tag245c, tag700ad)
                      .flatMap(Collection::stream)
@@ -80,12 +81,41 @@ public class MarcClient {
         //  * hentes fra Marc21 245a + b
         //  * opdelt i flere linjer hvis længere end ?
         
-        List<String> tag245ab = getStrings(marc21, "245", "a","b");
+        List<String> tag245ab = getStrings(marc21, "245", "a", "b");
+        tag245ab = joinIfEndingInColon(tag245ab);
         
         return Stream.of(tag245ab)
                      .flatMap(Collection::stream)
                      .filter(Objects::nonNull)
+                     .map(string -> string.replaceAll("\\s+/\\s*$", ""))
                      .collect(Collectors.joining("; "));
+    }
+    
+    /**
+     * If an element ends with :, join it with the next element
+     *
+     * This is to ensure that we do not join them with ; later on, producing
+     * some :; thing, which looks stupid
+     * @param stringList the list of strings
+     * @return A list of strings, with less than or equal number of elements in stringList
+     */
+    private static List<String> joinIfEndingInColon(List<String> stringList) {
+        List<String> result = new ArrayList<>();
+        for (int i = 0; i < stringList.size(); i++) {
+            String element = stringList.get(i).trim();
+            if (i < stringList.size()-1){ //not last element
+                if (element.endsWith(":")){
+                    //Increment i so we skip this element in the next iteration
+                    String nextElement = stringList.get(++i).trim();
+                    
+                    //Join with next element
+                    result.add(element + " " + nextElement);
+                } else {
+                    result.add(element);
+                }
+            }
+        }
+        return result;
     }
     
     
@@ -118,7 +148,7 @@ public class MarcClient {
         //   * felt 96 (i 96 kan dog også være rettighedsbegrænsninger indskrevet).
         
         //Alle 260a felter
-        List<String> tag260abc = getStrings(marc21, "260", "a","b","c");
+        List<String> tag260abc = getStrings(marc21, "260", "a", "b", "c");
         
         
         //Alle 500a felter der starter med premiere (case insensive)
