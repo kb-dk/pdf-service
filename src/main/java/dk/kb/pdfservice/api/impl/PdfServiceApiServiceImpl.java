@@ -119,6 +119,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
      **/
     @Override
     public StreamingOutput getPdf(String requestedPdfFile) {
+        
         try (NamedThread namedThread = NamedThread.postfix(requestedPdfFile)) {
     
             //This is the file to return to the use user. It might not exist yet
@@ -185,6 +186,9 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         
         String barcode = sourcePdfFile.getName().split("[-._]", 2)[0];
         PdfInfo pdfInfo = MarcClient.getPdfInfo(barcode);
+
+        //TODO suppressed records should be available?
+    
         try (InputStream apronFile = produceApron(pdfFileString, pdfInfo);
              InputStream requestedPDF = transformPdfFile(sourcePdfFile, pdfInfo);
              InputStream completePDF = PdfTitlePageInserter.mergeFrontPageWithPdf(apronFile, requestedPDF);

@@ -49,6 +49,24 @@ alma:
     sleep_variation_millis: 3000
 
 pdfService:
+
+  # If we cannot determine what kind of document it is, it is a B
+  defaultApron: B
+
+  #How we map between document types from 999a values
+  999a2documentType:
+    # TODO order of checks
+    A:
+      - DOD
+      - ~ # This means null. If no 999a values are defined, go with this
+    B:
+      - TeatermanusudenOCR
+    C:
+      - Teatermanus
+    D:
+  #  TODO eksempler og helt præcis beskrivelse af hvad der sker
+
+
   #  Where original PDFs are read from
   PDFsource:
     - "/data1/e-mat/dod"

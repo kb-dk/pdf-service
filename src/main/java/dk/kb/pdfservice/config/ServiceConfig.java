@@ -1,6 +1,7 @@
 package dk.kb.pdfservice.config;
 
 import dk.kb.alma.client.AlmaRestClient;
+import dk.kb.pdfservice.alma.DocumentType;
 import dk.kb.util.yaml.YAML;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +14,13 @@ import java.time.Duration;
 import java.time.Period;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAmount;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Sample configuration class using the Singleton pattern.
@@ -45,6 +52,16 @@ public class ServiceConfig {
         //Anything to shut down here??
     }
     
+    
+    public static Map<DocumentType, Set<String>> getDocumentTypeMapping() {
+        LinkedHashMap<DocumentType, Set<String>> result = new LinkedHashMap<>();
+    
+        for (DocumentType type : DocumentType.values()) {
+            @NotNull List<String> values = getConfig().getList("pdfService.999a2documentType."+type.name(),new ArrayList<>());
+            result.put(type, new HashSet<>(values));
+        }
+        return result;
+    }
     
     public static List<String> getPdfSourcePath() {
         return getConfig().getList("pdfService.PDFsource");
@@ -169,4 +186,7 @@ public class ServiceConfig {
     }
     
     
+    public static DocumentType getDefaultDocumentType() {
+        return DocumentType.valueOf(getConfig().getString("pdfService.defaultApron"));
+    }
 }

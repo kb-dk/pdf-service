@@ -1,6 +1,8 @@
 package dk.kb.pdfservice.alma;
 
+import com.google.common.collect.Sets;
 import dk.kb.alma.gen.bibs.Bib;
+import dk.kb.pdfservice.config.ServiceConfig;
 import dk.kb.util.other.StringListUtils;
 import dk.kb.util.xml.XPathSelector;
 import dk.kb.util.xml.XpathUtils;
@@ -11,10 +13,13 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -27,6 +32,16 @@ public class MarcClient {
         //Portfolios portFolios = almaInventoryClient.getBibPortfolios(mmsID);
         
         Element marc21 = bib.getAnies().get(0);
+    
+    
+        final LocalDate publicationDate = CopyrightLogic.getPublicationDate(bib, marc21);
+        boolean isWithinCopyright = CopyrightLogic.isWithinCopyright(publicationDate);
+        DocumentType documentType = getDocumentType(marc21);
+        
+        
+        //if no 999a, not
+        //if digitised before 2021, it is Type A
+        
         String authors = getAuthors(marc21);
         String title = getTitle(marc21);
         String alternativeTitle = getAlternativeTitle(marc21);
@@ -34,10 +49,8 @@ public class MarcClient {
         String place = getPlace(marc21);
         String size = getSize(marc21);
         
+        //bib.getSuppressFromExternalSearch()
         
-        final LocalDate publicationDate = CopyrightLogic.getPublicationDate(bib, marc21);
-        boolean isWithinCopyright = CopyrightLogic.isWithinCopyright(publicationDate);
-        DocumentType documentType = getDocumentType(marc21, isWithinCopyright);
         
         PdfInfo pdfInfo = new PdfInfo(authors,
                                       title,
@@ -113,6 +126,8 @@ public class MarcClient {
                 } else {
                     result.add(element);
                 }
+            } else {
+                result.add(element);
             }
         }
         return result;
@@ -202,33 +217,26 @@ public class MarcClient {
     }
     
     
-    private static DocumentType getDocumentType(Element marc21, boolean isWithinCopyright) {
+    private static DocumentType getDocumentType(Element marc21) {
+        //TODO implement algorithm as detailed by TLR
         
-        List<String> tag997a = getStrings(marc21, "997", "a");
-        
-        if (tag997a.contains("DOD")) {
-            return DocumentType.A;
+        Set<String> tag999a = new HashSet<>(getStrings(marc21, "999", "a"));
+        if (tag999a.isEmpty()){
+            //Because we cannot match on empty, but we can match on null below
+            tag999a.add(null);
         }
         
-        if (tag997a.contains("DRA")) {
-            if (isWithinCopyright) {
-                return DocumentType.C;
-            } else {
-                return DocumentType.B;
+        Map<DocumentType, Set<String>> mappings = ServiceConfig.getDocumentTypeMapping();
+    
+        for (DocumentType type : DocumentType.values()) {
+            Set<String> acceptableValues = mappings.get(type);
+    
+            if (!Sets.intersection(acceptableValues,tag999a).isEmpty()){
+                return type;
             }
         }
         
-        if (tag997a.contains("KBD")) {
-            if (isWithinCopyright) {
-                return DocumentType.A;
-            } else {
-                return DocumentType.B;
-            }
-        }
-        
-        //TODO What should DocumentType default to?
-        //As A starts with the words "The work may be copyrighted" it seems to natural choice
-        return DocumentType.Unknown;
+        return ServiceConfig.getDefaultDocumentType();
     }
     
     
