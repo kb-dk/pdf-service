@@ -43,8 +43,12 @@ public class PdfTitlePageCreator {
             //How to override the FOP logging
             //LoggingEventListener loggingEventListener = new LoggingEventListener();
             //agent.getEventBroadcaster().addEventListener(loggingEventListener);
-            agent.setAuthor(pdfInfo.getAuthors());
-            agent.setTitle(pdfInfo.getTitle());
+            if (pdfInfo.getAuthors() != null && !pdfInfo.getAuthors().isEmpty()) {
+                agent.setAuthor(pdfInfo.getAuthors());
+            }
+            if (pdfInfo.getTitle() != null && !pdfInfo.getTitle().isEmpty()) {
+                agent.setTitle(pdfInfo.getTitle());
+            }
             agent.setCreationDate(new Date(pdfInfo.getPublicationDate().toEpochDay()));
             
             Fop fop = fopFactory.newFop(MimeConstants.MIME_PDF, agent, outStream);

@@ -50,8 +50,12 @@ alma:
 
 pdfService:
 
-
-
+  # Logic for deciding which of the 4 types of aprons to use
+  # See the apron types on https://sbprojects.statsbiblioteket.dk/display/DK/Record+Typer
+  # First marc 999a is retried, and then each of the entries below is tried,
+  #  in the stated order, starting from the top, until one match
+  # If none match, we use the __default__ value.
+  # If the __default__ value is not used, we fail...
   999aTOdocumentType:
 
     # Alle ældre poster, som ikke har et 999a felt, men typisk et 997a felt, får alle samme forklæde A.
@@ -62,16 +66,19 @@ pdfService:
     # laves der forskellige forklæder A (DOD) eller B (1600talsKUM m.fl.) eller C (Teatermanus)
     # - alt afhængig af for hvilken ”Electronic Collection” der står i 999a.
 
+    # if 999a contains Teatermanus, use apron C
     - 999a: "Teatermanus"
       type: C
 
+    # if 999a contains TeatermanusudenOCR, use apron B
     - 999a: "TeatermanusudenOCR"
       type: B
 
+    # if 999a contains DOD, use apron A
     - 999a: "DOD"
       type: A
 
-    # If no other values match, but 999a is not empty
+    # If no other values match, but 999a is not empty, use Apron B
     - 999a: __default__
       type: B
 
