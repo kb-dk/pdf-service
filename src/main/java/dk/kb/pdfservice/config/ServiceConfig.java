@@ -3,9 +3,13 @@ package dk.kb.pdfservice.config;
 import dk.kb.alma.client.AlmaRestClient;
 import dk.kb.pdfservice.alma.DocumentType;
 import dk.kb.util.yaml.YAML;
+import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.collections4.OrderedMap;
+import org.apache.commons.collections4.map.ListOrderedMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import java.awt.*;
 import java.io.IOException;
@@ -14,13 +18,8 @@ import java.time.Duration;
 import java.time.Period;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAmount;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Sample configuration class using the Singleton pattern.
@@ -52,15 +51,21 @@ public class ServiceConfig {
         //Anything to shut down here??
     }
     
+    public static final String EMPTY = "__empty__";
+    public static final String DEFAULT = "__default__";
     
-    public static Map<DocumentType, Set<String>> getDocumentTypeMapping() {
-        LinkedHashMap<DocumentType, Set<String>> result = new LinkedHashMap<>();
-    
-        for (DocumentType type : DocumentType.values()) {
-            @NotNull List<String> values = getConfig().getList("pdfService.999a2documentType."+type.name(),new ArrayList<>());
-            result.put(type, new HashSet<>(values));
+    public static Map<String, DocumentType> getDocumentTypeMapping() {
+        OrderedMap<String, DocumentType> documentTypeMapping = new ListOrderedMap<>();
+        
+        @NotNull List<YAML> entries = getConfig().getYAMLList("pdfService.999aTOdocumentType");
+        for (YAML entry : entries) {
+            @NotNull String key = entry.getString("999a");
+            @NotNull String type = entry.getString("type");
+            DocumentType value = DocumentType.valueOf(type);
+            documentTypeMapping.put(key, value);
         }
-        return result;
+        
+        return documentTypeMapping;
     }
     
     public static List<String> getPdfSourcePath() {
@@ -96,21 +101,21 @@ public class ServiceConfig {
         String unit = getConfig().getString(
                 "pdfService.TimeSincePublicationToBeOutsideCopyright.unit");
         ChronoUnit chronoUnit = ChronoUnit.valueOf(unit);
-        switch (chronoUnit){
+        switch (chronoUnit) {
             case DAYS:
-                return Period.of(0,0,value);
+                return Period.of(0, 0, value);
             case WEEKS:
-                return Period.of(0,0,value*7);
+                return Period.of(0, 0, value * 7);
             case MONTHS:
-                return Period.of(0,value, 0);
+                return Period.of(0, value, 0);
             case YEARS:
-                return Period.of(value,0,0);
+                return Period.of(value, 0, 0);
             case DECADES:
-                return Period.of(value*10,0,0);
+                return Period.of(value * 10, 0, 0);
             case CENTURIES:
-                return Period.of(value*100,0,0);
+                return Period.of(value * 100, 0, 0);
             case MILLENNIA:
-                return Period.of(value*1000,0,0);
+                return Period.of(value * 1000, 0, 0);
             default:
                 return Duration.of(value, chronoUnit);
         }
@@ -136,7 +141,7 @@ public class ServiceConfig {
                                          .getString("pdfService.copyrightFooter.Color"));
     }
     
-    public static float getCopyrightFooterTransparency(){
+    public static float getCopyrightFooterTransparency() {
         return ServiceConfig.getConfig().getFloat("pdfService.copyrightFooter.Transparency");
     }
     
@@ -145,12 +150,12 @@ public class ServiceConfig {
                                          .getString("pdfService.copyrightFooter.Background.Color"));
     }
     
-    public static float getCopyrightFooterBackgroundTransparency(){
+    public static float getCopyrightFooterBackgroundTransparency() {
         return ServiceConfig.getConfig().getFloat("pdfService.copyrightFooter.Background.Transparency");
     }
     
     
-    public static String getErrorMessage(){
+    public static String getErrorMessage() {
         return ServiceConfig.getConfig().getString("pdfService.errorMessage");
     }
     

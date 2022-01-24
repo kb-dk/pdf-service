@@ -50,21 +50,30 @@ alma:
 
 pdfService:
 
-  # If we cannot determine what kind of document it is, it is a B
-  defaultApron: B
 
-  #How we map between document types from 999a values
-  999a2documentType:
-    # TODO order of checks
-    A:
-      - DOD
-      - ~ # This means null. If no 999a values are defined, go with this
-    B:
-      - TeatermanusudenOCR
-    C:
-      - Teatermanus
-    D:
-  #  TODO eksempler og helt præcis beskrivelse af hvad der sker
+
+  999aTOdocumentType:
+
+    # Alle ældre poster, som ikke har et 999a felt, men typisk et 997a felt, får alle samme forklæde A.
+    - 999a: __empty__ #Meaning 999a is empty (== not set)
+      type: A # Such records is of type A
+
+    # For alle fysiske poster med 999a ( findes kun på pdf’er fra og med 2021),
+    # laves der forskellige forklæder A (DOD) eller B (1600talsKUM m.fl.) eller C (Teatermanus)
+    # - alt afhængig af for hvilken ”Electronic Collection” der står i 999a.
+
+    - 999a: "Teatermanus"
+      type: C
+
+    - 999a: "TeatermanusudenOCR"
+      type: B
+
+    - 999a: "DOD"
+      type: A
+
+    # If no other values match, but 999a is not empty
+    - 999a: __default__
+      type: B
 
 
   #  Where original PDFs are read from
@@ -97,10 +106,10 @@ pdfService:
     - "oplysninger om ophavsret og brugerrettigheder, se venligst"
     - "Os)I/5MNZS»' OM Os)^AV§nsl: c>Z bruZe^ettiZ^Scjer; SS vsnIiZ3H" # Thank you 130020902567.pdf
     - "l^c»' op I/s ni UZE!' om opIiAVZ^ oz bi'UZe^ettjZliecjes', se venIiZS^" # 130020159147.pdf
-#TODO match on apron image instead of this crap
+  #TODO match on apron image instead of this crap
 
 
-# How long must pass since publication for at work to be outside copyright
+  # How long must pass since publication for at work to be outside copyright
   TimeSincePublicationToBeOutsideCopyright:
     value: 140
     unit: YEARS
@@ -119,7 +128,7 @@ pdfService:
   copyrightFooter:
     Text:
       - "Manuskriptkopien må ikke anvendes til opførelse og må ikke videre distribueres"
-#      - "The manuscript copy may not be used for public performance and may not be distributed."
+    #      - "The manuscript copy may not be used for public performance and may not be distributed."
     Fontsize: 12
     #Font is Helvetica, which is unfortunately not configurable
 

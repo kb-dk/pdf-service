@@ -3,9 +3,11 @@ package dk.kb.pdfservice.alma;
 import com.google.common.collect.Sets;
 import dk.kb.alma.gen.bibs.Bib;
 import dk.kb.pdfservice.config.ServiceConfig;
+import dk.kb.pdfservice.webservice.exception.NotFoundServiceObjection;
 import dk.kb.util.other.StringListUtils;
 import dk.kb.util.xml.XPathSelector;
 import dk.kb.util.xml.XpathUtils;
+import org.apache.commons.collections4.OrderedMap;
 import org.w3c.dom.Element;
 
 import javax.annotation.Nonnull;
@@ -14,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -30,10 +33,15 @@ public class MarcClient {
     public static PdfInfo getPdfInfo(String actualBarcode) {
         Bib bib = AlmaLookupClient.getBib(actualBarcode);
         //Portfolios portFolios = almaInventoryClient.getBibPortfolios(mmsID);
+    
+        Element marc21 = bib.getAnies()
+                            .stream()
+                            .filter(element -> Objects.equals(element.getLocalName(), "record"))
+                            .findFirst()
+                            .orElseThrow(() -> new NotFoundServiceObjection("Failed to parse marc21 data for "+actualBarcode));
+                        
         
-        Element marc21 = bib.getAnies().get(0);
-    
-    
+        
         final LocalDate publicationDate = CopyrightLogic.getPublicationDate(bib, marc21);
         boolean isWithinCopyright = CopyrightLogic.isWithinCopyright(publicationDate);
         DocumentType documentType = getDocumentType(marc21);
@@ -106,9 +114,10 @@ public class MarcClient {
     
     /**
      * If an element ends with :, join it with the next element
-     *
+     * <p>
      * This is to ensure that we do not join them with ; later on, producing
      * some :; thing, which looks stupid
+     *
      * @param stringList the list of strings
      * @return A list of strings, with less than or equal number of elements in stringList
      */
@@ -116,8 +125,8 @@ public class MarcClient {
         List<String> result = new ArrayList<>();
         for (int i = 0; i < stringList.size(); i++) {
             String element = stringList.get(i).trim();
-            if (i < stringList.size()-1){ //not last element
-                if (element.endsWith(":")){
+            if (i < stringList.size() - 1) { //not last element
+                if (element.endsWith(":")) {
                     //Increment i so we skip this element in the next iteration
                     String nextElement = stringList.get(++i).trim();
                     
@@ -218,25 +227,42 @@ public class MarcClient {
     
     
     private static DocumentType getDocumentType(Element marc21) {
-        //TODO implement algorithm as detailed by TLR
-        
+    
+        /**
+         * Der skelnes aktuelt  mellem 3 slags forklæder med forskellige brugsrettigheds tekster.
+         *
+         * 1)
+         * For alle fysiske poster med 999 a  ( findes kun på pdf’er fra og med 2021),  laves der forskellige forklæder A (DOD) eller B (1600talsKUM m.fl.) eller C (Teatermanus) - alt afhængig af for hvilken ”Electronic Collection” der står i 999 a.
+         * Er det ok at basere forklæde algoritmen på feltet 999 a ”Electronic Collection” - også fremover både på de elektroniske og fysiske poster?
+         * VGR: Ja
+         *
+         * 2)
+         *
+         * Vil de fysiske poster med felt 997 a DOD (og andre betegnelser) blive til 999 a DOD  fremover eller hvad planlægger i der skal ske med dem?
+         * VGR: De historiske 997 linier forventer hun ikke der bliver pillet ved, men der er ikke taget nogen endelig beslutning, hvad der skal ske. Men det ville være mærkeligt om man ville ændre noget på de historiske poster.
+         *
+         */
         Set<String> tag999a = new HashSet<>(getStrings(marc21, "999", "a"));
-        if (tag999a.isEmpty()){
-            //Because we cannot match on empty, but we can match on null below
-            tag999a.add(null);
-        }
-        
-        Map<DocumentType, Set<String>> mappings = ServiceConfig.getDocumentTypeMapping();
     
-        for (DocumentType type : DocumentType.values()) {
-            Set<String> acceptableValues = mappings.get(type);
-    
-            if (!Sets.intersection(acceptableValues,tag999a).isEmpty()){
-                return type;
+        //This is an ordered map, so you can trust the iteration order
+        Map<String, DocumentType> mappings = ServiceConfig.getDocumentTypeMapping();
+        DocumentType defaultResult = null;
+        for (Map.Entry<String, DocumentType> entry : mappings.entrySet()) {
+            String key = entry.getKey();
+            if (key.equals(ServiceConfig.EMPTY) && tag999a.isEmpty()){
+                return entry.getValue();
+            }
+            if (key.equals(ServiceConfig.DEFAULT)){
+                //Record the default value and continue.
+                //We will use the default value after this loop, if nothing matched before
+                defaultResult = entry.getValue();
+                continue;
+            }
+            if (tag999a.contains(key)){
+                return entry.getValue();
             }
         }
-        
-        return ServiceConfig.getDefaultDocumentType();
+        return defaultResult;
     }
     
     
