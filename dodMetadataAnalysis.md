@@ -97,3 +97,12 @@ grep 'barcode\s$' 999a.list  | xargs -r -i grep {} 997a.list | grep 'barcode\s$'
 ```
 
 
+
+Records without 997a=MUS and missing 260c
+-----------------------
+
+```
+grep 'barcode\s$' 260c.list | xargs -r -i grep {} 997a.list | grep -v MUS  
+```
+
+
