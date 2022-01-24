@@ -1,6 +1,6 @@
 package dk.kb.pdfservice.alma;
 
-public enum DocumentType {
+public enum ApronType {
     
     A, B, C, D, Unknown
 }

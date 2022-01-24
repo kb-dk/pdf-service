@@ -1,13 +1,11 @@
 package dk.kb.pdfservice.alma;
 
-import com.google.common.collect.Sets;
 import dk.kb.alma.gen.bibs.Bib;
 import dk.kb.pdfservice.config.ServiceConfig;
 import dk.kb.pdfservice.webservice.exception.NotFoundServiceObjection;
 import dk.kb.util.other.StringListUtils;
 import dk.kb.util.xml.XPathSelector;
 import dk.kb.util.xml.XpathUtils;
-import org.apache.commons.collections4.OrderedMap;
 import org.w3c.dom.Element;
 
 import javax.annotation.Nonnull;
@@ -15,14 +13,15 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -39,23 +38,25 @@ public class MarcClient {
                             .filter(element -> Objects.equals(element.getLocalName(), "record"))
                             .findFirst()
                             .orElseThrow(() -> new NotFoundServiceObjection("Failed to parse marc21 data for "+actualBarcode));
-                        
+    
+    
+        RecordType recordType = getRecordType(marc21);
+        ApronType apronType = getApronType(marc21);
+    
         
-        
-        final LocalDate publicationDate = CopyrightLogic.getPublicationDate(bib, marc21);
+        final LocalDate publicationDate = CopyrightLogic.getPublicationDate(bib, marc21, recordType);
         boolean isWithinCopyright = CopyrightLogic.isWithinCopyright(publicationDate);
-        DocumentType documentType = getDocumentType(marc21);
         
         
         //if no 999a, not
         //if digitised before 2021, it is Type A
         
-        String authors = getAuthors(marc21);
-        String title = getTitle(marc21);
-        String alternativeTitle = getAlternativeTitle(marc21);
-        String udgavebetegnelse = getUdgavebetegnelse(marc21);
-        String place = getPlace(marc21);
-        String size = getSize(marc21);
+        String authors = getAuthors(marc21, recordType);
+        String title = getTitle(marc21, recordType);
+        String alternativeTitle = getAlternativeTitle(marc21, recordType);
+        String udgavebetegnelse = getUdgavebetegnelse(marc21, recordType);
+        String placeAndYear = getPlaceAndYear(marc21, recordType);
+        String size = getSize(marc21, recordType);
         
         //bib.getSuppressFromExternalSearch()
         
@@ -64,15 +65,18 @@ public class MarcClient {
                                       title,
                                       alternativeTitle,
                                       udgavebetegnelse,
-                                      place,
+                                      placeAndYear,
                                       size,
-                                      documentType,
+                                      apronType,
                                       publicationDate,
                                       isWithinCopyright);
         return pdfInfo;
     }
     
-    private static String getAuthors(Element marc21) {
+   
+    private static String getAuthors(Element marc21, RecordType recordType) {
+        
+        //https://sbprojects.statsbiblioteket.dk/pages/viewpage.action?pageId=103877561
         
         /*
         Forfatter(e):
@@ -88,7 +92,7 @@ public class MarcClient {
         List<String> tag100a = getStrings(marc21, "100", "a");
         List<String> tag245c = getStrings(marc21, "245", "c");
         
-        List<String> tag700ad = getStrings(marc21, "700", "a", "d");
+        List<String> tag700ad = ifTeater(recordType, () -> getStrings(marc21, "700", "a", "d"));
         
         return Stream.of(tag100a, tag245c, tag700ad)
                      .flatMap(Collection::stream)
@@ -96,8 +100,16 @@ public class MarcClient {
                      .collect(Collectors.joining("; "));
     }
     
+    public static <T extends List<String>> List<String> ifTeater(RecordType recordType, Supplier<T> supplier) {
+        if (recordType == RecordType.Teater){
+            return supplier.get();
+        } else {
+            return Collections.emptyList();
+        }
+    }
     
-    private static String getTitle(Element marc21) {
+    
+    private static String getTitle(Element marc21, RecordType recordType) {
         //* Titel:
         //  * hentes fra Marc21 245a + b
         //  * opdelt i flere linjer hvis længere end ?
@@ -143,7 +155,7 @@ public class MarcClient {
     }
     
     
-    private static String getAlternativeTitle(Element marc21) {
+    private static String getAlternativeTitle(Element marc21, RecordType recordType) {
         //Alternativ Titel:  hentes fra Marc21 246a -  hvis ikke noget = ingenting
         List<String> tag246a = getStrings(marc21, "246", "a");
         return Stream.of(tag246a)
@@ -153,7 +165,7 @@ public class MarcClient {
         
     }
     
-    private static String getUdgavebetegnelse(Element marc21) {
+    private static String getUdgavebetegnelse(Element marc21, RecordType recordType) {
         //* Udgavebetegnelse:
         //  * 250a
         //  * hvis ikke noget = ingenting (ikke relevant for teatermanuskripter)
@@ -164,7 +176,7 @@ public class MarcClient {
                      .collect(Collectors.joining("; "));
     }
     
-    private static String getPlace(Element marc21) {
+    private static String getPlaceAndYear(Element marc21, RecordType recordType) {
         
         //  * hentes fra Marc21 260a + b + c eller 500a (hvis man kan afgrænse til *premiere*,
         //          da man ved overførslen til ALMA slog mange felter sammen til dette felt),
@@ -173,21 +185,24 @@ public class MarcClient {
         
         //Alle 260a felter
         List<String> tag260abc = getStrings(marc21, "260", "a", "b", "c");
+    
         
-        
+        List<String> tag240a = ifTeater(recordType, () ->getStrings(marc21, "240", "a"));
+    
         //Alle 500a felter der starter med premiere (case insensive)
-        List<String> tag500a = getStrings(marc21, "500", "a")
+        List<String> tag500a = ifTeater(recordType, () ->getStrings(marc21, "500", "a")
                 .stream()
                 .filter(string -> string.toLowerCase(Locale.getDefault()).startsWith("premiere"))
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()));
         
         //Alle 710a felter
-        List<String> tag710a = getStrings(marc21, "710", "a");
+        List<String> tag710a = ifTeater(recordType, () ->getStrings(marc21, "710", "a"));
         
         //Alle 096a felter
-        List<String> tag096a = getStrings(marc21, "096", "a");
+        List<String> tag096a = ifTeater(recordType, () ->getStrings(marc21, "096", "a"));
         
         final List<String> allFields = Stream.of(tag260abc,
+                                                 tag240a,
                                                  tag500a,
                                                  tag710a,
                                                  tag096a)
@@ -215,7 +230,7 @@ public class MarcClient {
     }
     
     
-    private static String getSize(Element marc21) {
+    private static String getSize(Element marc21, RecordType recordType) {
         // Forlæggets fysiske størrelse:
         // hentes fra Marc21 300a
         List<String> tag300a = getStrings(marc21, "300", "a");
@@ -225,8 +240,17 @@ public class MarcClient {
                      .collect(Collectors.joining(", "));
     }
     
+    private static RecordType getRecordType(Element marc21) {
+        //TODO make this configurable
+        Set<String> tag999a = new HashSet<>(getStrings(marc21, "999", "a"));
+        if (tag999a.contains("Teatermanus") || tag999a.contains("TeatermanusudenOCR")){
+            return RecordType.Teater;
+        }
+        return RecordType.Common;
+    }
     
-    private static DocumentType getDocumentType(Element marc21) {
+    
+    private static ApronType getApronType(Element marc21) {
     
         /**
          * Der skelnes aktuelt  mellem 3 slags forklæder med forskellige brugsrettigheds tekster.
@@ -245,9 +269,9 @@ public class MarcClient {
         Set<String> tag999a = new HashSet<>(getStrings(marc21, "999", "a"));
     
         //This is an ordered map, so you can trust the iteration order
-        Map<String, DocumentType> mappings = ServiceConfig.getDocumentTypeMapping();
-        DocumentType defaultResult = null;
-        for (Map.Entry<String, DocumentType> entry : mappings.entrySet()) {
+        Map<String, ApronType> mappings = ServiceConfig.getDocumentTypeMapping();
+        ApronType defaultResult = ApronType.Unknown;
+        for (Map.Entry<String, ApronType> entry : mappings.entrySet()) {
             String key = entry.getKey();
             if (key.equals(ServiceConfig.EMPTY) && tag999a.isEmpty()){
                 return entry.getValue();

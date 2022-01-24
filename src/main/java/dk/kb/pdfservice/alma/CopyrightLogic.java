@@ -82,20 +82,25 @@ public class CopyrightLogic {
                                 .isAfter(LocalDate.now(ZoneId.systemDefault()));
     }
     
-    protected static LocalDate getPublicationDate(Bib bib, Element marc21) {
+    protected static LocalDate getPublicationDate(Bib bib, Element marc21, RecordType recordType) {
         
         final String dateOfPublication = bib.getDateOfPublication();
+        log.debug("Alma dateOfPublication (should correspond to marc008) {}",dateOfPublication);
         
         final Optional<String> tag260c = MarcClient.getString(marc21, "260", "c");
         log.debug("tag260c {}", tag260c);
         
         
-        final List<String> tag500a = MarcClient.getStrings(marc21, "500", "a");
-        log.debug("tag500a {}", tag500a);
-        final Optional<String> premiere = tag500a.stream()
-                                                 .filter(str -> str.startsWith("Premiere"))
-                                                 .findFirst()
-                                                 .map(a -> a.split(" ", 3)[1]);
+        final Optional<String> premiere =
+                MarcClient.ifTeater(recordType, () -> {
+                              List<String> tag500a = MarcClient.getStrings(marc21, "500", "a");
+                              log.debug("tag500a {}", tag500a);
+                              return tag500a;
+                          })
+                          .stream()
+                          .filter(str -> str.startsWith("Premiere"))
+                          .map(a -> a.split(" ", 3)[1])
+                          .findFirst();
         
         final String dateField = premiere.orElse(tag260c.orElse(dateOfPublication));
         
@@ -143,7 +148,7 @@ public class CopyrightLogic {
     
     private static int getFirstYear(Matcher matcher) {
         String yearRaw = matcher.group("year");
-        if (yearRaw == null || yearRaw.isEmpty()){
+        if (yearRaw == null || yearRaw.isEmpty()) {
             //It no year specified, return current year
             return LocalDate.now(ZoneId.systemDefault()).getYear();
         } else {

@@ -17,7 +17,7 @@ public class PdfInfo {
     private final String size;
     private final LocalDate publicationDate;
     private final boolean isWithinCopyright;
-    private final DocumentType documentType;
+    private final ApronType documentType;
     
     
     public PdfInfo(String authors,
@@ -26,7 +26,7 @@ public class PdfInfo {
                    String udgavebetegnelse,
                    String place,
                    String size,
-                   DocumentType documentType,
+                   ApronType documentType,
                    LocalDate publicationDate,
                    boolean isWithinCopyright) {
         this.authors           = authors;
@@ -72,7 +72,7 @@ public class PdfInfo {
         return isWithinCopyright;
     }
     
-    public DocumentType getDocumentType() {
+    public ApronType getDocumentType() {
         return documentType;
     }
     

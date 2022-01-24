@@ -2,7 +2,7 @@ package dk.kb.pdfservice.api.impl;
 
 import com.google.common.util.concurrent.Striped;
 import com.google.common.util.concurrent.StripedFactory;
-import dk.kb.pdfservice.alma.DocumentType;
+import dk.kb.pdfservice.alma.ApronType;
 import dk.kb.pdfservice.alma.MarcClient;
 import dk.kb.pdfservice.alma.PdfInfo;
 import dk.kb.pdfservice.api.PdfServiceApi;
@@ -278,7 +278,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         InputStream requestedPDF;
         try (PDDocument pdDocument = PdfUtils.openDocument(new FileInputStream(pdfFile))) {
             PdfTitlePageCleaner.cleanHeaderPages(pdDocument);
-            if (pdfInfo.getDocumentType() == DocumentType.C) {
+            if (pdfInfo.getDocumentType() == ApronType.C) {
                 log.info("Starting to insert footers for {}", pdfFile);
                 CopyrightFooterInserter.insertCopyrightFooter(pdDocument);
                 log.info("Finished inserting footers for {}", pdfFile);

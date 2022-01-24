@@ -1,15 +1,13 @@
 package dk.kb.pdfservice.config;
 
 import dk.kb.alma.client.AlmaRestClient;
-import dk.kb.pdfservice.alma.DocumentType;
+import dk.kb.pdfservice.alma.ApronType;
 import dk.kb.util.yaml.YAML;
-import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.map.ListOrderedMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import java.awt.*;
 import java.io.IOException;
@@ -54,14 +52,14 @@ public class ServiceConfig {
     public static final String EMPTY = "__empty__";
     public static final String DEFAULT = "__default__";
     
-    public static Map<String, DocumentType> getDocumentTypeMapping() {
-        OrderedMap<String, DocumentType> documentTypeMapping = new ListOrderedMap<>();
+    public static Map<String, ApronType> getDocumentTypeMapping() {
+        OrderedMap<String, ApronType> documentTypeMapping = new ListOrderedMap<>();
         
         @NotNull List<YAML> entries = getConfig().getYAMLList("pdfService.999aTOdocumentType");
         for (YAML entry : entries) {
             @NotNull String key = entry.getString("999a");
             @NotNull String type = entry.getString("type");
-            DocumentType value = DocumentType.valueOf(type);
+            ApronType value = ApronType.valueOf(type);
             documentTypeMapping.put(key, value);
         }
         
@@ -191,7 +189,7 @@ public class ServiceConfig {
     }
     
     
-    public static DocumentType getDefaultDocumentType() {
-        return DocumentType.valueOf(getConfig().getString("pdfService.defaultApron"));
+    public static ApronType getDefaultDocumentType() {
+        return ApronType.valueOf(getConfig().getString("pdfService.defaultApron"));
     }
 }
