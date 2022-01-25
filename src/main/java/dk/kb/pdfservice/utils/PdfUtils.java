@@ -5,6 +5,7 @@ import org.apache.pdfbox.io.RandomAccessBufferedFileInputStream;
 import org.apache.pdfbox.io.RandomAccessRead;
 import org.apache.pdfbox.pdfparser.PDFParser;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.font.PDFont;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -24,5 +25,22 @@ public class PdfUtils {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         pdDocument.save(new BufferedOutputStream(output));
         return output.toInputStream();
+    }
+    
+    public static float calculateTextLengthPixels(String text,
+                                                  float fontSize,
+                                                  PDFont font) {
+        if (text == null) {
+            return 0;
+        }
+        float stringWidth;
+        try {
+            stringWidth = font.getStringWidth(text);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to get width of string '" + text + "'", e);
+        }
+        
+        float width = (fontSize * stringWidth);
+        return (width / 1000f);
     }
 }

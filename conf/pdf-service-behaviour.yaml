@@ -48,39 +48,64 @@ alma:
     # the back off time. sleep_variation_millis multiplied with a randon number [0-1] will be added to the sleep time to combat this effect
     sleep_variation_millis: 3000
 
+
+
 pdfService:
 
-  # Logic for deciding which of the 4 types of aprons to use
-  # See the apron types on https://sbprojects.statsbiblioteket.dk/display/DK/Record+Typer
-  # First marc 999a is retried, and then each of the entries below is tried,
-  #  in the stated order, starting from the top, until one match
-  # If none match, we use the __default__ value.
-  # If the __default__ value is not used, we fail...
-  999aTOdocumentType:
+  # This section controls the settings for the apron page
+  apron:
+    #This XSLT generates the frontpage
+    FOPfile: /home/dodpdfsv/services/conf/frontpage.xsl
+    #Relative URLs in this FOPfile will be resolved from the folder containing the FOPfile
+    # So you can refer to KBLogo.png simply as "KBLogo.png" without any path
 
-    # Alle ældre poster, som ikke har et 999a felt, men typisk et 997a felt, får alle samme forklæde A.
-    - 999a: __empty__ #Meaning 999a is empty (== not set)
-      type: A # Such records is of type A
+    #These are the values for the metadata-table
+    metadataTable:
+      # We need these values here, rather than directly in the XSLT because the program needs them to perform
+      #  optimal line cutting; We try to remove the fewest number of lines, so that the apron do not spill over onto
+      #  2 pages
 
-    # For alle fysiske poster med 999a ( findes kun på pdf’er fra og med 2021),
-    # laves der forskellige forklæder A (DOD) eller B (1600talsKUM m.fl.) eller C (Teatermanus)
-    # - alt afhængig af for hvilken ”Electronic Collection” der står i 999a.
+      widthCM: 9 # Width in centimeters of the left column of the metadata table
+      font: HELVETICA # Font of the metadata table
+      fontSize: 10 #px
 
-    # if 999a contains Teatermanus, use apron C
-    - 999a: "Teatermanus"
-      type: C
+      maxlines:
+        # Number of lines available for metadata differ for the different apron types
+        A: 14
+        B: 15
+        C: 12
 
-    # if 999a contains TeatermanusudenOCR, use apron B
-    - 999a: "TeatermanusudenOCR"
-      type: B
+    # Logic for deciding which of the 4 types of aprons to use
+    # See the apron types on https://sbprojects.statsbiblioteket.dk/display/DK/Record+Typer
+    # First marc 999a is retried, and then each of the entries below is tried,
+    #  in the stated order, starting from the top, until one match
+    # If none match, we use the __default__ value.
+    # If the __default__ value is not used, we fail...
+    999aToApronType:
 
-    # if 999a contains DOD, use apron A
-    - 999a: "DOD"
-      type: A
+      # Alle ældre poster, som ikke har et 999a felt, men typisk et 997a felt, får alle samme forklæde A.
+      - 999a: __empty__ #Meaning 999a is empty (== not set)
+        type: A # Such records is of type A
 
-    # If no other values match, but 999a is not empty, use Apron B
-    - 999a: __default__
-      type: B
+      # For alle fysiske poster med 999a ( findes kun på pdf’er fra og med 2021),
+      # laves der forskellige forklæder A (DOD) eller B (1600talsKUM m.fl.) eller C (Teatermanus)
+      # - alt afhængig af for hvilken ”Electronic Collection” der står i 999a.
+
+      # if 999a contains Teatermanus, use apron C
+      - 999a: "Teatermanus"
+        type: C
+
+      # if 999a contains TeatermanusudenOCR, use apron B
+      - 999a: "TeatermanusudenOCR"
+        type: B
+
+      # if 999a contains DOD, use apron A
+      - 999a: "DOD"
+        type: A
+
+      # If no other values match, but 999a is not empty, use Apron B
+      - 999a: __default__
+        type: B
 
 
   #  Where original PDFs are read from
@@ -121,27 +146,20 @@ pdfService:
     value: 140
     unit: YEARS
 
-  # The frontpage to use
-  frontpage:
-    FOPfile: /home/dodpdfsv/services/conf/frontpage.xsl
-    #Relative URLs in this FOPfile will be resolved from the folder containing the FOPfile
-    # So you can refer to KBLogo.png simply as "KBLogo.png" without any path
-
-
 
   errorMessage: "Denne post kunne ikke fremvises. Hvis du mener det er en fejl, kan du henvende dig til Spørg Biblioteket med et link til den post du prøver at tilgå: https://www.kb.dk/spoerg-biblioteket"
 
-  # Details of the footer to insert, if the document is under copyright
+  # Details of the footer to insert for apron type C
   copyrightFooter:
     Text:
-      - "Manuskriptkopien må ikke anvendes til opførelse og må ikke videre distribueres"
+      - "Manuskriptkopien må ikke anvendes til opførelse og må ikke videredistribueres"
     #      - "The manuscript copy may not be used for public performance and may not be distributed."
     Fontsize: 12
     #Font is Helvetica, which is unfortunately not configurable
 
     # See https://www.rapidtables.com/web/color/html-color-codes.html for possible values
     Color: '#FF0000' # Black
-    Transparency: 0.3 # Between 0.0 and 1.0. 1.0 is totally covering, i.e. not transparent. 0.0 is invisible
+    Transparency: 0.7 # Between 0.0 and 1.0. 1.0 is totally covering, i.e. not transparent. 0.0 is invisible
 
     Background:
       # In order for the footer to be visible on darker backgrounds

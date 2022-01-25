@@ -2,6 +2,7 @@ package dk.kb.pdfservice.config;
 
 import dk.kb.alma.client.AlmaRestClient;
 import dk.kb.pdfservice.alma.ApronType;
+import dk.kb.pdfservice.titlepage.FontEnum;
 import dk.kb.util.yaml.YAML;
 import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.map.ListOrderedMap;
@@ -52,10 +53,10 @@ public class ServiceConfig {
     public static final String EMPTY = "__empty__";
     public static final String DEFAULT = "__default__";
     
-    public static Map<String, ApronType> getDocumentTypeMapping() {
+    public static Map<String, ApronType> getApronTypeMapping() {
         OrderedMap<String, ApronType> documentTypeMapping = new ListOrderedMap<>();
         
-        @NotNull List<YAML> entries = getConfig().getYAMLList("pdfService.999aTOdocumentType");
+        @NotNull List<YAML> entries = getConfig().getYAMLList("pdfService.apron.999aToApronType");
         for (YAML entry : entries) {
             @NotNull String key = entry.getString("999a");
             @NotNull String type = entry.getString("type");
@@ -122,7 +123,7 @@ public class ServiceConfig {
     
     //FrontPage
     public static Path getFrontPageFopFile() {
-        return Path.of(getConfig().getString("pdfService.frontpage.FOPfile")).toAbsolutePath();
+        return Path.of(getConfig().getString("pdfService.apron.FOPfile")).toAbsolutePath();
     }
     
     //Copyright Footer
@@ -188,8 +189,19 @@ public class ServiceConfig {
         return almaRestClient;
     }
     
+    public static double getMaxLinesForApron(ApronType apronType) {
+        return getConfig().getDouble("pdfService.apron.metadataTable.maxlines."+apronType.name());
+    }
     
-    public static ApronType getDefaultDocumentType() {
-        return ApronType.valueOf(getConfig().getString("pdfService.defaultApron"));
+    public static float getApronMetadataTableWidthCm() {
+        return getConfig().getFloat("pdfService.apron.metadataTable.widthCM");
+    }
+    
+    public static int getApronMetadataTableFontSize() {
+        return getConfig().getInteger("pdfService.apron.metadataTable.fontSize");
+    }
+    
+    public static FontEnum getApronMetadataTableFont() {
+        return FontEnum.valueOf(getConfig().getString("pdfService.apron.metadataTable.font"));
     }
 }

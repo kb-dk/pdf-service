@@ -269,7 +269,7 @@ public class MarcClient {
         Set<String> tag999a = new HashSet<>(getStrings(marc21, "999", "a"));
     
         //This is an ordered map, so you can trust the iteration order
-        Map<String, ApronType> mappings = ServiceConfig.getDocumentTypeMapping();
+        Map<String, ApronType> mappings = ServiceConfig.getApronTypeMapping();
         ApronType defaultResult = ApronType.Unknown;
         for (Map.Entry<String, ApronType> entry : mappings.entrySet()) {
             String key = entry.getKey();

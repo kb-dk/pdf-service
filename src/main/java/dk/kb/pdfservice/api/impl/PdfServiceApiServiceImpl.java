@@ -278,7 +278,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         InputStream requestedPDF;
         try (PDDocument pdDocument = PdfUtils.openDocument(new FileInputStream(pdfFile))) {
             PdfTitlePageCleaner.cleanHeaderPages(pdDocument);
-            if (pdfInfo.getDocumentType() == ApronType.C) {
+            if (pdfInfo.getApronType() == ApronType.C) {
                 log.info("Starting to insert footers for {}", pdfFile);
                 CopyrightFooterInserter.insertCopyrightFooter(pdDocument);
                 log.info("Finished inserting footers for {}", pdfFile);

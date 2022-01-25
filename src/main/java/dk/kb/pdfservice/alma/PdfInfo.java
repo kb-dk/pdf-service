@@ -13,7 +13,7 @@ public class PdfInfo {
     private final String title;
     private final String alternativeTitle;
     private final String udgavebetegnelse;
-    private final String place;
+    private final String placeAndYear;
     private final String size;
     private final LocalDate publicationDate;
     private final boolean isWithinCopyright;
@@ -24,7 +24,7 @@ public class PdfInfo {
                    String title,
                    String alternativeTitle,
                    String udgavebetegnelse,
-                   String place,
+                   String placeAndYear,
                    String size,
                    ApronType documentType,
                    LocalDate publicationDate,
@@ -32,9 +32,9 @@ public class PdfInfo {
         this.authors           = authors;
         this.title             = title;
         this.alternativeTitle  = alternativeTitle;
-        this.udgavebetegnelse  = udgavebetegnelse;
-        this.place             = place;
-        this.size              = size;
+        this.udgavebetegnelse = udgavebetegnelse;
+        this.placeAndYear     = placeAndYear;
+        this.size             = size;
         this.documentType      = documentType;
         this.publicationDate   = publicationDate;
         this.isWithinCopyright = isWithinCopyright;
@@ -56,8 +56,8 @@ public class PdfInfo {
         return udgavebetegnelse;
     }
     
-    public String getPlace() {
-        return place;
+    public String getPlaceAndYear() {
+        return placeAndYear;
     }
     
     public String getSize() {
@@ -72,7 +72,7 @@ public class PdfInfo {
         return isWithinCopyright;
     }
     
-    public ApronType getDocumentType() {
+    public ApronType getApronType() {
         return documentType;
     }
     
@@ -83,7 +83,7 @@ public class PdfInfo {
                ", title='" + title + '\'' +
                ", alternativeTitle='" + alternativeTitle + '\'' +
                ", udgavebetegnelse='" + udgavebetegnelse + '\'' +
-               ", place='" + place + '\'' +
+               ", place='" + placeAndYear + '\'' +
                ", size='" + size + '\'' +
                ", publicationDate=" + publicationDate +
                ", isWithinCopyright=" + isWithinCopyright +

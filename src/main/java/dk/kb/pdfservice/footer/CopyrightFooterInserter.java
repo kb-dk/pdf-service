@@ -2,11 +2,11 @@ package dk.kb.pdfservice.footer;
 
 import com.google.common.collect.Lists;
 import dk.kb.pdfservice.config.ServiceConfig;
+import dk.kb.pdfservice.utils.PdfUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.apache.pdfbox.pdmodel.graphics.state.RenderingMode;
@@ -74,8 +74,8 @@ public class CopyrightFooterInserter {
                     
                     //TODO calculate for font1 up front, rahter than for each page
                     //font is page-dependent, so we have to calculate this for each page
-                    float textWidth = calculateTextLengthPixels(copyrightFooterText, fontSize, font);
-                    float textboxWidth = calculateTextLengthPixels("  " + copyrightFooterText + "  ", fontSize, font);
+                    float textWidth = PdfUtils.calculateTextLengthPixels(copyrightFooterText, fontSize, font);
+                    float textboxWidth = PdfUtils.calculateTextLengthPixels("  " + copyrightFooterText + "  ", fontSize, font);
                     
                     contentStream.moveTo(0, 0);//Ensure we start at lowest left corner
                     
@@ -130,20 +130,4 @@ public class CopyrightFooterInserter {
     }
     
     
-    protected static float calculateTextLengthPixels(String text,
-                                                     float fontSize,
-                                                     PDFont font) {
-        if (text == null) {
-            return 0;
-        }
-        float stringWidth;
-        try {
-            stringWidth = font.getStringWidth(text);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to get width of string '" + text + "'", e);
-        }
-        
-        float width = (fontSize * stringWidth);
-        return (width / 1000f);
-    }
 }
