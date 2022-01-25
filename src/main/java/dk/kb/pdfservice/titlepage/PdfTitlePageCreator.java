@@ -118,7 +118,7 @@ public class PdfTitlePageCreator {
     }
     
     protected static List<String> enforceLimits(List<String> info, ApronType apronType) {
-        //a4 width in pixels * 9cm/21cm //TODO configurable
+        //a4 width in pixels * 9cm/21cm -- 21cm being the width of A4 in cm
         final float lineWidth = PDRectangle.A4.getWidth() * ServiceConfig.getApronMetadataTableWidthCm()/21;
         final PDType1Font font = ServiceConfig.getApronMetadataTableFont().getFont();
         final int fontSize = ServiceConfig.getApronMetadataTableFontSize();
