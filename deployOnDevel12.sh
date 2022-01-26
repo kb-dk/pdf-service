@@ -26,7 +26,7 @@ if [ $build == "fast" ]; then
     (
         mvn $1 package -Psbprojects-nexus -DskipTests=true
     ) || exit 1
-else
+elif [ $build != "not" ]; then
     # Extensive
     (
         cd "$SCRIPT_DIR/"..
@@ -38,7 +38,7 @@ fi
 set -x
 #install
 rsync -av "$SCRIPT_DIR/target/${projectName}-${version}.war" "${devel}:services/tomcat-apps/${projectName}.war"
-rsync -av "$SCRIPT_DIR/conf" --exclude='*-local.yaml' --exclude "/**/**/" "${devel}:services/"
+rsync -av "$SCRIPT_DIR/conf" --exclude='*-local.yaml' --include '/conf/oldHeaderImages/'  --exclude '/**/**/'  "${devel}:services/"
 rsync -av "$SCRIPT_DIR/conf/devel12/" "${devel}:services/conf/"
 rsync -av "$SCRIPT_DIR/conf/devel12/${projectBaseUrl}.xml" "${devel}:tomcat/conf/Catalina/localhost/${projectBaseUrl}.xml"
 

@@ -123,22 +123,25 @@ pdfService:
     # unit can be one of NANOS, MICROS, MILLIS, SECONDS, MINUTES, HOURS, HALF_DAYS
 
   # When inserting new front page, we search for old frontpages to remove
-  # If a page contains any of these strings (case insensitive), it is regarded
-  # as a frontpage and removed
   # As soon as we find a page that is NOT a frontpage, we stop the search. So there
   # should be no problem with removing pages deep in document
+
+  # First extract the images from each page
+  # For each image extracted, compare it to each of the header images in this folder
+  # We scale the extracted image to match the dimensions of the oldHeaderImages file
+  # If the difference is below 1%, we call it a match
+  oldHeaderImagesDir: conf/oldHeaderImages
+
+  # If a page did NOT match any of the header images above, we examine the text on the page
+  # Some of the newer aprons are NOT static images with OCR, but actual PDF pages with correct text,
+  # so this is nessesary to handle these.
+  # If a page contains any of these strings (case insensitive), it is regarded
+  # as a frontpage and removed
   oldHeaderStrings:
     - "det kongelige bibliotek"
     - "det kgl. bibliotek"
-
     - "digitaliseret af"
-    - "L)iAiNli8St-s1: Af" #Thank you 130020902524.pdf
-    - "lDiziHAlise^ af" # Thank you 130020159147.pdf
-
     - "oplysninger om ophavsret og brugerrettigheder, se venligst"
-    - "Os)I/5MNZS»' OM Os)^AV§nsl: c>Z bruZe^ettiZ^Scjer; SS vsnIiZ3H" # Thank you 130020902567.pdf
-    - "l^c»' op I/s ni UZE!' om opIiAVZ^ oz bi'UZe^ettjZliecjes', se venIiZS^" # 130020159147.pdf
-  #TODO match on apron image instead of this crap
 
 
   # How long must pass since publication for at work to be outside copyright

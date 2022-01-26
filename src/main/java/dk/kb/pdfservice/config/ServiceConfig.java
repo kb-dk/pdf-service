@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.validation.constraints.NotNull;
 import java.awt.*;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -91,6 +92,9 @@ public class ServiceConfig {
         return getConfig().getList("pdfService.oldHeaderStrings");
     }
     
+    public static File getOldHeaderImageDir() {
+        return new File(ServiceConfig.getConfig().getString("pdfService.oldHeaderImagesDir"));
+    }
     
     //Copyright determination
     public static TemporalAmount getTimeSincePublicationToBeOutsideCopyright() {
@@ -204,4 +208,5 @@ public class ServiceConfig {
     public static FontEnum getApronMetadataTableFont() {
         return FontEnum.valueOf(getConfig().getString("pdfService.apron.metadataTable.font"));
     }
+   
 }
