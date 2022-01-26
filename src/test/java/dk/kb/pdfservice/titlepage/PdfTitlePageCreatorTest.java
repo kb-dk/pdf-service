@@ -49,7 +49,19 @@ class PdfTitlePageCreatorTest {
                         + "  \"udgavebetegnelse\" : \"\",\n"
                         + "  \"withinCopyright\" : false\n"
                         + "}";
-        PdfInfo pdfInfo = JSON.fromJson(json2, PdfInfo.class);
+        
+        String json3 = "{\n"
+                       + "  \"alternativeTitle\" : \"קרית ארבע ; חלק ראשון :מדבר בטבע הולכי ד' ובעלי חיי העצומים תבניתם טבעם ומחיתן ...מהבחור אליקים בן ... איסרל זאלדין.\",\n"
+                       + "  \"apronType\" : \"B\",\n"
+                       + "  \"authors\" : \"me-ha-baḥur ʾElyaqim ben ... ʾIserl Zoldin.\",\n"
+                       + "  \"placeAndYear\" : \"[Kbh.] :; [Eget Forlag],; 1786-1787\",\n"
+                       + "  \"publicationDate\" : \"1786-01-01\",\n"
+                       + "  \"size\" : \"19 bl.\",\n"
+                       + "  \"title\" : \"Qiryatʾ arbaʿ : ḥeleq riʾshon medaber be-ṭevaʿ holkhe 4 u-vaʿale ḥaye ha-ʿatsumim tavnitam ṭivʿam u-mḥitan gam yesupar bo mi-mivḥar ha-beruʾ[i]m u-me-rov godlo\",\n"
+                       + "  \"udgavebetegnelse\" : \"\",\n"
+                       + "  \"withinCopyright\" : false\n"
+                       + "}";
+        PdfInfo pdfInfo = JSON.fromJson(json3, PdfInfo.class);
         try (InputStream apronPage = PdfTitlePageCreator.produceHeaderPage(pdfInfo)) {
             Files.copy(apronPage, Path.of("test.pdf"), StandardCopyOption.REPLACE_EXISTING);
         }
