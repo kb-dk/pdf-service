@@ -161,15 +161,17 @@
                         <xsl:attribute name="font-size">
                             <xsl:value-of select="$metadataTableFontSize"/>px
                         </xsl:attribute>
-                        <xsl:attribute name="font-family">
-                            <xsl:value-of select="$metadataTableFont"/>
+                        <!-- https://stackoverflow.com/a/35186571/4527948 -->
+                        <!--You can add multiple fonts here, and it will use the first that can represent a character-->
+                        <xsl:attribute name="font-family">DejaVuSans
+<!--                            <xsl:value-of select="$metadataTableFont"/>-->
                         </xsl:attribute>
                         <xsl:attribute name="keep-with-previous">always</xsl:attribute>
 
 
                         <!--                    <fo:block font-size="10px" keep-with-previous="always" font-family="Helvetica">-->
                         <fo:table table-layout="fixed" width="100%" border-collapse="separate">
-                            <fo:table-column column-width="8cm"/>
+                            <fo:table-column column-width="8.6cm"/>
                             <xsl:element name="table-column" namespace="http://www.w3.org/1999/XSL/Format">
                                 <xsl:attribute name="column-width"><xsl:value-of select="$metadataTableWidth"/>cm</xsl:attribute>
                             </xsl:element>

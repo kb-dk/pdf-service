@@ -147,7 +147,7 @@ public class PdfTitlePageCleaner {
                 // There are 255 values of pixels in total
                 double percentage
                         = (difference / total_pixels / 255) * 100;
-                if (percentage > 1.0){
+                if (percentage > 1.0){ //TODO configurable percentage
                     //If we reach above the threshold, just break rather than compare the rest of the image data
                     //The difference is only increasing so it will never get better
                     return false;

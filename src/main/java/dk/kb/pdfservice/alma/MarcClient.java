@@ -158,7 +158,13 @@ public class MarcClient {
     private static String getAlternativeTitle(Element marc21, RecordType recordType) {
         //Alternativ Titel:  hentes fra Marc21 246a -  hvis ikke noget = ingenting
         List<String> tag246a = getStrings(marc21, "246", "a");
-        return Stream.of(tag246a)
+        //Alternative titel for
+        // http://devel12.statsbiblioteket.dk:8211/pdf-service/api/getPdf/130009869108.pdf
+        // https://kbdk-kgl-psb.primo.exlibrisgroup.com/discovery/fulldisplay?docid=alma99122802669405763&context=U&vid=45KBDK_KGL:KGL&lang=da
+        // ligger i
+        // 740a
+        List<String> tag740a = getStrings(marc21, "740", "a");
+        return Stream.of(tag246a, tag740a)
                      .flatMap(Collection::stream)
                      .filter(Objects::nonNull)
                      .collect(Collectors.joining("; "));

@@ -15,6 +15,7 @@ import dk.kb.pdfservice.utils.PdfUtils;
 import dk.kb.pdfservice.webservice.exception.InternalServiceObjection;
 import dk.kb.pdfservice.webservice.exception.NotFoundServiceObjection;
 import dk.kb.pdfservice.webservice.exception.ServiceObjection;
+import dk.kb.util.json.JSON;
 import dk.kb.util.other.NamedThread;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
@@ -186,9 +187,11 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         
         String barcode = sourcePdfFile.getName().split("[-._]", 2)[0];
         PdfInfo pdfInfo = MarcClient.getPdfInfo(barcode);
-
+    
+        System.out.println(JSON.toJson(pdfInfo));
         //TODO suppressed records should be available?
     
+        //TODO configurable produceApron module, so we can insert another
         try (InputStream apronFile = produceApron(pdfFileString, pdfInfo);
              InputStream requestedPDF = transformPdfFile(sourcePdfFile, pdfInfo);
              InputStream completePDF = PdfTitlePageInserter.mergeFrontPageWithPdf(apronFile, requestedPDF);

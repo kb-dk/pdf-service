@@ -1,11 +1,9 @@
 package dk.kb.pdfservice.titlepage;
 
-import com.google.common.math.DoubleMath;
 import dk.kb.pdfservice.alma.ApronType;
 import dk.kb.pdfservice.alma.PdfInfo;
 import dk.kb.pdfservice.config.ServiceConfig;
 import dk.kb.pdfservice.utils.PdfUtils;
-import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -15,7 +13,11 @@ import org.apache.fop.apps.Fop;
 import org.apache.fop.apps.FopFactory;
 import org.apache.fop.apps.FopFactoryBuilder;
 import org.apache.fop.apps.MimeConstants;
-import org.apache.fop.hyphenation.Hyphenator;
+import org.apache.fop.configuration.Configuration;
+import org.apache.fop.configuration.ConfigurationException;
+import org.apache.fop.configuration.DefaultConfigurationBuilder;
+import org.apache.fop.fonts.FontManager;
+import org.apache.fop.fonts.truetype.TTFFile;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
@@ -28,13 +30,13 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.stream.StreamSource;
+import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -44,17 +46,28 @@ public class PdfTitlePageCreator {
     
     private static final Logger log = LoggerFactory.getLogger(PdfTitlePageCreator.class);
     
-    public static InputStream produceHeaderPage(PdfInfo pdfInfo) throws TransformerException, FOPException, IOException {
+    public static InputStream produceHeaderPage(PdfInfo pdfInfo)
+            throws TransformerException, FOPException, IOException {
         File formatterFile = ServiceConfig.getFrontPageFopFile().toFile();
-    
-    
+        
+        
         FopFactoryBuilder builder = new FopFactoryBuilder(formatterFile.getAbsoluteFile().getParentFile().toURI());
         builder.setAccessibility(false);
+        
+        DefaultConfigurationBuilder cfgBuilder = new DefaultConfigurationBuilder();
+        try {
+            Configuration cfg = cfgBuilder.buildFromFile(ServiceConfig.getFOPConfigFile());
+            builder.setConfiguration(cfg);
+        } catch (ConfigurationException e) {
+            throw new RuntimeException(e);
+        }
+        
         FopFactory fopFactory = builder.build();
         
         
         try (ByteArrayOutputStream outStream = new ByteArrayOutputStream()) {
             FOUserAgent agent = fopFactory.newFOUserAgent();
+            FontManager fontManager = agent.getFontManager();
             //How to override the FOP logging
             //LoggingEventListener loggingEventListener = new LoggingEventListener();
             //agent.getEventBroadcaster().addEventListener(loggingEventListener);
@@ -87,15 +100,26 @@ public class PdfTitlePageCreator {
                     throw exception;
                 }
             });
-    
+            
             try (InputStream formatterStream = new FileInputStream(formatterFile)) {
                 
-                Transformer xslfoTransformer = factory.newTransformer(new StreamSource(formatterStream,formatterFile.toURI().toASCIIString()));
-    
-                List<String> info = List.of(pdfInfo.getAuthors(), pdfInfo.getTitle(), pdfInfo.getAlternativeTitle(),
-                                            pdfInfo.getUdgavebetegnelse(), pdfInfo.getPlaceAndYear(), pdfInfo.getSize());
+                Transformer xslfoTransformer = factory.newTransformer(new StreamSource(formatterStream,
+                                                                                       formatterFile.toURI()
+                                                                                                    .toASCIIString()));
                 
-                info = enforceLimits(info, pdfInfo.getApronType());
+                
+                List<String> info = List.of(fixChars(pdfInfo.getAuthors()),
+                                            fixChars(pdfInfo.getTitle()),
+                                            fixChars(pdfInfo.getAlternativeTitle()),
+                                            fixChars(pdfInfo.getUdgavebetegnelse()),
+                                            fixChars(pdfInfo.getPlaceAndYear()),
+                                            fixChars(pdfInfo.getSize()));
+                int apronMetadataTableFontSize = ServiceConfig.getApronMetadataTableFontSize();
+                float apronMetadataTableWidthCm = ServiceConfig.getApronMetadataTableWidthCm();
+                info = enforceLimits(info,
+                                     pdfInfo.getApronType(),
+                                     apronMetadataTableFontSize,
+                                     apronMetadataTableWidthCm);
                 
                 xslfoTransformer.setParameter("authors", info.get(0));
                 xslfoTransformer.setParameter("title", info.get(1));
@@ -104,10 +128,13 @@ public class PdfTitlePageCreator {
                 xslfoTransformer.setParameter("placeAndYear", info.get(4));
                 xslfoTransformer.setParameter("size", info.get(5));
                 xslfoTransformer.setParameter("documentType", pdfInfo.getApronType().name());
-    
-                xslfoTransformer.setParameter("metadataTableFont", ServiceConfig.getApronMetadataTableFont().getFont().getBaseFont());
-                xslfoTransformer.setParameter("metadataTableFontSize", ServiceConfig.getApronMetadataTableFontSize());
-                xslfoTransformer.setParameter("metadataTableWidth", ServiceConfig.getApronMetadataTableWidthCm());
+                
+                
+                xslfoTransformer.setParameter("metadataTableFont", ServiceConfig.getApronMetadataTableFont().getFullName());
+                
+                xslfoTransformer.setParameter("metadataTableFontSize", apronMetadataTableFontSize);
+                
+                xslfoTransformer.setParameter("metadataTableWidth", apronMetadataTableWidthCm);
                 
                 xslfoTransformer.transform(new StreamSource(new StringReader("<xml/>")),
                                            new SAXResult(fop.getDefaultHandler()));
@@ -117,70 +144,77 @@ public class PdfTitlePageCreator {
         }
     }
     
-    protected static List<String> enforceLimits(List<String> info, ApronType apronType) {
-        //a4 width in pixels * 9cm/21cm -- 21cm being the width of A4 in cm
-        final float lineWidth = PDRectangle.A4.getWidth() * ServiceConfig.getApronMetadataTableWidthCm()/21;
-        final PDType1Font font = ServiceConfig.getApronMetadataTableFont().getFont();
-        final int fontSize = ServiceConfig.getApronMetadataTableFontSize();
-        
-        Map<Integer, Pair<String,Double>> lengthMap = new HashMap<>();
+    private static String fixChars(String string) {
+        //String resplaced = string.replaceAll("̈\u0308", "\u200B̈ \\1");
+        return string;
+    }
     
+    protected static List<String> enforceLimits(List<String> info,
+                                                ApronType apronType,
+                                                int apronMetadataTableFontSize,
+                                                float apronMetadataTableWidthCm) {
+        //a4 width in pixels * 9cm/21cm -- 21cm being the width of A4 in cm
+        final float lineWidth = PDRectangle.A4.getWidth() * apronMetadataTableWidthCm / 21;
+        final TTFFile font = ServiceConfig.getApronMetadataTableFont();
+        
+        Map<Integer, Pair<String, Double>> lengthMap = new HashMap<>();
+        
         
         for (int i = 0; i < info.size(); i++) {
             String string = info.get(i);
-    
+            
             //Now we know how many pixels each entry takes. Then figure out how many lines this corresponds to, by dividing with the
             //line length
-            double lines = getNumLines(string, fontSize, font, lineWidth);
-            if (i < 2 ){ //The two first entries are written even if empty
+            double lines = getNumLines(string, apronMetadataTableFontSize, font, lineWidth);
+            if (i < 2) { //The two first entries are written even if empty
                 lines = Math.max(lines, 1);
             }
             lengthMap.put(i, MutablePair.of(string, lines));
         }
-    
+        
         double usedLines = lengthMap.values().stream().mapToDouble(Pair::getValue).sum();
         
         final double maxLines = ServiceConfig.getMaxLinesForApron(apronType);
-    
+        
         //If is is to many lines, remove last line from the longest, and keep going until reduced to acceptable level
-        while (usedLines > maxLines){
+        while (usedLines > maxLines) {
             Pair<String, Double> longestEntry = lengthMap.values()
                                                          .stream()
                                                          .max(Map.Entry.comparingByValue())
                                                          .get();
-    
+            
             double newValue = longestEntry.getValue() - 1;
             longestEntry.setValue(newValue);
-    
+            
             usedLines = lengthMap.values().stream().mapToDouble(Pair::getValue).sum();
         }
-    
-    
+        
+        
         List<String> result = new ArrayList<>(info.size());
         //Now reduce each entry down to the computed length
         for (Map.Entry<Integer, Pair<String, Double>> entry : lengthMap.entrySet()) {
-        
+            
             String text = entry.getValue().getLeft();
             Double finalLength = entry.getValue().getRight();
-    
-            double currentLength = getNumLines(text, fontSize, font, lineWidth);
             
-            while (currentLength > finalLength){
-    
+            double currentLength = getNumLines(text, apronMetadataTableFontSize, font, lineWidth);
+            
+            while (currentLength > finalLength) {
+                
                 //replace last "word" with ... and fix if the text already ends with ...
-                text = text.replaceFirst("\\s\\S+\\s*$","...").replaceFirst("\\.{3,}$", "...");
-                currentLength = getNumLines(text, fontSize, font, lineWidth);
+                text          = text.replaceFirst("\\s\\S+\\s*$", "...").replaceFirst("\\.{3,}$", "...");
+                currentLength = getNumLines(text, apronMetadataTableFontSize, font, lineWidth);
             }
             
-            result.add( entry.getKey(), text);
+            result.add(entry.getKey(), text);
         }
         
         return result;
     }
     
-    private static int getNumLines(String string, int fontSize, PDType1Font helvetica, float lineWidth) {
+    private static int getNumLines(String string, int fontSize, TTFFile font, float lineWidth) {
         String[] splits = string.split("\\s");
-        if (splits.length == 0){ //if empty, assume we use NO lines
+        if (splits.length == 0) { //if empty, assume we use NO lines
             return 0;
         }
         int currentlineNr = 0;
@@ -188,13 +222,15 @@ public class PdfTitlePageCreator {
         for (String word : splits) {
             currentLine.add(word);
             String currentLinePlusWord = String.join(" ", currentLine);
-            float widthOfCurrentLinePlusWord = PdfUtils.calculateTextLengthPixels(currentLinePlusWord, fontSize, helvetica);
-            if (widthOfCurrentLinePlusWord > lineWidth){
+            float widthOfCurrentLinePlusWord = PdfUtils.calculateTextLengthPixelsFop(currentLinePlusWord,
+                                                                                  fontSize,
+                                                                                  font);
+            if (widthOfCurrentLinePlusWord > lineWidth) {
                 currentlineNr += 1;
                 currentLine = new ArrayList<>(List.of(word));
             }
         }
-        return currentlineNr+1;
+        return currentlineNr + 1;
     }
     
     

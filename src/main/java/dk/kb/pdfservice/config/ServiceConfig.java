@@ -6,13 +6,20 @@ import dk.kb.pdfservice.titlepage.FontEnum;
 import dk.kb.util.yaml.YAML;
 import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.map.ListOrderedMap;
+import org.apache.fop.fonts.truetype.FontFileReader;
+import org.apache.fop.fonts.truetype.OFFontLoader;
+import org.apache.fop.fonts.truetype.TTFFile;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.validation.constraints.NotNull;
 import java.awt.*;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Period;
@@ -194,7 +201,7 @@ public class ServiceConfig {
     }
     
     public static double getMaxLinesForApron(ApronType apronType) {
-        return getConfig().getDouble("pdfService.apron.metadataTable.maxlines."+apronType.name());
+        return getConfig().getDouble("pdfService.apron.metadataTable.maxlines." + apronType.name());
     }
     
     public static float getApronMetadataTableWidthCm() {
@@ -205,8 +212,28 @@ public class ServiceConfig {
         return getConfig().getInteger("pdfService.apron.metadataTable.fontSize");
     }
     
-    public static FontEnum getApronMetadataTableFont() {
-        return FontEnum.valueOf(getConfig().getString("pdfService.apron.metadataTable.font"));
+    public static TTFFile getApronMetadataTableFont() {
+        TTFFile ttfFile = new TTFFile(false, true);
+    
+        File file = new File("conf/fonts/DejaVuSans.ttf").getAbsoluteFile();
+        try (InputStream stream = new FileInputStream(file)) {
+            FontFileReader reader = new FontFileReader(stream);
+            String header = OFFontLoader.readHeader(reader);
+            boolean supported = ttfFile.readFont(reader, header, "name");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return ttfFile;
+        //
+        //String fontFile = getConfig().getString("pdfService.apron.metadataTable.fontFile");
+        //Font font = Font.createFont(Font.TRUETYPE_FONT, new File(fontFile));
+        //return font;
+        //
+        
+        //return FontEnum.valueOf(getConfig().getString("pdfService.apron.metadataTable.font")).getFont();
     }
-   
+    
+    public static File getFOPConfigFile() {
+        return new File(ServiceConfig.getConfig().getString("pdfService.apron.FOPconfig")).getAbsoluteFile();
+    }
 }

@@ -27,6 +27,7 @@ public class CopyrightFooterInserter {
             throws IOException {
         //TODO log something so we can see what is happening...
         
+        //TODO configurable font for footer..
         final PDType1Font font = PDType1Font.HELVETICA;
         //We add them from the bottom up, to reverse to preserve the order from the config file.
         final java.util.List<String> copyrightFooterTexts = Lists.reverse(ServiceConfig.getCopyrightFooterText());

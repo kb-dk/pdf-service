@@ -1,5 +1,7 @@
 package dk.kb.pdfservice.alma;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.time.LocalDate;
 
 /**
@@ -17,26 +19,27 @@ public class PdfInfo {
     private final String size;
     private final LocalDate publicationDate;
     private final boolean isWithinCopyright;
-    private final ApronType documentType;
+    private final ApronType apronType;
     
     
-    public PdfInfo(String authors,
-                   String title,
-                   String alternativeTitle,
-                   String udgavebetegnelse,
-                   String placeAndYear,
-                   String size,
-                   ApronType documentType,
-                   LocalDate publicationDate,
-                   boolean isWithinCopyright) {
+    public PdfInfo(
+            @JsonProperty("authors")String authors,
+            @JsonProperty("title")String title,
+            @JsonProperty("alternativeTitle")String alternativeTitle,
+            @JsonProperty("udgavebetegnelse")String udgavebetegnelse,
+            @JsonProperty("placeAndYear")String placeAndYear,
+            @JsonProperty("size")String size,
+            @JsonProperty("apronType")ApronType apronType,
+            @JsonProperty("publicationDate")LocalDate publicationDate,
+            @JsonProperty("isWithinCopyright")boolean isWithinCopyright) {
         this.authors           = authors;
         this.title             = title;
         this.alternativeTitle  = alternativeTitle;
         this.udgavebetegnelse = udgavebetegnelse;
         this.placeAndYear     = placeAndYear;
-        this.size             = size;
-        this.documentType      = documentType;
-        this.publicationDate   = publicationDate;
+        this.size            = size;
+        this.apronType       = apronType;
+        this.publicationDate = publicationDate;
         this.isWithinCopyright = isWithinCopyright;
     }
     
@@ -73,7 +76,7 @@ public class PdfInfo {
     }
     
     public ApronType getApronType() {
-        return documentType;
+        return apronType;
     }
     
     @Override
@@ -87,7 +90,9 @@ public class PdfInfo {
                ", size='" + size + '\'' +
                ", publicationDate=" + publicationDate +
                ", isWithinCopyright=" + isWithinCopyright +
-               ", documentType=" + documentType +
+               ", documentType=" + apronType +
                '}';
     }
+    
+    
 }

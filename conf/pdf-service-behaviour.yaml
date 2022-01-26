@@ -56,6 +56,7 @@ pdfService:
   apron:
     #This XSLT generates the frontpage
     FOPfile: /home/dodpdfsv/services/conf/frontpage.xsl
+    FOPconfig: /home/dodpdfsv/services/conf/fop.xconf
     #Relative URLs in this FOPfile will be resolved from the folder containing the FOPfile
     # So you can refer to KBLogo.png simply as "KBLogo.png" without any path
 
@@ -66,14 +67,17 @@ pdfService:
       #  2 pages
 
       widthCM: 9 # Width in centimeters of the left column of the metadata table
-      font: HELVETICA # Font of the metadata table
+      # TODO how to use ttf files instead of builtin fonts
+
+#      "http://unifoundry.com/unifont/index.html"
+      font: HELVETICA # Font of the metadata table //TODO
       fontSize: 10 #px
 
-      maxlines:
+      maxlines: # Remember these are very dependent on the font and fontsize above
         # Number of lines available for metadata differ for the different apron types
-        A: 14
-        B: 15
-        C: 12
+        A: 11
+        B: 12
+        C: 9
 
     # Logic for deciding which of the 4 types of aprons to use
     # See the apron types on https://sbprojects.statsbiblioteket.dk/display/DK/Record+Typer
@@ -83,9 +87,32 @@ pdfService:
     # If the __default__ value is not used, we fail...
     999aToApronType:
 
+
+      #I mit hoved så gælder følgende per fysisk post: DILA/LOHA mener der også bør skelnes mellem A og B forklæder i DOD:
+      #
+      #hvis der er 1 997 a DOD så skal den have  hvis 1) trykkeår  er ældre end 140 = B forklæde  ellers ( hvis mellem 100-140 år)  A forklæde.
+      #Hvis der er 1 999 a DOD så skal den have  hvis 1) trykkeår  er ældre end 140 = B forklæde  ellers ( hvis mellem 100-140 år)  A forklæde.
+      #Hvis der er 1 999 a Teatermanus, så  skal den have forklæde C med footer.
+      #Ellers alle andre skal have forklæde B
+      #dvs. 1600talsKUM, 1600talsC8, TeatermanusudenOCR (Sufflør), Danskkvindehistoriskkulturarv, EOD  ( det har de i dag via Limb), samt alle dem som ikke matcher ovenstående
+      #
+      #Danskkvindehistoriskkulturarv mangler afklaring hos LOHA.
+
+      #9) før 2021 DOD A forklæde fra 1903-1910
+      #
+      #113418012891 findes  i sandkassen http://devel12.statsbiblioteket.dk:8211/pdf-service/api/getPdf/113418012891-color.pdf FEJLER viser B skulle have været A
+      #
+      #10 før 2021 DOD A forklæde fra 1896-1897
+      #
+      #130022885783  findes  i sandkassen http://devel12.statsbiblioteket.dk:8211/pdf-service/api/getPdf/130022885783-color.pdf  FEJLER viser B skulle have været A
+
       # Alle ældre poster, som ikke har et 999a felt, men typisk et 997a felt, får alle samme forklæde A.
-      - 999a: __empty__ #Meaning 999a is empty (== not set)
-        type: A # Such records is of type A
+      #        TODO A or B depending on 260c
+#      - 997a: "DOD"
+#        type: A or B
+      # if 999a contains DOD, use apron A or B
+      - 999a: "DOD"
+        type: A # or B
 
       # For alle fysiske poster med 999a ( findes kun på pdf’er fra og med 2021),
       # laves der forskellige forklæder A (DOD) eller B (1600talsKUM m.fl.) eller C (Teatermanus)
@@ -94,14 +121,6 @@ pdfService:
       # if 999a contains Teatermanus, use apron C
       - 999a: "Teatermanus"
         type: C
-
-      # if 999a contains TeatermanusudenOCR, use apron B
-      - 999a: "TeatermanusudenOCR"
-        type: B
-
-      # if 999a contains DOD, use apron A
-      - 999a: "DOD"
-        type: A
 
       # If no other values match, but 999a is not empty, use Apron B
       - 999a: __default__
@@ -117,7 +136,7 @@ pdfService:
   # This ensures that updates to ALMA will tage effect (after a while)
   # Note that if this age is SHORTER than the alma.cache_timeout, the cached ALMA record
   # will be used, which defeats the purpose....
-  maxAgeOfTempPdfsInMinutes:
+  maxAgeOfTempPdfsInMinutes: # TODO naming minutes...
     value: 5
     unit: SECONDS
     # unit can be one of NANOS, MICROS, MILLIS, SECONDS, MINUTES, HOURS, HALF_DAYS
