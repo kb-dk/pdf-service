@@ -66,11 +66,11 @@ pdfService:
       #  optimal line cutting; We try to remove the fewest number of lines, so that the apron do not spill over onto
       #  2 pages
 
-      widthCM: 9 # Width in centimeters of the left column of the metadata table
+      widthCM: 8.4 # Width in centimeters of the left column of the metadata table
       # TODO how to use ttf files instead of builtin fonts
 
 #      "http://unifoundry.com/unifont/index.html"
-      font: HELVETICA # Font of the metadata table //TODO
+      fontFile: /home/dodpdfsv/services/conf/fonts/DejaVuSans.ttf # Font of the metadata table
       fontSize: 10 #px
 
       maxlines: # Remember these are very dependent on the font and fontsize above

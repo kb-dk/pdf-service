@@ -19,8 +19,6 @@ import org.apache.fop.configuration.DefaultConfigurationBuilder;
 import org.apache.fop.fonts.FontManager;
 import org.apache.fop.fonts.truetype.TTFFile;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.font.PDFont;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +28,6 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.stream.StreamSource;
-import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -41,6 +38,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class PdfTitlePageCreator {
     
@@ -128,9 +126,11 @@ public class PdfTitlePageCreator {
                 xslfoTransformer.setParameter("placeAndYear", info.get(4));
                 xslfoTransformer.setParameter("size", info.get(5));
                 xslfoTransformer.setParameter("documentType", pdfInfo.getApronType().name());
-                
-                
-                xslfoTransformer.setParameter("metadataTableFont", ServiceConfig.getApronMetadataTableFont().getFullName());
+    
+    
+                xslfoTransformer.setParameter("metadataTableFont",
+                                              Objects.requireNonNull(ServiceConfig.getApronMetadataTableFont())
+                                                     .getFullName());
                 
                 xslfoTransformer.setParameter("metadataTableFontSize", apronMetadataTableFontSize);
                 
@@ -178,6 +178,7 @@ public class PdfTitlePageCreator {
         
         //If is is to many lines, remove last line from the longest, and keep going until reduced to acceptable level
         while (usedLines > maxLines) {
+            //TODO If multiple, prefer the last entry
             Pair<String, Double> longestEntry = lengthMap.values()
                                                          .stream()
                                                          .max(Map.Entry.comparingByValue())
@@ -214,7 +215,7 @@ public class PdfTitlePageCreator {
     
     private static int getNumLines(String string, int fontSize, TTFFile font, float lineWidth) {
         String[] splits = string.split("\\s");
-        if (splits.length == 0) { //if empty, assume we use NO lines
+        if (splits.length == 0) { //if empty, assume we use NO lines, as the entry will not be displayed
             return 0;
         }
         int currentlineNr = 0;
@@ -223,8 +224,9 @@ public class PdfTitlePageCreator {
             currentLine.add(word);
             String currentLinePlusWord = String.join(" ", currentLine);
             float widthOfCurrentLinePlusWord = PdfUtils.calculateTextLengthPixelsFop(currentLinePlusWord,
-                                                                                  fontSize,
-                                                                                  font);
+                                                                                     fontSize,
+                                                                                     font,
+                                                                                     ServiceConfig.getFontWidthMap());
             if (widthOfCurrentLinePlusWord > lineWidth) {
                 currentlineNr += 1;
                 currentLine = new ArrayList<>(List.of(word));

@@ -163,8 +163,8 @@
                         </xsl:attribute>
                         <!-- https://stackoverflow.com/a/35186571/4527948 -->
                         <!--You can add multiple fonts here, and it will use the first that can represent a character-->
-                        <xsl:attribute name="font-family">DejaVuSans
-<!--                            <xsl:value-of select="$metadataTableFont"/>-->
+                        <xsl:attribute name="font-family">
+                            <xsl:value-of select="$metadataTableFont"/>
                         </xsl:attribute>
                         <xsl:attribute name="keep-with-previous">always</xsl:attribute>
 

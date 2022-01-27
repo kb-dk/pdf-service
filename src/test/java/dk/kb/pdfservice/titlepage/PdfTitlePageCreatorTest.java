@@ -61,7 +61,7 @@ class PdfTitlePageCreatorTest {
                        + "  \"udgavebetegnelse\" : \"\",\n"
                        + "  \"withinCopyright\" : false\n"
                        + "}";
-        PdfInfo pdfInfo = JSON.fromJson(json3, PdfInfo.class);
+        PdfInfo pdfInfo = JSON.fromJson(json1, PdfInfo.class);
         try (InputStream apronPage = PdfTitlePageCreator.produceHeaderPage(pdfInfo)) {
             Files.copy(apronPage, Path.of("test.pdf"), StandardCopyOption.REPLACE_EXISTING);
         }

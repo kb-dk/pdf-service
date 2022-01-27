@@ -75,8 +75,8 @@ public class CopyrightFooterInserter {
                     
                     //TODO calculate for font1 up front, rahter than for each page
                     //font is page-dependent, so we have to calculate this for each page
-                    float textWidth = PdfUtils.calculateTextLengthPixels(copyrightFooterText, fontSize, font);
-                    float textboxWidth = PdfUtils.calculateTextLengthPixels("  " + copyrightFooterText + "  ", fontSize, font);
+                    float textWidth = PdfUtils.calculateTextLengthPixelsPdfBox(copyrightFooterText, fontSize, font);
+                    float textboxWidth = PdfUtils.calculateTextLengthPixelsPdfBox("  " + copyrightFooterText + "  ", fontSize, font);
                     
                     contentStream.moveTo(0, 0);//Ensure we start at lowest left corner
                     
