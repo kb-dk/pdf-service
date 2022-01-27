@@ -35,16 +35,7 @@ public class PdfTitlePageCleaner {
         PDFTextStripper stripper = new PDFTextStripper();
         
         //The reference images we will compare against
-        List<BufferedImage> referenceImages = FileUtils.listFiles(ServiceConfig.getOldHeaderImageDir(), new String[]{"png"}, false)
-                                                       .stream()
-                                                       .map(file -> {
-                                                           try {
-                                                               return ImageIO.read(file);
-                                                           } catch (IOException e) {
-                                                               throw new UncheckedIOException(e);
-                                                           }
-                                                       })
-                                                       .collect(Collectors.toList());
+        List<BufferedImage> referenceImages = ServiceConfig.getOldHeaderImages();
         
         
         //We assume that all previously inserted header pages contains the text "det kongelige bibliotek"

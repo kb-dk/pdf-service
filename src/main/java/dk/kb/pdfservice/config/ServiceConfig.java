@@ -3,9 +3,7 @@ package dk.kb.pdfservice.config;
 import dk.kb.alma.client.AlmaRestClient;
 import dk.kb.pdfservice.alma.ApronType;
 import dk.kb.util.yaml.YAML;
-import org.apache.commons.collections4.OrderedMap;
-import org.apache.commons.collections4.map.ListOrderedMap;
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.io.FileUtils;
 import org.apache.fop.fonts.truetype.FontFileReader;
 import org.apache.fop.fonts.truetype.OFFontLoader;
 import org.apache.fop.fonts.truetype.OFMtxEntry;
@@ -13,12 +11,15 @@ import org.apache.fop.fonts.truetype.TTFFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.imageio.ImageIO;
 import javax.validation.constraints.NotNull;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Period;
@@ -120,6 +121,23 @@ public class ServiceConfig {
     
     public static File getOldHeaderImageDir() {
         return new File(ServiceConfig.getConfig().getString("pdfService.oldHeaderImagesDir"));
+    }
+    
+    private static List<BufferedImage> oldHeaderImages = null;
+    public static synchronized List<BufferedImage> getOldHeaderImages(){
+        if (oldHeaderImages == null) {
+            oldHeaderImages = FileUtils.listFiles(ServiceConfig.getOldHeaderImageDir(), new String[]{"png"}, false)
+                            .stream()
+                            .map(file -> {
+                                try {
+                                    return ImageIO.read(file);
+                                } catch (IOException e) {
+                                    throw new UncheckedIOException(e);
+                                }
+                            })
+                            .collect(Collectors.toList());
+        }
+        return oldHeaderImages;
     }
     
     //Copyright determination
