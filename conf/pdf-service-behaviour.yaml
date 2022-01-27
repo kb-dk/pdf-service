@@ -67,13 +67,15 @@ pdfService:
       #  2 pages
 
       widthCM: 8.4 # Width in centimeters of the left column of the metadata table
-      # TODO how to use ttf files instead of builtin fonts
+      # The other column is currently 8.6cm, for a total of 18cm, which seems to be the max allowed
+      # So if you increate this, decrease the other column in frontpage.xsl
 
-#      "http://unifoundry.com/unifont/index.html"
+      #Perhaps use http://unifoundry.com/unifont/index.html instead??
       fontFile: /home/dodpdfsv/services/conf/fonts/DejaVuSans.ttf # Font of the metadata table
       fontSize: 10 #px
 
       maxlines: # Remember these are very dependent on the font and fontsize above
+        # TODO easy procedure for determining max number of lines for each apron
         # Number of lines available for metadata differ for the different apron types
         A: 11
         B: 12
@@ -81,12 +83,11 @@ pdfService:
 
     # Logic for deciding which of the 4 types of aprons to use
     # See the apron types on https://sbprojects.statsbiblioteket.dk/display/DK/Record+Typer
-    # First marc 999a is retried, and then each of the entries below is tried,
-    #  in the stated order, starting from the top, until one match
+    # First marc 999a+997a is retried, and then each of the entries below is tried,
+    #  _in the stated order_, starting from the top, until one match
     # If none match, we use the __default__ value.
     # If the __default__ value is not used, we fail...
     apronTypeMapper:
-
 
       #I mit hoved så gælder følgende per fysisk post: DILA/LOHA mener der også bør skelnes mellem A og B forklæder i DOD:
       #
@@ -97,11 +98,6 @@ pdfService:
       #dvs. 1600talsKUM, 1600talsC8, TeatermanusudenOCR (Sufflør), Danskkvindehistoriskkulturarv, EOD  ( det har de i dag via Limb), samt alle dem som ikke matcher ovenstående
       #
       #Danskkvindehistoriskkulturarv mangler afklaring hos LOHA.
-
-
-      #10 før 2021 DOD A forklæde fra 1896-1897
-      #
-      #130022885783  findes  i sandkassen http://devel12.statsbiblioteket.dk:8211/pdf-service/api/getPdf/130022885783-color.pdf  FEJLER viser B skulle have været A
 
       - 997a: "DOD"
         apronWithinCopyright: A
@@ -144,7 +140,7 @@ pdfService:
   # For each image extracted, compare it to each of the header images in this folder
   # We scale the extracted image to match the dimensions of the oldHeaderImages file
   # If the difference is below 1%, we call it a match
-  oldHeaderImagesDir: conf/oldHeaderImages
+  oldHeaderImagesDir: /home/dodpdfsv/services/conf/oldHeaderImages
 
   # If a page did NOT match any of the header images above, we examine the text on the page
   # Some of the newer aprons are NOT static images with OCR, but actual PDF pages with correct text,
@@ -172,10 +168,10 @@ pdfService:
       - "Manuskriptkopien må ikke anvendes til opførelse og må ikke videredistribueres"
     #      - "The manuscript copy may not be used for public performance and may not be distributed."
     Fontsize: 12
-    #Font is Helvetica, which is unfortunately not configurable
+    #TODO Font is Helvetica, which is unfortunately not configurable
 
     # See https://www.rapidtables.com/web/color/html-color-codes.html for possible values
-    Color: '#FF0000' # Black
+    Color: '#FF0000' # Red
     Transparency: 0.7 # Between 0.0 and 1.0. 1.0 is totally covering, i.e. not transparent. 0.0 is invisible
 
     Background:
