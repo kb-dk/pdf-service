@@ -5,6 +5,7 @@ import dk.kb.pdfservice.alma.ApronType;
 import dk.kb.util.yaml.YAML;
 import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.map.ListOrderedMap;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.fop.fonts.truetype.FontFileReader;
 import org.apache.fop.fonts.truetype.OFFontLoader;
 import org.apache.fop.fonts.truetype.OFMtxEntry;
@@ -23,6 +24,7 @@ import java.time.Duration;
 import java.time.Period;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAmount;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -59,21 +61,37 @@ public class ServiceConfig {
         //Anything to shut down here??
     }
     
-    public static final String EMPTY = "__empty__";
     public static final String DEFAULT = "__default__";
     
-    public static Map<String, ApronType> getApronTypeMapping() {
-        OrderedMap<String, ApronType> documentTypeMapping = new ListOrderedMap<>();
+    private static List<ApronMapping> apronMappingList = null;
+    public static synchronized List<ApronMapping> getApronTypeMapping() {
+        if (apronMappingList == null) {
+            apronMappingList = new ArrayList<>();
+    
+            @NotNull List<YAML> entries = getConfig().getYAMLList("pdfService.apron.apronTypeMapper");
+            for (YAML entry : entries) {
         
-        @NotNull List<YAML> entries = getConfig().getYAMLList("pdfService.apron.999aToApronType");
-        for (YAML entry : entries) {
-            @NotNull String key = entry.getString("999a");
-            @NotNull String type = entry.getString("type");
-            ApronType value = ApronType.valueOf(type);
-            documentTypeMapping.put(key, value);
+                String keyType = "999a";
+                String key = entry.getString(keyType, null);
+                if (key == null) {
+                    keyType = "997a";
+                    key     = entry.getString(keyType, null);
+                    if (key == null) {
+                        keyType = DEFAULT;
+                        key     = entry.getString(keyType, null);
+                    }
+                }
+        
+                String type1 = entry.getString("apronWithinCopyright", null);
+                ApronType value1 = ApronType.valueOf(type1);
+        
+                String type2 = entry.getString("apronOutOfCopyright", null);
+                ApronType value2 = ApronType.valueOf(type2);
+        
+                apronMappingList.add(new ApronMapping(keyType, key, value1, value2));
+            }
         }
-        
-        return documentTypeMapping;
+        return apronMappingList;
     }
     
     public static List<String> getPdfSourcePath() {
@@ -86,10 +104,10 @@ public class ServiceConfig {
     
     public static TemporalAmount getMaxAgeTempPdf() {
         @NotNull Integer value = getConfig().getInteger(
-                "pdfService.maxAgeOfTempPdfsInMinutes.value");
+                "pdfService.maxAgeOfTempPdfs.value");
         
         String unit = getConfig().getString(
-                "pdfService.maxAgeOfTempPdfsInMinutes.unit");
+                "pdfService.maxAgeOfTempPdfs.unit");
         return Duration.of(value, ChronoUnit.valueOf(unit));
         
     }

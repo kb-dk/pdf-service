@@ -37,7 +37,7 @@ alma:
   cache_timeout: 60000
 
   #Timeouts in milliseconds
-  connect_timeout: 30000
+  connect_timeout: 60000
   read_timeout: 30000
 
   # Sleep durations when retrying or receiving a response 429 from alma (rate_limit)
@@ -85,7 +85,7 @@ pdfService:
     #  in the stated order, starting from the top, until one match
     # If none match, we use the __default__ value.
     # If the __default__ value is not used, we fail...
-    999aToApronType:
+    apronTypeMapper:
 
 
       #I mit hoved så gælder følgende per fysisk post: DILA/LOHA mener der også bør skelnes mellem A og B forklæder i DOD:
@@ -98,33 +98,28 @@ pdfService:
       #
       #Danskkvindehistoriskkulturarv mangler afklaring hos LOHA.
 
-      #9) før 2021 DOD A forklæde fra 1903-1910
-      #
-      #113418012891 findes  i sandkassen http://devel12.statsbiblioteket.dk:8211/pdf-service/api/getPdf/113418012891-color.pdf FEJLER viser B skulle have været A
-      #
+
       #10 før 2021 DOD A forklæde fra 1896-1897
       #
       #130022885783  findes  i sandkassen http://devel12.statsbiblioteket.dk:8211/pdf-service/api/getPdf/130022885783-color.pdf  FEJLER viser B skulle have været A
 
-      # Alle ældre poster, som ikke har et 999a felt, men typisk et 997a felt, får alle samme forklæde A.
-      #        TODO A or B depending on 260c
-#      - 997a: "DOD"
-#        type: A or B
-      # if 999a contains DOD, use apron A or B
+      - 997a: "DOD"
+        apronWithinCopyright: A
+        apronOutOfCopyright: B
+
       - 999a: "DOD"
-        type: A # or B
+        apronWithinCopyright: A
+        apronOutOfCopyright: B
 
-      # For alle fysiske poster med 999a ( findes kun på pdf’er fra og med 2021),
-      # laves der forskellige forklæder A (DOD) eller B (1600talsKUM m.fl.) eller C (Teatermanus)
-      # - alt afhængig af for hvilken ”Electronic Collection” der står i 999a.
-
-      # if 999a contains Teatermanus, use apron C
       - 999a: "Teatermanus"
-        type: C
+        apronWithinCopyright: C
+        apronOutOfCopyright: C
 
-      # If no other values match, but 999a is not empty, use Apron B
-      - 999a: __default__
-        type: B
+
+      # If no other values match, use Apron B
+      - __default__: "Value here does not matter"
+        apronWithinCopyright: B
+        apronOutOfCopyright: B
 
 
   #  Where original PDFs are read from
@@ -136,9 +131,9 @@ pdfService:
   # This ensures that updates to ALMA will tage effect (after a while)
   # Note that if this age is SHORTER than the alma.cache_timeout, the cached ALMA record
   # will be used, which defeats the purpose....
-  maxAgeOfTempPdfsInMinutes: # TODO naming minutes...
-    value: 5
-    unit: SECONDS
+  maxAgeOfTempPdfs:
+    value: 24
+    unit: HOURS
     # unit can be one of NANOS, MICROS, MILLIS, SECONDS, MINUTES, HOURS, HALF_DAYS
 
   # When inserting new front page, we search for old frontpages to remove

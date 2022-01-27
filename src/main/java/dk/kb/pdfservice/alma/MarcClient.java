@@ -1,11 +1,15 @@
 package dk.kb.pdfservice.alma;
 
 import dk.kb.alma.gen.bibs.Bib;
+import dk.kb.pdfservice.config.ApronMapping;
 import dk.kb.pdfservice.config.ServiceConfig;
 import dk.kb.pdfservice.webservice.exception.NotFoundServiceObjection;
 import dk.kb.util.other.StringListUtils;
 import dk.kb.util.xml.XPathSelector;
 import dk.kb.util.xml.XpathUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 
 import javax.annotation.Nonnull;
@@ -17,7 +21,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -27,6 +30,7 @@ import java.util.stream.Stream;
 
 public class MarcClient {
     
+    public static final Logger log = LoggerFactory.getLogger(MarcClient.class);
     
     @Nonnull
     public static PdfInfo getPdfInfo(String actualBarcode) {
@@ -41,16 +45,12 @@ public class MarcClient {
     
     
         RecordType recordType = getRecordType(marc21);
-        ApronType apronType = getApronType(marc21);
     
-        
         final LocalDate publicationDate = CopyrightLogic.getPublicationDate(bib, marc21, recordType);
         boolean isWithinCopyright = CopyrightLogic.isWithinCopyright(publicationDate);
         
-        
-        //if no 999a, not
-        //if digitised before 2021, it is Type A
-        
+        ApronType apronType = getApronType(marc21, isWithinCopyright);
+
         String authors = getAuthors(marc21, recordType);
         String title = getTitle(marc21, recordType);
         String alternativeTitle = getAlternativeTitle(marc21, recordType);
@@ -256,43 +256,48 @@ public class MarcClient {
     }
     
     
-    private static ApronType getApronType(Element marc21) {
-    
-        /**
-         * Der skelnes aktuelt  mellem 3 slags forklæder med forskellige brugsrettigheds tekster.
-         *
-         * 1)
-         * For alle fysiske poster med 999 a  ( findes kun på pdf’er fra og med 2021),  laves der forskellige forklæder A (DOD) eller B (1600talsKUM m.fl.) eller C (Teatermanus) - alt afhængig af for hvilken ”Electronic Collection” der står i 999 a.
-         * Er det ok at basere forklæde algoritmen på feltet 999 a ”Electronic Collection” - også fremover både på de elektroniske og fysiske poster?
-         * VGR: Ja
-         *
-         * 2)
-         *
-         * Vil de fysiske poster med felt 997 a DOD (og andre betegnelser) blive til 999 a DOD  fremover eller hvad planlægger i der skal ske med dem?
-         * VGR: De historiske 997 linier forventer hun ikke der bliver pillet ved, men der er ikke taget nogen endelig beslutning, hvad der skal ske. Men det ville være mærkeligt om man ville ændre noget på de historiske poster.
-         *
-         */
+    private static ApronType getApronType(Element marc21, boolean isWithinCopyright) {
+        
+        Set<String> tag997a = new HashSet<>(getStrings(marc21, "997", "a"));
         Set<String> tag999a = new HashSet<>(getStrings(marc21, "999", "a"));
     
         //This is an ordered map, so you can trust the iteration order
-        Map<String, ApronType> mappings = ServiceConfig.getApronTypeMapping();
-        ApronType defaultResult = ApronType.Unknown;
-        for (Map.Entry<String, ApronType> entry : mappings.entrySet()) {
-            String key = entry.getKey();
-            if (key.equals(ServiceConfig.EMPTY) && tag999a.isEmpty()){
-                return entry.getValue();
-            }
-            if (key.equals(ServiceConfig.DEFAULT)){
-                //Record the default value and continue.
-                //We will use the default value after this loop, if nothing matched before
-                defaultResult = entry.getValue();
-                continue;
-            }
-            if (tag999a.contains(key)){
-                return entry.getValue();
+        List<ApronMapping> mappings = ServiceConfig.getApronTypeMapping();
+        Pair<ApronType,ApronType> defaultResult = Pair.of(ApronType.Unknown, ApronType.Unknown);
+    
+        Pair<ApronType,ApronType> result = null;
+        outerloop:
+        for (ApronMapping mapping : mappings) {
+            switch (mapping.getField()) {
+                case "997a":
+                    if (tag997a.contains(mapping.getFieldValue())) {
+                        result = Pair.of(mapping.getApronWithinCopyright(),mapping.getApronOutsideCopyright() );
+                        break outerloop;
+                    }
+                    break;
+                case "999a":
+                    if (tag999a.contains(mapping.getFieldValue())) {
+                        result = Pair.of(mapping.getApronWithinCopyright(),mapping.getApronOutsideCopyright() );
+                        break outerloop;
+                    }
+                    break;
+                case ServiceConfig.DEFAULT:
+                    //Record the default value and continue.
+                    //We will use the default value after this loop, if nothing matched before
+                    defaultResult = Pair.of(mapping.getApronWithinCopyright(),mapping.getApronOutsideCopyright() );
+                    continue outerloop;
+                default:
+                    log.warn("Found unknown keyType {} when parsing Apron Mapping config",mapping.getField());
             }
         }
-        return defaultResult;
+        if (result == null){
+            result = defaultResult;
+        }
+        if (isWithinCopyright){
+            return result.getLeft();
+        } else {
+            return result.getRight();
+        }
     }
     
     
