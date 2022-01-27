@@ -23,8 +23,8 @@ public class PdfTitlePageInserter {
             pdfMergerUtility.addSource(resultingPdf);
             pdfMergerUtility.setDestinationStream(completePDF);
             //TODO Configurable memory settings
-            //Just use 100MBs and unlimited temp files
-            pdfMergerUtility.mergeDocuments(MemoryUsageSetting.setupMixed(1024 * 1024 * 100));
+            //Do NOT use main memory as we do not want to risk running out on many concurrent requests. Use unlimited temp files
+            pdfMergerUtility.mergeDocuments(MemoryUsageSetting.setupTempFileOnly());
             completePDF.flush(); //just in case it is not done automatically
     
             return completePDF.toInputStream();
