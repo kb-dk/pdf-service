@@ -1,7 +1,6 @@
 package dk.kb.pdfservice.titlepage;
 
 import dk.kb.pdfservice.config.ServiceConfig;
-import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -13,17 +12,13 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.imageio.ImageIO;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.stream.Collectors;
 
 public class PdfTitlePageCleaner {
     
@@ -88,7 +83,8 @@ public class PdfTitlePageCleaner {
     private static boolean compareImages(BufferedImage imgA, BufferedImage imgB) throws IOException {
         
         //TODO if we scale UP, we already know that this is a failure, as the reference images are SCALED DOWN versions of the apron
-        
+        //But do we know this in general?
+    
         imgA = scaleImage(imgA, imgB.getWidth(), imgB.getHeight()); //scale A to Bs size
         // By now, images are of same size
         
@@ -107,19 +103,29 @@ public class PdfTitlePageCleaner {
         // So total number of pixels = width * height *
         // 3
         double total_pixels = width * height * 3;
+    
+    
+        //TODO There MUST be a faster way to do this...
+        
+        //How to perhaps do it in java 17
+        //
+        //IntBuffer intBufferA = pixelsAsIntBuffer(imgA);
+        //ByteVector vectorA = IntVector.fromArray(IntVector.SPECIES_PREFERRED, intBufferA.array(), 0).reinterpretAsBytes();
+        //IntBuffer intBufferB = pixelsAsIntBuffer(imgB);
+        //ByteVector vectorB = IntVector.fromArray(IntVector.SPECIES_PREFERRED, intBufferB.array(), 0).reinterpretAsBytes();
+        //
+        //
+        //int vectorDifference = Arrays.stream(vectorA.sub(vectorB).abs().toIntArray()).sum();
         
         
+        
+        //Outer loop for rows(height)
         // treating images likely 2D matrix
-        
-        //There MUST be a faster way to do this...
-        // Outer loop for rows(height)
         for (int y = 0; y < height; y++) {
-            
+    
             // Inner loop for columns(width)
             for (int x = 0; x < width; x++) {
                 //We have to separate the colors, or otherwise red will matter more then blue which will matter more than gren
-                
-                //TODO read out the entire array and compare, do NOT do this
                 int rgbA = imgA.getRGB(x, y);
                 int rgbB = imgB.getRGB(x, y);
                 
@@ -138,7 +144,7 @@ public class PdfTitlePageCleaner {
                 // There are 255 values of pixels in total
                 double percentage
                         = (difference / total_pixels / 255) * 100;
-                if (percentage > 1.0){ //TODO configurable percentage
+                if (percentage > ServiceConfig.getOldHeaderImagesmMaxDifferenceAllowedForMatch() * 100) {
                     //If we reach above the threshold, just break rather than compare the rest of the image data
                     //The difference is only increasing so it will never get better
                     return false;

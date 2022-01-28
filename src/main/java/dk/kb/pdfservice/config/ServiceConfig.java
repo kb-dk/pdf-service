@@ -120,7 +120,11 @@ public class ServiceConfig {
     }
     
     public static File getOldHeaderImageDir() {
-        return new File(ServiceConfig.getConfig().getString("pdfService.oldHeaderImagesDir"));
+        return new File(ServiceConfig.getConfig().getString("pdfService.oldHeaderImages.imageDirectory"));
+    }
+    
+    public static Double getOldHeaderImagesmMaxDifferenceAllowedForMatch() {
+        return ServiceConfig.getConfig().getDouble("pdfService.oldHeaderImages.maxDifferenceAllowedForMatch");
     }
     
     private static List<BufferedImage> oldHeaderImages = null;

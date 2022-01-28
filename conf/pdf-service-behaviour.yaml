@@ -140,7 +140,11 @@ pdfService:
   # For each image extracted, compare it to each of the header images in this folder
   # We scale the extracted image to match the dimensions of the oldHeaderImages file
   # If the difference is below 1%, we call it a match
-  oldHeaderImagesDir: /home/dodpdfsv/services/conf/oldHeaderImages
+  oldHeaderImages:
+    imageDirectory: /home/dodpdfsv/services/conf/oldHeaderImages
+    # Percent difference between images before we regard them as different
+    # 1.0 is inverse colors. 0.0 pixel-perfect match.
+    maxDifferenceAllowedForMatch: 0.01
 
   # If a page did NOT match any of the header images above, we examine the text on the page
   # Some of the newer aprons are NOT static images with OCR, but actual PDF pages with correct text,
