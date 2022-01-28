@@ -259,6 +259,8 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     @Nonnull
     private StreamingOutput returnPdfFile(File readyPdfFile) throws IOException {
         //buffer the file here. This allows us to release any locks BEFORE the StreamingOutput is completely read
+        //TODO this could result in bad things for the 1+ GB files...
+        //TODO use DeferrredFileOutputStream here again...
         final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         try (InputStream pdfFile = new FileInputStream(readyPdfFile)) {
             IOUtils.copy(pdfFile, buffer);
