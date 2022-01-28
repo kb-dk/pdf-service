@@ -46,7 +46,8 @@ public class MarcClient {
     
         RecordType recordType = getRecordType(marc21);
     
-        final LocalDate publicationDate = CopyrightLogic.getPublicationDate(bib, marc21, recordType);
+        String publicationDateString = CopyrightLogic.getPublicationDateString(bib, marc21, recordType);
+        final LocalDate publicationDate = CopyrightLogic.getPublicationDate(publicationDateString);
         boolean isWithinCopyright = CopyrightLogic.isWithinCopyright(publicationDate);
         
         ApronType apronType = getApronType(marc21, isWithinCopyright);
@@ -57,8 +58,10 @@ public class MarcClient {
         String udgavebetegnelse = getUdgavebetegnelse(marc21, recordType);
         String placeAndYear = getPlaceAndYear(marc21, recordType);
         String size = getSize(marc21, recordType);
+        String keywords = getKeywords(marc21, recordType);
         
         //bib.getSuppressFromExternalSearch()
+        
         
         
         PdfInfo pdfInfo = new PdfInfo(authors,
@@ -69,11 +72,24 @@ public class MarcClient {
                                       size,
                                       apronType,
                                       publicationDate,
-                                      isWithinCopyright);
+                                      publicationDateString,
+                                      isWithinCopyright,
+                                      keywords);
         return pdfInfo;
     }
     
-   
+    private static String getKeywords(Element marc21, RecordType recordType) {
+    
+        List<String> tag653a = getStrings(marc21, "653", "a");
+        tag653a = joinIfEndingInColon(tag653a);
+    
+        return Stream.of(tag653a)
+                     .flatMap(Collection::stream)
+                     .filter(Objects::nonNull)
+                     .collect(Collectors.joining("; "));
+    }
+    
+    
     private static String getAuthors(Element marc21, RecordType recordType) {
         
         //https://sbprojects.statsbiblioteket.dk/pages/viewpage.action?pageId=103877561
@@ -231,8 +247,8 @@ public class MarcClient {
         //Addendum til ovenstående eksempel: Der stod faktisk "Folketeatret.", og det indgår IKKE
         // i den længere tekst. Det er en anden grund til at jeg fjerner afsluttende .
         
-        //Sammensæt med ; som adskillelse, fordi jeg syntes det ser pænere ud end ,
-        return String.join("; ", uniqueFields);
+        //Sammensæt med " " som adskillelse
+        return String.join(" ", uniqueFields);
     }
     
     

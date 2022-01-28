@@ -16,7 +16,6 @@ import org.apache.fop.apps.MimeConstants;
 import org.apache.fop.configuration.Configuration;
 import org.apache.fop.configuration.ConfigurationException;
 import org.apache.fop.configuration.DefaultConfigurationBuilder;
-import org.apache.fop.fonts.FontManager;
 import org.apache.fop.fonts.truetype.TTFFile;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.slf4j.Logger;
@@ -33,10 +32,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,24 +63,12 @@ public class PdfTitlePageCreator {
         
         try (ByteArrayOutputStream outStream = new ByteArrayOutputStream()) {
             FOUserAgent agent = fopFactory.newFOUserAgent();
-            FontManager fontManager = agent.getFontManager();
+
             //How to override the FOP logging
             //LoggingEventListener loggingEventListener = new LoggingEventListener();
             //agent.getEventBroadcaster().addEventListener(loggingEventListener);
-            if (pdfInfo.getAuthors() != null && !pdfInfo.getAuthors().isEmpty()) {
-                agent.setAuthor(pdfInfo.getAuthors());
-            }
-            if (pdfInfo.getTitle() != null && !pdfInfo.getTitle().isEmpty()) {
-                agent.setTitle(pdfInfo.getTitle());
-            }
-    
-            Date creationDate = new Date(pdfInfo.getPublicationDate().toEpochDay() * ChronoUnit.DAYS.getDuration().toMillis());
-            agent.setCreationDate(creationDate);
-            //agent.setCreator();
-            //agent.setProducer();
-            //agent.setKeywords(pdfInfo.getSubjects());
-            //agent.setSubject();
             
+        
             
             Fop fop = fopFactory.newFop(MimeConstants.MIME_PDF, agent, outStream);
             
@@ -113,14 +97,19 @@ public class PdfTitlePageCreator {
                 Transformer xslfoTransformer = factory.newTransformer(new StreamSource(formatterStream,
                                                                                        formatterFile.toURI()
                                                                                                     .toASCIIString()));
-                
-                
-                List<String> info = List.of(fixChars(pdfInfo.getAuthors()),
-                                            fixChars(pdfInfo.getTitle()),
-                                            fixChars(pdfInfo.getAlternativeTitle()),
-                                            fixChars(pdfInfo.getUdgavebetegnelse()),
-                                            fixChars(pdfInfo.getPlaceAndYear()),
-                                            fixChars(pdfInfo.getSize()));
+    
+                //String resplaced = string.replaceAll("̈\u0308", "\u200B̈ \\1");
+                //String resplaced = string.replaceAll("̈\u0308", "\u200B̈ \\1");
+                //String resplaced = string.replaceAll("̈\u0308", "\u200B̈ \\1");
+                //String resplaced = string.replaceAll("̈\u0308", "\u200B̈ \\1");
+                //String resplaced = string.replaceAll("̈\u0308", "\u200B̈ \\1");
+                //String resplaced = string.replaceAll("̈\u0308", "\u200B̈ \\1");
+                List<String> info = List.of(pdfInfo.getAuthors(),
+                                            pdfInfo.getTitle(),
+                                            pdfInfo.getAlternativeTitle(),
+                                            pdfInfo.getUdgavebetegnelse(),
+                                            pdfInfo.getPlaceAndYear(),
+                                            pdfInfo.getSize());
                 int apronMetadataTableFontSize = ServiceConfig.getApronMetadataTableFontSize();
                 float apronMetadataTableWidthCm = ServiceConfig.getApronMetadataTableWidthCm();
                 info = enforceLimits(info,
@@ -135,8 +124,8 @@ public class PdfTitlePageCreator {
                 xslfoTransformer.setParameter("placeAndYear", info.get(4));
                 xslfoTransformer.setParameter("size", info.get(5));
                 xslfoTransformer.setParameter("documentType", pdfInfo.getApronType().name());
-    
-    
+                
+                
                 xslfoTransformer.setParameter("metadataTableFont",
                                               Objects.requireNonNull(ServiceConfig.getApronMetadataTableFont())
                                                      .getFullName());
@@ -151,11 +140,6 @@ public class PdfTitlePageCreator {
             outStream.flush(); //just in case it is not done automatically
             return outStream.toInputStream();
         }
-    }
-    
-    private static String fixChars(String string) {
-        //String resplaced = string.replaceAll("̈\u0308", "\u200B̈ \\1");
-        return string;
     }
     
     protected static List<String> enforceLimits(List<String> info,

@@ -18,29 +18,35 @@ public class PdfInfo {
     private final String placeAndYear;
     private final String size;
     private final LocalDate publicationDate;
+    private final String publicationDateString;
     private final boolean isWithinCopyright;
     private final ApronType apronType;
+    private final String keywords;
     
     
     public PdfInfo(
-            @JsonProperty("authors")String authors,
-            @JsonProperty("title")String title,
-            @JsonProperty("alternativeTitle")String alternativeTitle,
-            @JsonProperty("udgavebetegnelse")String udgavebetegnelse,
-            @JsonProperty("placeAndYear")String placeAndYear,
-            @JsonProperty("size")String size,
-            @JsonProperty("apronType")ApronType apronType,
-            @JsonProperty("publicationDate")LocalDate publicationDate,
-            @JsonProperty("isWithinCopyright")boolean isWithinCopyright) {
+            @JsonProperty("authors") String authors,
+            @JsonProperty("title") String title,
+            @JsonProperty("alternativeTitle") String alternativeTitle,
+            @JsonProperty("udgavebetegnelse") String udgavebetegnelse,
+            @JsonProperty("placeAndYear") String placeAndYear,
+            @JsonProperty("size") String size,
+            @JsonProperty("apronType") ApronType apronType,
+            @JsonProperty("publicationDate") LocalDate publicationDate,
+            @JsonProperty("publicationDateString") String publicationDateString,
+            @JsonProperty("isWithinCopyright") boolean isWithinCopyright,
+            @JsonProperty("subjects")String keywords) {
         this.authors           = authors;
         this.title             = title;
         this.alternativeTitle  = alternativeTitle;
-        this.udgavebetegnelse = udgavebetegnelse;
-        this.placeAndYear     = placeAndYear;
-        this.size            = size;
-        this.apronType       = apronType;
-        this.publicationDate = publicationDate;
+        this.udgavebetegnelse  = udgavebetegnelse;
+        this.placeAndYear      = placeAndYear;
+        this.size              = size;
+        this.apronType         = apronType;
+        this.publicationDate   = publicationDate;
+        this.publicationDateString = publicationDateString;
         this.isWithinCopyright = isWithinCopyright;
+        this.keywords          = keywords;
     }
     
     public String getAuthors() {
@@ -71,6 +77,14 @@ public class PdfInfo {
         return publicationDate;
     }
     
+    public String getPublicationDateString() {
+        return publicationDateString;
+    }
+    
+    public String getKeywords() {
+        return keywords;
+    }
+    
     public boolean isWithinCopyright() {
         return isWithinCopyright;
     }
@@ -86,13 +100,13 @@ public class PdfInfo {
                ", title='" + title + '\'' +
                ", alternativeTitle='" + alternativeTitle + '\'' +
                ", udgavebetegnelse='" + udgavebetegnelse + '\'' +
-               ", place='" + placeAndYear + '\'' +
+               ", placeAndYear='" + placeAndYear + '\'' +
                ", size='" + size + '\'' +
                ", publicationDate=" + publicationDate +
+               ", publicationDateString='" + publicationDateString + '\'' +
                ", isWithinCopyright=" + isWithinCopyright +
-               ", documentType=" + apronType +
+               ", apronType=" + apronType +
+               ", keywords='" + keywords + '\'' +
                '}';
     }
-    
-    
 }

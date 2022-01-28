@@ -82,8 +82,20 @@ public class CopyrightLogic {
                                 .isAfter(LocalDate.now(ZoneId.systemDefault()));
     }
     
-    protected static LocalDate getPublicationDate(Bib bib, Element marc21, RecordType recordType) {
-        
+    protected static LocalDate getPublicationDate(String dateField) {
+    
+        log.debug("input date is {}", dateField);
+        LocalDate parsedDate;
+        if (dateField == null) {
+            parsedDate = LocalDate.now(ZoneId.systemDefault());
+        } else {
+            parsedDate = parseDate(dateField);
+        }
+        log.info("Input date {} parsed to {}", dateField, parsedDate);
+        return parsedDate;
+    }
+    
+    protected static String getPublicationDateString(Bib bib, Element marc21, RecordType recordType) {
         final String dateOfPublication = bib.getDateOfPublication();
         log.debug("Alma dateOfPublication (should correspond to marc008) {}",dateOfPublication);
         
@@ -103,16 +115,7 @@ public class CopyrightLogic {
                           .findFirst();
         
         final String dateField = premiere.orElse(tag260c.orElse(dateOfPublication));
-        
-        log.debug("input date is {}", dateField);
-        LocalDate parsedDate;
-        if (dateField == null) {
-            parsedDate = LocalDate.now(ZoneId.systemDefault());
-        } else {
-            parsedDate = parseDate(dateField);
-        }
-        log.info("Input date {} parsed to {}", dateField, parsedDate);
-        return parsedDate;
+        return dateField;
     }
     
     @Nullable

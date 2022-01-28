@@ -15,12 +15,12 @@ import dk.kb.pdfservice.utils.PdfUtils;
 import dk.kb.pdfservice.webservice.exception.InternalServiceObjection;
 import dk.kb.pdfservice.webservice.exception.NotFoundServiceObjection;
 import dk.kb.pdfservice.webservice.exception.ServiceObjection;
-import dk.kb.util.json.JSON;
 import dk.kb.util.other.NamedThread;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -188,13 +188,13 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         String barcode = sourcePdfFile.getName().split("[-._]", 2)[0];
         PdfInfo pdfInfo = MarcClient.getPdfInfo(barcode);
     
-        System.out.println(JSON.toJson(pdfInfo));
+        //System.out.println(JSON.toJson(pdfInfo));
         //TODO suppressed records should be available?
     
         //TODO configurable produceApron module, so we can insert another
         try (InputStream apronFile = produceApron(pdfFileString, pdfInfo);
-             InputStream requestedPDF = transformPdfFile(sourcePdfFile, pdfInfo);
-             InputStream completePDF = PdfTitlePageInserter.mergeFrontPageWithPdf(apronFile, requestedPDF);
+             ClosablePair<InputStream,PDDocumentInformation> requestedPDF = cleanOldApronPages(sourcePdfFile, pdfInfo);
+             InputStream completePDF = PdfTitlePageInserter.mergeApronWithPdf(apronFile, requestedPDF.getLeft(), requestedPDF.getRight(), pdfInfo);
              OutputStream pdfFileOnDisk = new FileOutputStream(readyPdfFile)) {
             log.debug("Finished merging documents for {}", pdfFileString);
             IOUtils.copy(completePDF, pdfFileOnDisk);
@@ -277,9 +277,11 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         return apronFile;
     }
     
-    private InputStream transformPdfFile(File pdfFile, PdfInfo pdfInfo) throws IOException {
+    private ClosablePair<InputStream, PDDocumentInformation> cleanOldApronPages(File pdfFile, PdfInfo pdfInfo) throws IOException {
         InputStream requestedPDF;
+        PDDocumentInformation pdfMetadata;
         try (PDDocument pdDocument = PdfUtils.openDocument(new FileInputStream(pdfFile))) {
+            pdfMetadata = pdDocument.getDocumentInformation();
             PdfTitlePageCleaner.cleanHeaderPages(pdDocument);
             if (pdfInfo.getApronType() == ApronType.C) {
                 log.info("Starting to insert footers for {}", pdfFile);
@@ -288,7 +290,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
             }
             requestedPDF = PdfUtils.dumpDocument(pdDocument);
         }
-        return requestedPDF;
+        return ClosablePair.of(requestedPDF, pdfMetadata);
     }
     
     
