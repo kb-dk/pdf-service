@@ -133,16 +133,25 @@ pdfService:
   #  Where original PDFs are read from
   PDFsource:
     - "/data1/e-mat/dod"
-  #  Where generated PDFs are stored
-  PDFTempFolder: "/home/dodpdfsv/temp/"
-  # If copyrighted PDF is older than this age, request ALMA data and create it again
-  # This ensures that updates to ALMA will tage effect (after a while)
-  # Note that if this age is SHORTER than the alma.cache_timeout, the cached ALMA record
-  # will be used, which defeats the purpose....
-  maxAgeOfTempPdfs:
-    value: 24
-    unit: HOURS
-    # unit can be one of NANOS, MICROS, MILLIS, SECONDS, MINUTES, HOURS, HALF_DAYS
+
+  temp:
+    #  Where temporary files are stored when we unload them from memopry
+    folder: "/home/dodpdfsv/temp/"
+    #PDFs above this size will be spilled to disk, rather than kept in memory when being built
+    threshold: 10485760 # bytes 1048576 = 1MB:
+
+
+  cache:
+    #  Where generated PDFs are stored
+    cacheFolder: "/home/dodpdfsv/cache/"
+    # If copyrighted PDF is older than this age, request ALMA data and create it again
+    # This ensures that updates to ALMA will tage effect (after a while)
+    # Note that if this age is SHORTER than the alma.cache_timeout, the cached ALMA record
+    # will be used, which defeats the purpose....
+    maxAgeOfCachedPdfs:
+      value: 24
+      unit: HOURS
+      # unit can be one of NANOS, MICROS, MILLIS, SECONDS, MINUTES, HOURS, HALF_DAYS
 
   # When inserting new front page, we search for old frontpages to remove
   # As soon as we find a page that is NOT a frontpage, we stop the search. So there

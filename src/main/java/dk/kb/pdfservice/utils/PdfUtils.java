@@ -1,6 +1,8 @@
 package dk.kb.pdfservice.utils;
 
-import org.apache.commons.io.output.ByteArrayOutputStream;
+import dk.kb.pdfservice.config.ServiceConfig;
+import org.apache.commons.io.input.ProxyInputStream;
+import org.apache.commons.io.output.DeferredFileOutputStream;
 import org.apache.fop.fonts.truetype.OFMtxEntry;
 import org.apache.fop.fonts.truetype.TTFFile;
 import org.apache.pdfbox.io.RandomAccessBufferedFileInputStream;
@@ -9,9 +11,12 @@ import org.apache.pdfbox.pdfparser.PDFParser;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 
 public class PdfUtils {
@@ -24,10 +29,24 @@ public class PdfUtils {
         return parser.getPDDocument();
     }
     
-    public static InputStream dumpDocument(PDDocument pdDocument) throws IOException {
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        pdDocument.save(new BufferedOutputStream(output));
-        return output.toInputStream();
+    public static InputStream dumpDocument(PDDocument pdDocument, String name) throws IOException {
+        Path tempFile = Files.createTempFile(ServiceConfig.getTempPath(), name, ".pdf");
+        
+        DeferredFileOutputStream output = new DeferredFileOutputStream(ServiceConfig.getTempThresholdBytes(),
+                                                                       tempFile.toFile());
+        try (output) {
+            pdDocument.save(new BufferedOutputStream(output));
+        }
+        
+        return new ProxyInputStream(new BufferedInputStream(output.toInputStream())) {
+            @Override
+            public void close() throws IOException {
+                super.close();
+                // Deletes the spilled file, if nessesary
+                //file is never null, as we specify the exact file in the constructor above
+                Files.deleteIfExists(output.getFile().toPath());
+            }
+        };
     }
     
     public static float calculateTextLengthPixelsPdfBox(String text,
@@ -56,7 +75,7 @@ public class PdfUtils {
             return 0;
         }
         //TODO do NOT do this for each invocation
-       
+        
         float stringWidth;
         try {
             int sum = text.codePoints().map(codepoint -> fontWidthMap.get(codepoint).getWx()).sum();

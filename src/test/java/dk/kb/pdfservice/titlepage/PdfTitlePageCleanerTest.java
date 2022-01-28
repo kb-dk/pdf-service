@@ -1,24 +1,16 @@
 package dk.kb.pdfservice.titlepage;
 
-import dk.kb.pdfservice.alma.ApronType;
 import dk.kb.pdfservice.config.ServiceConfig;
-import dk.kb.pdfservice.footer.CopyrightFooterInserter;
 import dk.kb.pdfservice.utils.PdfUtils;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class PdfTitlePageCleanerTest {
     
@@ -40,7 +32,7 @@ class PdfTitlePageCleanerTest {
             int numPagesAfter = pdDocument.getNumberOfPages();
             //TODO assert based on pages removed...
             
-            try (InputStream requestedPDF = PdfUtils.dumpDocument(pdDocument)) {
+            try (InputStream requestedPDF = PdfUtils.dumpDocument(pdDocument, testfile)) {
                 Files.copy(requestedPDF, Path.of("test.pdf"), StandardCopyOption.REPLACE_EXISTING);
             }
         }

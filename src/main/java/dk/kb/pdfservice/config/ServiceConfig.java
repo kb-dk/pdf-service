@@ -99,16 +99,25 @@ public class ServiceConfig {
         return getConfig().getList("pdfService.PDFsource");
     }
     
-    public static String getPdfTempPath() {
-        return getConfig().getString("pdfService.PDFTempFolder");
+    public static Path getTempPath() {
+        return Path.of(getConfig().getString("pdfService.temp.folder"));
+    }
+    
+    public static int getTempThresholdBytes() {
+        return getConfig().getInteger("pdfService.temp.threshold");
+    }
+    
+    
+    public static String getPdfCachePath() {
+        return getConfig().getString("pdfService.cache.cacheFolder");
     }
     
     public static TemporalAmount getMaxAgeTempPdf() {
         @NotNull Integer value = getConfig().getInteger(
-                "pdfService.maxAgeOfTempPdfs.value");
+                "pdfService.cache.maxAgeOfCachedPdfs.value");
         
         String unit = getConfig().getString(
-                "pdfService.maxAgeOfTempPdfs.unit");
+                "pdfService.cache.maxAgeOfCachedPdfs.unit");
         return Duration.of(value, ChronoUnit.valueOf(unit));
         
     }
@@ -300,4 +309,5 @@ public class ServiceConfig {
     public static String getPrimoLink(String mmsId) {
         return getConfig().getString("pdfService.primo.host")+getConfig().getString("pdfService.primo.path")+mmsId + getConfig().getString("pdfService.primo.postfix");
     }
+    
 }

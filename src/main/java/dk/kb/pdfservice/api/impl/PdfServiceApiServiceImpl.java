@@ -45,6 +45,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.time.Instant;
 import java.time.temporal.TemporalAmount;
 import java.util.List;
@@ -124,7 +125,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         try (NamedThread namedThread = NamedThread.postfix(requestedPdfFile)) {
     
             //This is the file to return to the use user. It might not exist yet
-            File copyrightedPdfFile = getTempFile(requestedPdfFile);
+            File copyrightedPdfFile = getCacheFile(requestedPdfFile);
     
             //1. Lock for this filename, so only one user can use it
             final ReadWriteLock readWriteLock = stripedLock.get(requestedPdfFile);
@@ -133,16 +134,16 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
             readWriteLock.readLock().lock();
             //state: w=0,r=1
             try {
-                boolean useTempPdf = canUseTempPdf(copyrightedPdfFile);
+                boolean useCachePdf = canUseCachePdf(copyrightedPdfFile);
         
                 //The copyrighted PDF is not usable, so it must be regenerated
-                if (!useTempPdf) {
+                if (!useCachePdf) {
             
                     upgradeToWriteLock(readWriteLock);
                     //state: w=1,r=0,
                     try {
                         //recheck that somebody did not update the pdf beneath us while we were waiting for the write lock
-                        if (!canUseTempPdf(copyrightedPdfFile)) {
+                        if (!canUseCachePdf(copyrightedPdfFile)) {
                             //recreate the copyrighted PDF
                             createCopyrightedPDF(requestedPdfFile, copyrightedPdfFile);
                         }
@@ -188,18 +189,25 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         String barcode = sourcePdfFile.getName().split("[-._]", 2)[0];
         PdfInfo pdfInfo = MarcClient.getPdfInfo(barcode);
     
-        //System.out.println(JSON.toJson(pdfInfo));
-        //TODO suppressed records should be available?
-    
-        //TODO configurable produceApron module, so we can insert another
-        try (InputStream apronFile = produceApron(pdfFileString, pdfInfo);
-             ClosablePair<InputStream,PDDocumentInformation> requestedPDF = cleanOldApronPages(sourcePdfFile, pdfInfo);
-             InputStream completePDF = PdfTitlePageInserter.mergeApronWithPdf(apronFile, requestedPDF.getLeft(), requestedPDF.getRight(), pdfInfo);
-             OutputStream pdfFileOnDisk = new FileOutputStream(readyPdfFile)) {
-            log.debug("Finished merging documents for {}", pdfFileString);
-            IOUtils.copy(completePDF, pdfFileOnDisk);
-            log.info("Finished returning pdf {}", pdfFileString);
-        } catch (IOException e) {
+        try {
+            Files.createDirectories(readyPdfFile.getParentFile().toPath());
+            
+            //System.out.println(JSON.toJson(pdfInfo));
+            //TODO suppressed records should be available?
+            //TODO configurable produceApron module, so we can insert another
+            try (InputStream apronFile = produceApron(pdfFileString, pdfInfo);
+                 ClosablePair<InputStream, PDDocumentInformation> requestedPDF = cleanOldApronPages(sourcePdfFile,
+                                                                                                    pdfInfo);
+                 InputStream completePDF = PdfTitlePageInserter.mergeApronWithPdf(apronFile,
+                                                                                  requestedPDF.getLeft(),
+                                                                                  requestedPDF.getRight(),
+                                                                                  pdfInfo);
+                 OutputStream pdfFileOnDisk = new FileOutputStream(readyPdfFile)) {
+                log.debug("Finished merging documents for {}", pdfFileString);
+                IOUtils.copy(completePDF, pdfFileOnDisk);
+                log.info("Finished returning pdf {}", pdfFileString);
+            }
+        }catch (IOException e) {
             log.error("Failed for {}", pdfFileString, e);
             object(() -> new InternalServiceObjection("Unknown failure for " + pdfFileString, e));
         }
@@ -221,12 +229,12 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     }
     
     
-    private File getTempFile(String requestedPdfFile) {
+    private File getCacheFile(String requestedPdfFile) {
         File file = new File(requestedPdfFile);
-        return new File(ServiceConfig.getPdfTempPath(), file.getName());
+        return new File(ServiceConfig.getPdfCachePath(), file.getName());
     }
     
-    private boolean canUseTempPdf(File readyPdfFile) {
+    private boolean canUseCachePdf(File readyPdfFile) {
         
         //2. Check if file exists
         if (isUsable(readyPdfFile)) {
@@ -288,7 +296,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                 CopyrightFooterInserter.insertCopyrightFooter(pdDocument);
                 log.info("Finished inserting footers for {}", pdfFile);
             }
-            requestedPDF = PdfUtils.dumpDocument(pdDocument);
+            requestedPDF = PdfUtils.dumpDocument(pdDocument,pdfFile.getName());
         }
         return ClosablePair.of(requestedPDF, pdfMetadata);
     }
