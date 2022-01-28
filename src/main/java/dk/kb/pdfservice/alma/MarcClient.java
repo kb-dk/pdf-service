@@ -1,6 +1,7 @@
 package dk.kb.pdfservice.alma;
 
 import dk.kb.alma.gen.bibs.Bib;
+import dk.kb.alma.gen.items.Item;
 import dk.kb.pdfservice.config.ApronMapping;
 import dk.kb.pdfservice.config.ServiceConfig;
 import dk.kb.pdfservice.webservice.exception.NotFoundServiceObjection;
@@ -34,9 +35,11 @@ public class MarcClient {
     
     @Nonnull
     public static PdfInfo getPdfInfo(String actualBarcode) {
-        Bib bib = AlmaLookupClient.getBib(actualBarcode);
+        Pair<Bib, Item> bibItem = AlmaLookupClient.getBib(actualBarcode);
         //Portfolios portFolios = almaInventoryClient.getBibPortfolios(mmsID);
-    
+        Bib bib = bibItem.getLeft();
+        Item item = bibItem.getRight();
+        
         Element marc21 = bib.getAnies()
                             .stream()
                             .filter(element -> Objects.equals(element.getLocalName(), "record"))
@@ -60,6 +63,7 @@ public class MarcClient {
         String size = getSize(marc21, recordType);
         String keywords = getKeywords(marc21, recordType);
         
+        String volume = item.getItemData().getDescription();
         //bib.getSuppressFromExternalSearch()
         
         
@@ -68,6 +72,7 @@ public class MarcClient {
                                       title,
                                       alternativeTitle,
                                       udgavebetegnelse,
+                                      volume,
                                       placeAndYear,
                                       size,
                                       apronType,

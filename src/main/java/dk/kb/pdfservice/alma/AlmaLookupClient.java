@@ -4,6 +4,7 @@ import dk.kb.alma.client.AlmaInventoryClient;
 import dk.kb.alma.gen.bibs.Bib;
 import dk.kb.alma.gen.items.Item;
 import dk.kb.pdfservice.config.ServiceConfig;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class AlmaLookupClient {
     
@@ -15,7 +16,7 @@ public class AlmaLookupClient {
     }
     
     
-    public static Bib getBib(String actualBarcode) {
+    public static Pair<Bib,Item> getBib(String actualBarcode) {
     
         //TODO perhaps perform an SRU search, possible for the entire URL here
         //TODO an SRU search would be slower, but it would get the MARC21 directly rather than through a second call
@@ -25,6 +26,6 @@ public class AlmaLookupClient {
         
         String mmsID = item.getBibData().getMmsId();
         Bib bib = almaInventoryClient.getBib(mmsID);
-        return bib;
+        return Pair.of(bib,item);
     }
 }

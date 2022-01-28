@@ -15,6 +15,7 @@ public class PdfInfo {
     private final String title;
     private final String alternativeTitle;
     private final String udgavebetegnelse;
+    private final String volume;
     private final String placeAndYear;
     private final String size;
     private final LocalDate publicationDate;
@@ -29,6 +30,7 @@ public class PdfInfo {
             @JsonProperty("title") String title,
             @JsonProperty("alternativeTitle") String alternativeTitle,
             @JsonProperty("udgavebetegnelse") String udgavebetegnelse,
+            @JsonProperty("volume") String volume,
             @JsonProperty("placeAndYear") String placeAndYear,
             @JsonProperty("size") String size,
             @JsonProperty("apronType") ApronType apronType,
@@ -36,17 +38,19 @@ public class PdfInfo {
             @JsonProperty("publicationDateString") String publicationDateString,
             @JsonProperty("isWithinCopyright") boolean isWithinCopyright,
             @JsonProperty("subjects")String keywords) {
-        this.authors           = authors;
-        this.title             = title;
-        this.alternativeTitle  = alternativeTitle;
-        this.udgavebetegnelse  = udgavebetegnelse;
-        this.placeAndYear      = placeAndYear;
-        this.size              = size;
-        this.apronType         = apronType;
-        this.publicationDate   = publicationDate;
+        this.authors               = authors;
+        this.title                 = title;
+        this.alternativeTitle      = alternativeTitle;
+        this.udgavebetegnelse      = udgavebetegnelse;
+        this.volume                = volume;
+        this.placeAndYear          = placeAndYear;
+        this.size                  = size;
+        this.apronType             = apronType;
+        this.publicationDate       = publicationDate;
         this.publicationDateString = publicationDateString;
-        this.isWithinCopyright = isWithinCopyright;
-        this.keywords          = keywords;
+        this.isWithinCopyright     = isWithinCopyright;
+        this.keywords              = keywords;
+        
     }
     
     public String getAuthors() {
@@ -63,6 +67,9 @@ public class PdfInfo {
     
     public String getUdgavebetegnelse() {
         return udgavebetegnelse;
+    }
+    public String getVolume() {
+        return volume;
     }
     
     public String getPlaceAndYear() {
@@ -100,6 +107,7 @@ public class PdfInfo {
                ", title='" + title + '\'' +
                ", alternativeTitle='" + alternativeTitle + '\'' +
                ", udgavebetegnelse='" + udgavebetegnelse + '\'' +
+               ", volume='" + volume + '\'' +
                ", placeAndYear='" + placeAndYear + '\'' +
                ", size='" + size + '\'' +
                ", publicationDate=" + publicationDate +

@@ -23,6 +23,9 @@
     <!--DocumentType can be one of A,B,C,D,E,.... Currently only A,B,C is used-->
     <xsl:param name="documentType" as="xs:string"/>
 
+    <xsl:param name="volume" as="xs:string"/>
+
+
     <xsl:param name="metadataTableFont" as="xs:string"/>
     <xsl:param name="metadataTableFontSize" as="xs:string"/>
     <xsl:param name="metadataTableWidth" as="xs:string"/>
@@ -238,6 +241,23 @@
                                                        text-align="left" font-weight="normal">
                                             <fo:block>
                                                 <xsl:value-of select="$edition"/>
+                                            </fo:block>
+                                        </fo:table-cell>
+                                    </fo:table-row>
+                                </xsl:if>
+
+                                <xsl:if test="$volume != ''">
+                                    <fo:table-row>
+                                        <fo:table-cell border="solid 0px black"
+                                                       text-align="left" font-weight="normal">
+                                            <fo:block>
+                                                Bindbetegnelse | Volume Statement:
+                                            </fo:block>
+                                        </fo:table-cell>
+                                        <fo:table-cell border="solid 0px black"
+                                                       text-align="left" font-weight="normal">
+                                            <fo:block>
+                                                <xsl:value-of select="$volume"/>
                                             </fo:block>
                                         </fo:table-cell>
                                     </fo:table-row>
