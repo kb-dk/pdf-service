@@ -1,5 +1,6 @@
 package dk.kb.pdfservice.alma;
 
+import com.google.common.collect.Sets;
 import dk.kb.alma.gen.bibs.Bib;
 import dk.kb.alma.gen.items.Item;
 import dk.kb.pdfservice.config.ApronMapping;
@@ -268,9 +269,10 @@ public class MarcClient {
     }
     
     private static RecordType getRecordType(Element marc21) {
-        //TODO make this configurable
+        Set<String> theatre999aValues = new HashSet<>(ServiceConfig.getTheatreCriteria());
+        //TODO Test if this works
         Set<String> tag999a = new HashSet<>(getStrings(marc21, "999", "a"));
-        if (tag999a.contains("Teatermanus") || tag999a.contains("TeatermanusudenOCR")){
+        if (!Sets.intersection(theatre999aValues,tag999a).isEmpty()){
             return RecordType.Teater;
         }
         return RecordType.Common;

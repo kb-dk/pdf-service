@@ -174,6 +174,12 @@ public class ServiceConfig {
     
     
     //FrontPage
+    public static List<String> getTheatreCriteria() {
+        return getConfig().getList("pdfService.theaterCriteria.999a");
+    }
+    
+    
+    //FrontPage
     public static Path getFrontPageFopFile() {
         return Path.of(getConfig().getString("pdfService.apron.FOPfile")).toAbsolutePath();
     }

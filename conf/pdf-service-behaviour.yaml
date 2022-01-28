@@ -118,6 +118,11 @@ pdfService:
         apronOutOfCopyright: B
 
 
+  theaterCriteria:
+    999a:
+      - Teatermanus
+      - TeatermanusudenOCR
+
   #  Where original PDFs are read from
   PDFsource:
     - "/data1/e-mat/dod"
