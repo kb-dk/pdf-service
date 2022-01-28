@@ -33,6 +33,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -75,7 +77,14 @@ public class PdfTitlePageCreator {
             if (pdfInfo.getTitle() != null && !pdfInfo.getTitle().isEmpty()) {
                 agent.setTitle(pdfInfo.getTitle());
             }
-            agent.setCreationDate(new Date(pdfInfo.getPublicationDate().toEpochDay()));
+    
+            Date creationDate = new Date(pdfInfo.getPublicationDate().toEpochDay() * ChronoUnit.DAYS.getDuration().toMillis());
+            agent.setCreationDate(creationDate);
+            //agent.setCreator();
+            //agent.setProducer();
+            //agent.setKeywords(pdfInfo.getSubjects());
+            //agent.setSubject();
+            
             
             Fop fop = fopFactory.newFop(MimeConstants.MIME_PDF, agent, outStream);
             
