@@ -52,6 +52,13 @@ alma:
 
 pdfService:
 
+  primo:
+#    host: "https://soeg.kbdk" # For production
+    host: "https://kbdk-kgl-psb.primo.exlibrisgroup.com" #Important, do not have double / between host and path
+    path: "/discovery/fulldisplay?docid=alma" #The mmsID is appended here
+    postfix: "&context=U&vid=45KBDK_KGL:KGL&lang=da"
+
+
   # This section controls the settings for the apron page
   apron:
     #This XSLT generates the frontpage

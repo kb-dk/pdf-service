@@ -296,4 +296,8 @@ public class ServiceConfig {
     public static File getFOPConfigFile() {
         return new File(ServiceConfig.getConfig().getString("pdfService.apron.FOPconfig")).getAbsoluteFile();
     }
+    
+    public static String getPrimoLink(String mmsId) {
+        return getConfig().getString("pdfService.primo.host")+getConfig().getString("pdfService.primo.path")+mmsId + getConfig().getString("pdfService.primo.postfix");
+    }
 }

@@ -67,7 +67,7 @@ public class MarcClient {
         String volume = item.getItemData().getDescription();
         //bib.getSuppressFromExternalSearch()
         
-        
+        String primoLink = ServiceConfig.getPrimoLink(bib.getMmsId());
         
         PdfInfo pdfInfo = new PdfInfo(authors,
                                       title,
@@ -80,7 +80,8 @@ public class MarcClient {
                                       publicationDate,
                                       publicationDateString,
                                       isWithinCopyright,
-                                      keywords);
+                                      keywords,
+                                      primoLink);
         return pdfInfo;
     }
     
@@ -270,7 +271,6 @@ public class MarcClient {
     
     private static RecordType getRecordType(Element marc21) {
         Set<String> theatre999aValues = new HashSet<>(ServiceConfig.getTheatreCriteria());
-        //TODO Test if this works
         Set<String> tag999a = new HashSet<>(getStrings(marc21, "999", "a"));
         if (!Sets.intersection(theatre999aValues,tag999a).isEmpty()){
             return RecordType.Teater;

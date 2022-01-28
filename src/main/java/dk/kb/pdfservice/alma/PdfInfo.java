@@ -23,6 +23,7 @@ public class PdfInfo {
     private final boolean isWithinCopyright;
     private final ApronType apronType;
     private final String keywords;
+    private final String primoLink;
     
     
     public PdfInfo(
@@ -37,7 +38,8 @@ public class PdfInfo {
             @JsonProperty("publicationDate") LocalDate publicationDate,
             @JsonProperty("publicationDateString") String publicationDateString,
             @JsonProperty("isWithinCopyright") boolean isWithinCopyright,
-            @JsonProperty("subjects")String keywords) {
+            @JsonProperty("keywords") String keywords,
+            @JsonProperty("primoLink") String primoLink) {
         this.authors               = authors;
         this.title                 = title;
         this.alternativeTitle      = alternativeTitle;
@@ -51,6 +53,7 @@ public class PdfInfo {
         this.isWithinCopyright     = isWithinCopyright;
         this.keywords              = keywords;
         
+        this.primoLink = primoLink;
     }
     
     public String getAuthors() {
@@ -98,6 +101,10 @@ public class PdfInfo {
     
     public ApronType getApronType() {
         return apronType;
+    }
+    
+    public String getPrimoLink() {
+        return primoLink;
     }
     
     @Override

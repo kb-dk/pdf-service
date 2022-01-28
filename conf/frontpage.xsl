@@ -25,6 +25,8 @@
 
     <xsl:param name="volume" as="xs:string"/>
 
+    <xsl:param name="primoLink" as="xs:string"/>
+
 
     <xsl:param name="metadataTableFont" as="xs:string"/>
     <xsl:param name="metadataTableFontSize" as="xs:string"/>
@@ -176,9 +178,10 @@
                         <fo:table table-layout="fixed" width="100%" border-collapse="separate">
                             <fo:table-column column-width="8.6cm"/>
                             <xsl:element name="table-column" namespace="http://www.w3.org/1999/XSL/Format">
-                                <xsl:attribute name="column-width"><xsl:value-of select="$metadataTableWidth"/>cm</xsl:attribute>
+                                <xsl:attribute name="column-width"><xsl:value-of select="$metadataTableWidth"/>cm
+                                </xsl:attribute>
                             </xsl:element>
-<!--                            <fo:table-column column-width="9cm"/>-->
+                            <!--                            <fo:table-column column-width="9cm"/>-->
                             <fo:table-body keep-together.within-page="always">
                                 <fo:table-row> <!--Forfattere-->
                                     <fo:table-cell border="solid 0px black" text-align="left" font-weight="normal">
@@ -206,7 +209,16 @@
                                     <fo:table-cell border="solid 0px black"
                                                    text-align="left" font-weight="normal">
                                         <fo:block>
-                                            <xsl:value-of select="$title"/>
+                                            <xsl:element name="basic-link"
+                                                         namespace="http://www.w3.org/1999/XSL/Format">
+                                                <xsl:attribute name="external-destination">
+                                                    <xsl:value-of select="$primoLink"/>
+                                                </xsl:attribute>
+                                                <xsl:attribute name="indicate-destination">true</xsl:attribute>
+                                                <fo:inline text-decoration="underline">
+                                                <xsl:value-of select="$title"/>
+                                                </fo:inline>
+                                            </xsl:element>
                                         </fo:block>
                                     </fo:table-cell>
                                 </fo:table-row>

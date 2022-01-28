@@ -126,8 +126,9 @@ public class PdfTitlePageCreator {
                 xslfoTransformer.setParameter("documentType", pdfInfo.getApronType().name());
     
                 xslfoTransformer.setParameter("volume", pdfInfo.getVolume());
-                
-                
+                xslfoTransformer.setParameter("primoLink", pdfInfo.getPrimoLink());
+    
+    
                 xslfoTransformer.setParameter("metadataTableFont",
                                               Objects.requireNonNull(ServiceConfig.getApronMetadataTableFont())
                                                      .getFullName());
