@@ -115,7 +115,7 @@
         </fo:block>
         <fo:block text-align="left" font-size="14pt">
             This manuscript is copyright protected and is only for personal use. However, you may also use the
-            manuscript in connection with the entrance exam at the Danish theatre schools.
+            manuscript when applying for enrolment at Danish schools of performing arts
         </fo:block>
         <fo:block text-align="left" font-size="14pt">
             If you want to perform the manuscript, you must have the consent of the copyright holder. In that regard,
