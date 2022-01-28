@@ -107,8 +107,11 @@ public class PdfTitlePageInserter {
         if (pdfInfo.getAuthors() != null && !pdfInfo.getAuthors().isEmpty()) {
             pddocInfo.setAuthor(pdfInfo.getAuthors());
         }
+    
+        if (pdfInfo.getVolume() != null && !pdfInfo.getVolume().isEmpty()) {
+            pddocInfo.setSubject(pdfInfo.getVolume());
+        }
         
-        //agent.setSubject();
         
         if (pdfInfo.getKeywords() != null && !pdfInfo.getKeywords().isEmpty()) {
             pddocInfo.setKeywords(pdfInfo.getKeywords());
