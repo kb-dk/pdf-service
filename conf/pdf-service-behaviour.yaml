@@ -91,9 +91,9 @@ pdfService:
 
       #I mit hoved så gælder følgende per fysisk post: DILA/LOHA mener der også bør skelnes mellem A og B forklæder i DOD:
       #
-      #hvis der er 1 997 a DOD så skal den have  hvis 1) trykkeår  er ældre end 140 = B forklæde  ellers ( hvis mellem 100-140 år)  A forklæde.
-      #Hvis der er 1 999 a DOD så skal den have  hvis 1) trykkeår  er ældre end 140 = B forklæde  ellers ( hvis mellem 100-140 år)  A forklæde.
-      #Hvis der er 1 999 a Teatermanus, så  skal den have forklæde C med footer.
+      #hvis der er 1 997 a DOD så skal den have hvis 1) trykkeår er ældre end 140 = B forklæde ellers A forklæde.
+      #Hvis der er 1 999 a DOD så skal den have hvis 1) trykkeår er ældre end 140 = B forklæde ellers A forklæde.
+      #Hvis der er 1 999 a Teatermanus, så skal den have 1) trykkeår er ældre end 140 = B forklæde ellers C forklæde.
       #Ellers alle andre skal have forklæde B
       #dvs. 1600talsKUM, 1600talsC8, TeatermanusudenOCR (Sufflør), Danskkvindehistoriskkulturarv, EOD  ( det har de i dag via Limb), samt alle dem som ikke matcher ovenstående
       #
@@ -109,7 +109,7 @@ pdfService:
 
       - 999a: "Teatermanus"
         apronWithinCopyright: C
-        apronOutOfCopyright: C
+        apronOutOfCopyright: B
 
 
       # If no other values match, use Apron B
@@ -175,7 +175,7 @@ pdfService:
     #TODO Font is Helvetica, which is unfortunately not configurable
 
     # See https://www.rapidtables.com/web/color/html-color-codes.html for possible values
-    Color: '#FF0000' # Red
+    Color: '#000000' # Black
     Transparency: 0.7 # Between 0.0 and 1.0. 1.0 is totally covering, i.e. not transparent. 0.0 is invisible
 
     Background:
