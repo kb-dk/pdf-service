@@ -1,0 +1,49 @@
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.0.0 http://maven.apache.org/xsd/assembly-2.0.0.xsd">
+
+    <id>package</id>
+    <formats>
+        <format>tar.gz</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
+
+    <fileSets>
+        <fileSet>
+            <outputDirectory>services/conf</outputDirectory>
+            <directory>conf/</directory>
+            <excludes>
+                <exclude>devel12/</exclude>
+                <exclude>ocp/</exclude>
+                <exclude>${project.artifactId}-local.yaml</exclude>
+                <exclude>${project.artifactId}-environment.yaml</exclude>
+            </excludes>
+        </fileSet>
+    </fileSets>
+    <files>
+        <file>
+            <outputDirectory>services/conf</outputDirectory>
+            <source>conf/devel12/fop.xconf</source>
+        </file>
+        <file>
+            <outputDirectory>services/conf</outputDirectory>
+            <source>conf/devel12/${project.artifactId}.xml</source>
+        </file>
+
+
+        <file>
+            <outputDirectory>services/tomcat-apps</outputDirectory>
+            <source>target/${project.artifactId}-${project.version}.war</source>
+        </file>
+
+        <file>
+            <outputDirectory>.</outputDirectory>
+            <source>README.md</source>
+        </file>
+        <file>
+            <outputDirectory>.</outputDirectory>
+            <source>CHANGELOG.md</source>
+        </file>
+
+    </files>
+</assembly>

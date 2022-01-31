@@ -460,7 +460,7 @@
                 <version>2.4</version>
                 <configuration>
                     <descriptors>
-                        <descriptor>src/main/assembly/build-scheme.xml</descriptor>
+                        <descriptor>src/main/assembly/assembly.xml</descriptor>
                     </descriptors>
                 </configuration>
                 <executions>
