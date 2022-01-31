@@ -62,7 +62,7 @@ class PdfTitlePageCreatorTest {
                        + "  \"withinCopyright\" : false\n"
                        + "}";
         PdfInfo pdfInfo = JSON.fromJson(json1, PdfInfo.class);
-        try (InputStream apronPage = PdfTitlePageCreator.produceHeaderPage(pdfInfo)) {
+        try (InputStream apronPage = PdfApronCreator.produceApronPage(pdfInfo)) {
             Files.copy(apronPage, Path.of("test.pdf"), StandardCopyOption.REPLACE_EXISTING);
         }
         //Höpffneri
@@ -70,9 +70,9 @@ class PdfTitlePageCreatorTest {
     
         List<String> info = List.of(pdfInfo.getAuthors(), pdfInfo.getTitle(), pdfInfo.getAlternativeTitle(),
                                     pdfInfo.getUdgavebetegnelse(), pdfInfo.getPlaceAndYear(), pdfInfo.getSize());
-        List<String> result = PdfTitlePageCreator.enforceLimits(info, pdfInfo.getApronType(),
-                                                                ServiceConfig.getApronMetadataTableFontSize(),
-                                                                ServiceConfig.getApronMetadataTableWidthCm());
+        List<String> result = PdfApronCreator.enforceLimits(info, pdfInfo.getApronType(),
+                                                            ServiceConfig.getApronMetadataTableFontSize(),
+                                                            ServiceConfig.getApronMetadataTableWidthCm());
         //Check that the system does not break itself on weird chars
         assertEquals("Hafnia :; Typis Directoris Sacr. Reg. Majestatis & Univ. Typogr. Joh. Georg Höpffneri,; 1754",  result.get(4));
     }
@@ -89,9 +89,9 @@ class PdfTitlePageCreatorTest {
                                           "[S.l.],; 1696",
                                           "[72] bl.");
     
-        List<String> resultingLines = PdfTitlePageCreator.enforceLimits(textBlocks, ApronType.B,
-                                                                        ServiceConfig.getApronMetadataTableFontSize(),
-                                                                        ServiceConfig.getApronMetadataTableWidthCm());
+        List<String> resultingLines = PdfApronCreator.enforceLimits(textBlocks, ApronType.B,
+                                                                    ServiceConfig.getApronMetadataTableFontSize(),
+                                                                    ServiceConfig.getApronMetadataTableWidthCm());
         assertEquals("Dero Königl. Majestät zu Dännemarck Norwegen, &c. &c. bestalten Raths, August Wygands, Entsetzter Vortrab, oder Kurtzer Anfang des künfftigen Beweises; Dass alles in ermeltem Vortrab enthalten (1.) die reine, lautere ... Warheit bleibe; (2.) Darin der ietzo prædominirenden Parthey des Hamburgischen Rahts nicht der tausendste Theil der in ihnen ... wohnenden Bossheit, noch weniger die bey dem gemeinen Gut in Hamburg vorgehende entsetzliche Diebereyen enthalten oder vorgestellet; Und (3.) das von ermelter Rahts-Parthey darwider ...",resultingLines.get(1));
         //System.out.println(resultingLines);
     }

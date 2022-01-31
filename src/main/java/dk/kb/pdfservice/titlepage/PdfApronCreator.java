@@ -38,11 +38,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class PdfTitlePageCreator {
+public class PdfApronCreator {
     
-    private static final Logger log = LoggerFactory.getLogger(PdfTitlePageCreator.class);
+    private static final Logger log = LoggerFactory.getLogger(PdfApronCreator.class);
     
-    public static InputStream produceHeaderPage(PdfInfo pdfInfo)
+    public static InputStream produceApronPage(PdfInfo pdfInfo)
             throws TransformerException, FOPException, IOException {
         File formatterFile = ServiceConfig.getFrontPageFopFile().toFile();
         

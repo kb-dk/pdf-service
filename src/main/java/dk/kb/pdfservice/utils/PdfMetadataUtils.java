@@ -1,10 +1,7 @@
-package dk.kb.pdfservice.titlepage;
+package dk.kb.pdfservice.utils;
 
 import dk.kb.pdfservice.alma.PdfInfo;
-import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.pdfbox.cos.COSStream;
-import org.apache.pdfbox.io.MemoryUsageSetting;
-import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.common.PDMetadata;
 import org.slf4j.Logger;
@@ -12,7 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -21,41 +17,10 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
-public class PdfTitlePageInserter {
+public class PdfMetadataUtils {
     
-    public static Logger log = LoggerFactory.getLogger(PdfTitlePageInserter.class);
+    public static Logger log = LoggerFactory.getLogger(PdfMetadataUtils.class);
     
-    public static InputStream mergeApronWithPdf(InputStream apronFile,
-                                                InputStream resultingPdf,
-                                                PDDocumentInformation origPdfMetadata,
-                                                PdfInfo pdfInfo)
-            throws IOException {
-        final var completePDF = new ByteArrayOutputStream();
-        PDFMergerUtility pdfMergerUtility = new PDFMergerUtility();
-        if (apronFile.available() > 0) {
-            pdfMergerUtility.addSource(apronFile);
-            pdfMergerUtility.addSource(resultingPdf);
-            pdfMergerUtility.setDestinationStream(completePDF);
-            
-            PDDocumentInformation pdDocumentInformation = constructPdfMetadata(pdfInfo, origPdfMetadata);
-            pdfMergerUtility.setDestinationDocumentInformation(pdDocumentInformation);
-    
-    
-            PDMetadata metadata = createXMPmetadata();
-            pdfMergerUtility.setDestinationMetadata(metadata);
-            
-            
-            //TODO Configurable memory settings
-            //Do NOT use main memory as we do not want to risk running out on many concurrent requests. Use unlimited temp files
-            pdfMergerUtility.mergeDocuments(MemoryUsageSetting.setupTempFileOnly());
-            completePDF.flush(); //just in case it is not done automatically
-            
-            return completePDF.toInputStream();
-        } else {
-            return resultingPdf;
-        }
-        
-    }
     
     @Nonnull
     private static PDMetadata createXMPmetadata() throws IOException {
@@ -84,7 +49,7 @@ public class PdfTitlePageInserter {
     }
     
     @Nonnull
-    private static PDDocumentInformation constructPdfMetadata(PdfInfo pdfInfo,
+    public static PDDocumentInformation constructPdfMetadata(PdfInfo pdfInfo,
                                                               PDDocumentInformation origPdfMetadata) {
         PDDocumentInformation pddocInfo = new PDDocumentInformation();
         

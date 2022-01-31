@@ -1,5 +1,7 @@
 package dk.kb.pdfservice.config;
 
+import com.google.common.util.concurrent.Striped;
+import com.google.common.util.concurrent.StripedFactory;
 import dk.kb.alma.client.AlmaRestClient;
 import dk.kb.pdfservice.alma.ApronType;
 import dk.kb.util.yaml.YAML;
@@ -29,6 +31,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReadWriteLock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -58,20 +64,60 @@ public class ServiceConfig {
         serviceConfig = YAML.resolveLayeredConfigs(configFile);
     }
     
-    public static void shutdown() {
-        //Anything to shut down here??
+    
+    private static ExecutorService
+            threadPool = null;
+    
+    public static synchronized ExecutorService getPdfBuildersThreadPool() {
+        if (threadPool == null) {
+            threadPool = Executors.newFixedThreadPool(ServiceConfig.getConcurrentPdfBuilds());
+        }
+        return threadPool;
     }
+    
+    public static void shutdown() {
+        if (threadPool != null) {
+            threadPool.shutdown();
+            try {
+                threadPool.awaitTermination(30, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                //ignore
+            } finally {
+                threadPool.shutdownNow();
+            }
+        }
+        
+    }
+    
+    /**
+     * Each key is mapped to as tripe. Num of stripes are the number of possible locks
+     * So this means that at most 1023 locks (i.e. different files) can be handled at the same time
+     * We do not use the special features of ReentrantLock, but it basically means that the same thread can lock a
+     * Reentrant Lock multiple times, and must unlock the same number of times to release it
+     * When fair=true locks favor granting access to the longest-waiting thread.
+     */
+    private static  Striped<ReadWriteLock> stripedLock = null;
+    
+    public static synchronized Striped<ReadWriteLock> getPdfServeLocks() {
+        if (stripedLock == null){
+            stripedLock
+                    = StripedFactory.readWriteLockLazyWeak(ServiceConfig.getConcurrentServes(), true);
+        }
+        return stripedLock;
+    }
+    
     
     public static final String DEFAULT = "__default__";
     
     private static List<ApronMapping> apronMappingList = null;
+    
     public static synchronized List<ApronMapping> getApronTypeMapping() {
         if (apronMappingList == null) {
             apronMappingList = new ArrayList<>();
-    
+            
             @NotNull List<YAML> entries = getConfig().getYAMLList("pdfService.apron.apronTypeMapper");
             for (YAML entry : entries) {
-        
+                
                 String keyType = "999a";
                 String key = entry.getString(keyType, null);
                 if (key == null) {
@@ -82,13 +128,13 @@ public class ServiceConfig {
                         key     = entry.getString(keyType, null);
                     }
                 }
-        
+                
                 String type1 = entry.getString("apronWithinCopyright", null);
                 ApronType value1 = ApronType.valueOf(type1);
-        
+                
                 String type2 = entry.getString("apronOutOfCopyright", null);
                 ApronType value2 = ApronType.valueOf(type2);
-        
+                
                 apronMappingList.add(new ApronMapping(keyType, key, value1, value2));
             }
         }
@@ -137,18 +183,19 @@ public class ServiceConfig {
     }
     
     private static List<BufferedImage> oldHeaderImages = null;
-    public static synchronized List<BufferedImage> getOldHeaderImages(){
+    
+    public static synchronized List<BufferedImage> getOldHeaderImages() {
         if (oldHeaderImages == null) {
             oldHeaderImages = FileUtils.listFiles(ServiceConfig.getOldHeaderImageDir(), new String[]{"png"}, false)
-                            .stream()
-                            .map(file -> {
-                                try {
-                                    return ImageIO.read(file);
-                                } catch (IOException e) {
-                                    throw new UncheckedIOException(e);
-                                }
-                            })
-                            .collect(Collectors.toList());
+                                       .stream()
+                                       .map(file -> {
+                                           try {
+                                               return ImageIO.read(file);
+                                           } catch (IOException e) {
+                                               throw new UncheckedIOException(e);
+                                           }
+                                       })
+                                       .collect(Collectors.toList());
         }
         return oldHeaderImages;
     }
@@ -269,6 +316,7 @@ public class ServiceConfig {
     }
     
     private static TTFFile ttfFile = null;
+    
     public static synchronized TTFFile getApronMetadataTableFont() {
         if (ttfFile == null) {
             File file = new File(getConfig().getString("pdfService.apron.metadataTable.fontFile")).getAbsoluteFile();
@@ -279,7 +327,7 @@ public class ServiceConfig {
                 String header = OFFontLoader.readHeader(reader);
                 boolean supported = ttfFile.readFont(reader, header, "name");
                 if (!supported) {
-                    log.warn("Font file {} cannot be read as a truetype font",file);
+                    log.warn("Font file {} cannot be read as a truetype font", file);
                     return null;
                 }
             } catch (IOException e) {
@@ -290,6 +338,7 @@ public class ServiceConfig {
     }
     
     private static Map<Integer, OFMtxEntry> fontWidthMap = null;
+    
     public static synchronized Map<Integer, OFMtxEntry> getFontWidthMap() {
         if (fontWidthMap == null) {
             fontWidthMap = Collections.unmodifiableMap(
@@ -307,7 +356,18 @@ public class ServiceConfig {
     }
     
     public static String getPrimoLink(String mmsId) {
-        return getConfig().getString("pdfService.primo.host")+getConfig().getString("pdfService.primo.path")+mmsId + getConfig().getString("pdfService.primo.postfix");
+        return getConfig().getString("pdfService.primo.host")
+               + getConfig().getString("pdfService.primo.path")
+               + mmsId
+               + getConfig().getString("pdfService.primo.postfix");
+    }
+    
+    public static int getConcurrentServes() {
+        return getConfig().getInteger("pdfService.concurrency.numConcurrentCacheDownloads");
+    }
+    
+    public static int getConcurrentPdfBuilds() {
+        return getConfig().getInteger("pdfService.concurrency.numConcurrentPdfConstructions");
     }
     
 }

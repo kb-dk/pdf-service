@@ -28,7 +28,7 @@ class PdfTitlePageCleanerTest {
         //String testfile = "data/130021589854-color.pdf";
         try (PDDocument pdDocument = PdfUtils.openDocument(new FileInputStream(testfile))) {
             int numPagesBefore = pdDocument.getNumberOfPages();
-            PdfTitlePageCleaner.cleanHeaderPages(pdDocument);
+            PdfApronPageCleaner.cleanApronPages(pdDocument);
             int numPagesAfter = pdDocument.getNumberOfPages();
             //TODO assert based on pages removed...
             

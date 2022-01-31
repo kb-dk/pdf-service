@@ -20,11 +20,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-public class PdfTitlePageCleaner {
+public class PdfApronPageCleaner {
     
-    private static final Logger log = LoggerFactory.getLogger(PdfTitlePageCleaner.class);
+    private static final Logger log = LoggerFactory.getLogger(PdfApronPageCleaner.class);
     
-    public static void cleanHeaderPages(PDDocument doc) throws IOException {
+    public static void cleanApronPages(PDDocument doc) throws IOException {
+        
+        log.debug("Starting to strip old apron pages");
         
         //Initialise the text stripper before iterating through the pages
         PDFTextStripper stripper = new PDFTextStripper();
@@ -36,32 +38,41 @@ public class PdfTitlePageCleaner {
         //We assume that all previously inserted header pages contains the text "det kongelige bibliotek"
         //So we remove them, until we find a page that does NOT contain this string. Then the removal stops
         //and we assume that all the rest of the document are real pages
-        int pagenumber = 0;
+        
+        int realPageNumber = 0; //For log purposes
+        int pagenumber = 0; //Text Stripper works on page numbers
         pageloop:
         for (PDPage p : doc.getPages()) {
             pagenumber++;
+            realPageNumber++;
             
-            
+            log.debug("Examining page {}", realPageNumber);
             List<BufferedImage> pageImages = getImagesFromPage(p.getResources());
             
+            log.debug("Extracted {} images from page {}", pageImages.size(), realPageNumber);
             for (BufferedImage pageImage : pageImages) {
                 for (BufferedImage referenceImage : referenceImages) {
                     boolean identical = compareImages(pageImage, referenceImage);
                     if (identical) {
                         doc.removePage(p);
+                        log.info("Removed page {} as it match an oldHeaderImage. Page {} is now the new page {}",
+                                 realPageNumber,
+                                 realPageNumber+1,
+                                 pagenumber);
                         pagenumber--;
-                        log.info("Removed page ({}) as it match an oldHeaderImage", pagenumber);
                         continue pageloop;
                     }
                 }
             }
+            log.debug("Page {} did not match an oldHeaderImage", realPageNumber);
             
             
-            //Only extract text from this page
+            log.debug("Starting to extract text from page {}",realPageNumber);
             stripper.setStartPage(pagenumber);
             stripper.setEndPage(pagenumber);
             String content = stripper.getText(doc);
             if (content != null) {
+                log.trace("Found text '{}' om page {}",content, realPageNumber);
                 String pageText = content.replaceAll("\\s+", " ")
                                          .toLowerCase(Locale.ROOT);
                 if (ServiceConfig.getHeaderLines()
@@ -70,41 +81,47 @@ public class PdfTitlePageCleaner {
                                  .anyMatch(pageText::contains)) {
                     doc.removePage(p);
                     pagenumber--;
-                    log.info("Removed page ({}) as it match an known header string", pagenumber);
+                    log.info("Removed page {} as it match a known header string. Page {} is now the new page {}",
+                             realPageNumber,
+                             realPageNumber+1,
+                             pagenumber);
                     continue pageloop;
+                } else {
+                    log.debug("Text content from page {} does not match known header strings", realPageNumber);
                 }
+            } else {
+                log.debug("No text found on page {}",realPageNumber);
             }
             //If we got here, we did not remove a page, and the removal should stop
-            log.info("Found page ({}) that is not an old apron page, so stopping removal", pagenumber);
+            log.info("Page {} is apparently not an old apron page, so stopping removal", realPageNumber);
             break;
         }
     }
     
-    private static boolean compareImages(BufferedImage imgA, BufferedImage imgB) throws IOException {
+    private static boolean compareImages(BufferedImage imgA, BufferedImage imgB) {
         
         //TODO if we scale UP, we already know that this is a failure, as the reference images are SCALED DOWN versions of the apron
         //But do we know this in general?
-    
+        
         imgA = scaleImage(imgA, imgB.getWidth(), imgB.getHeight()); //scale A to Bs size
         // By now, images are of same size
         
         //ImageIO.write(imgA, "PNG", new File("image.png"));
         
         
-        
         int width = imgA.getWidth();
         int height = imgA.getHeight();
         
         long difference = 0;
-    
+        
         // Total number of red pixels = width * height
         // Total number of blue pixels = width * height
         // Total number of green pixels = width * height
         // So total number of pixels = width * height *
         // 3
         double total_pixels = width * height * 3;
-    
-    
+        
+        
         //TODO There MUST be a faster way to do this...
         
         //How to perhaps do it in java 17
@@ -118,11 +135,10 @@ public class PdfTitlePageCleaner {
         //int vectorDifference = Arrays.stream(vectorA.sub(vectorB).abs().toIntArray()).sum();
         
         
-        
         //Outer loop for rows(height)
         // treating images likely 2D matrix
         for (int y = 0; y < height; y++) {
-    
+            
             // Inner loop for columns(width)
             for (int x = 0; x < width; x++) {
                 //We have to separate the colors, or otherwise red will matter more then blue which will matter more than gren
@@ -140,7 +156,7 @@ public class PdfTitlePageCleaner {
                 int blueA = (rgbA) & 0xff;
                 int blueB = (rgbB) & 0xff;
                 difference += Math.abs(blueA - blueB);
-    
+                
                 // There are 255 values of pixels in total
                 double percentage
                         = (difference / total_pixels / 255) * 100;

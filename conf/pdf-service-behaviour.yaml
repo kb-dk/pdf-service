@@ -130,6 +130,11 @@ pdfService:
       - Teatermanus
       - TeatermanusudenOCR
 
+  concurrency:
+    numConcurrentCacheDownloads: 1023
+    numConcurrentPdfConstructions: 2
+
+
   #  Where original PDFs are read from
   PDFsource:
     - "/data1/e-mat/dod"

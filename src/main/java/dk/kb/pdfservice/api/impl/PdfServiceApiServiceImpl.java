@@ -1,26 +1,25 @@
 package dk.kb.pdfservice.api.impl;
 
-import com.google.common.util.concurrent.Striped;
-import com.google.common.util.concurrent.StripedFactory;
 import dk.kb.pdfservice.alma.ApronType;
 import dk.kb.pdfservice.alma.MarcClient;
 import dk.kb.pdfservice.alma.PdfInfo;
 import dk.kb.pdfservice.api.PdfServiceApi;
 import dk.kb.pdfservice.config.ServiceConfig;
 import dk.kb.pdfservice.footer.CopyrightFooterInserter;
-import dk.kb.pdfservice.titlepage.PdfTitlePageCleaner;
-import dk.kb.pdfservice.titlepage.PdfTitlePageCreator;
-import dk.kb.pdfservice.titlepage.PdfTitlePageInserter;
+import dk.kb.pdfservice.titlepage.PdfApronPageCleaner;
+import dk.kb.pdfservice.titlepage.PdfApronCreator;
+import dk.kb.pdfservice.utils.PdfMetadataUtils;
 import dk.kb.pdfservice.utils.PdfUtils;
 import dk.kb.pdfservice.webservice.exception.InternalServiceObjection;
 import dk.kb.pdfservice.webservice.exception.NotFoundServiceObjection;
 import dk.kb.pdfservice.webservice.exception.ServiceObjection;
 import dk.kb.util.other.NamedThread;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -46,10 +45,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.time.temporal.TemporalAmount;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReadWriteLock;
 
 import static dk.kb.pdfservice.utils.Objections.object;
@@ -97,16 +98,6 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     @Context
     private transient MessageContext messageContext;
     
-    /**
-     * Each key is mapped to as tripe. Num of stripes are the number of possible locks
-     * So this means that at most 1023 locks can be handled at the same time
-     * We do not use the special features of ReentrantLock, but it basically means that the same thread can lock a
-     * Reentrant Lock multiple times, and must unlock the same number of times to release it
-     * When fair=true locks favor granting access to the longest-waiting thread.
-     */
-    private static final Striped<ReadWriteLock> stripedLock
-            = StripedFactory.readWriteLockLazyWeak(1023, true);
-    
     
     /**
      * Request pdf file with copyright info added
@@ -123,29 +114,39 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     public StreamingOutput getPdf(String requestedPdfFile) {
         
         try (NamedThread namedThread = NamedThread.postfix(requestedPdfFile)) {
-    
+            
             //This is the file to return to the use user. It might not exist yet
             File copyrightedPdfFile = getCacheFile(requestedPdfFile);
-    
+            
             //1. Lock for this filename, so only one user can use it
-            final ReadWriteLock readWriteLock = stripedLock.get(requestedPdfFile);
-    
+            final ReadWriteLock readWriteLock = ServiceConfig.getPdfServeLocks().get(requestedPdfFile);
+            
             //First we acquire the read lock, to be able to read the file
             readWriteLock.readLock().lock();
             //state: w=0,r=1
             try {
                 boolean useCachePdf = canUseCachePdf(copyrightedPdfFile);
-        
+                
                 //The copyrighted PDF is not usable, so it must be regenerated
                 if (!useCachePdf) {
-            
+                    
                     upgradeToWriteLock(readWriteLock);
                     //state: w=1,r=0,
                     try {
                         //recheck that somebody did not update the pdf beneath us while we were waiting for the write lock
                         if (!canUseCachePdf(copyrightedPdfFile)) {
                             //recreate the copyrighted PDF
-                            createCopyrightedPDF(requestedPdfFile, copyrightedPdfFile);
+                            
+                            //Done in a threadpool so we can control the number of concurrect PDFs being created
+                            Future<?> result = ServiceConfig.getPdfBuildersThreadPool().submit(() -> {
+                                try (NamedThread namedPoolThread = NamedThread.postfix(requestedPdfFile)) {
+                                    
+                                    createCopyrightedPDF(
+                                            requestedPdfFile,
+                                            copyrightedPdfFile);
+                                }
+                            });
+                            result.get(); //wait on result or exception, potentially forever
                         }
                         //If we got to here, everything worked
                     } finally {
@@ -153,9 +154,9 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                         //w=0,r=1
                     }
                 }
-                //w=0,r=1, no matter if we went through the if or not
+                //w=0,r=1, no matter if we went through the write procedure or not
                 return returnPdfFile(copyrightedPdfFile);
-        
+                
             } catch (Exception e) {
                 log.error("Exception", e);
                 return object(() -> handleObjections(e, requestedPdfFile));
@@ -182,32 +183,47 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         readWriteLock.writeLock().lock();
     }
     
-    private void createCopyrightedPDF(String pdfFileString, File readyPdfFile) {
+    private void createCopyrightedPDF(String pdfFileString, File cachedPdfFile) {
         //4. otherwise create
-        final File sourcePdfFile = getPdfFile(pdfFileString);
+        final File sourcePdfFile = getSourcePdfFile(pdfFileString);
         
         String barcode = sourcePdfFile.getName().split("[-._]", 2)[0];
         PdfInfo pdfInfo = MarcClient.getPdfInfo(barcode);
     
+        
         try {
-            Files.createDirectories(readyPdfFile.getParentFile().toPath());
+            //Just in case the folder for the cached files do not already exist
+            Files.createDirectories(cachedPdfFile.getParentFile().toPath());
             
+            //Temp file is same dir as the resulting pdf file.
+            //This way, we KNOW that the files will be on the same mount
+            File tempFile = Files.createTempFile(cachedPdfFile.getParentFile().toPath(), sourcePdfFile.getName(), ".tmp").toFile();
+
             //System.out.println(JSON.toJson(pdfInfo));
             //TODO suppressed records should be available?
             //TODO configurable produceApron module, so we can insert another
-            try (InputStream apronFile = produceApron(pdfFileString, pdfInfo);
-                 ClosablePair<InputStream, PDDocumentInformation> requestedPDF = cleanOldApronPages(sourcePdfFile,
-                                                                                                    pdfInfo);
-                 InputStream completePDF = PdfTitlePageInserter.mergeApronWithPdf(apronFile,
-                                                                                  requestedPDF.getLeft(),
-                                                                                  requestedPDF.getRight(),
-                                                                                  pdfInfo);
-                 OutputStream pdfFileOnDisk = new FileOutputStream(readyPdfFile)) {
+            try (
+                    InputStream apronFile = produceApron(pdfFileString, pdfInfo);
+                    
+                    InputStream requestedPDF = createCombinedPdf(sourcePdfFile,
+                                                                 pdfInfo,
+                                                                 apronFile);
+                    OutputStream tempPdfFileStream = new FileOutputStream(tempFile)) {
                 log.debug("Finished merging documents for {}", pdfFileString);
-                IOUtils.copy(completePDF, pdfFileOnDisk);
+    
+                //Write to the tempfile. This can take a while
+                //People should be free to read the cached version (if they got a lock before we started)
+                IOUtils.copy(requestedPDF, tempPdfFileStream);
+                
+                //And when done, atomically move the temp file to replace the cachedPdfFile
+                //This ensures that already open instances of this file is not mangled
+                Files.move(tempFile.toPath(), cachedPdfFile.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+                
                 log.info("Finished returning pdf {}", pdfFileString);
+            } finally {
+                Files.deleteIfExists(tempFile.toPath());
             }
-        }catch (IOException e) {
+        } catch (IOException e) {
             log.error("Failed for {}", pdfFileString, e);
             object(() -> new InternalServiceObjection("Unknown failure for " + pdfFileString, e));
         }
@@ -215,7 +231,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     
     
     @Nonnull
-    private File getPdfFile(String pdfFileString) {
+    private File getSourcePdfFile(String pdfFileString) {
         List<String> pdfSourcePaths = ServiceConfig.getPdfSourcePath();
         return pdfSourcePaths.stream()
                              .map(File::new)
@@ -257,22 +273,19 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     }
     
     @Nonnull
-    private StreamingOutput returnPdfFile(File readyPdfFile) throws IOException {
-        //buffer the file here. This allows us to release any locks BEFORE the StreamingOutput is completely read
-        //TODO this could result in bad things for the 1+ GB files...
-        //TODO use DeferrredFileOutputStream here again...
-        final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        try (InputStream pdfFile = new FileInputStream(readyPdfFile)) {
-            IOUtils.copy(pdfFile, buffer);
-        }
+    private StreamingOutput returnPdfFile(File cachedPdfFile) throws IOException {
+
+        //We never write directly to the cached pdf file. Rather, we write to a temp file that is atomically
+        // moved into the cachedPdfFile
+        //So you will never get a mangled pdf file here.
         return output -> {
-            httpServletResponse.setHeader("Content-disposition", "inline; filename=\"" + readyPdfFile.getName() + "\"");
-            try {
-                IOUtils.copy(buffer.toInputStream(), output);
+            httpServletResponse.setHeader("Content-disposition", "inline; filename=\"" + cachedPdfFile.getName() + "\"");
+            
+            try (InputStream buffer = IOUtils.buffer(new FileInputStream(cachedPdfFile))) {
+                IOUtils.copy(buffer, output);
             } finally {
-                buffer.close();
                 //TODO perhaps log Author info here?
-                downloadLogger.info("IP {} downloaded {}", httpServletRequest.getRemoteAddr(), readyPdfFile.getName());
+                downloadLogger.info("IP {} downloaded {}", httpServletRequest.getRemoteAddr(), cachedPdfFile.getName());
             }
         };
     }
@@ -280,34 +293,73 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     private InputStream produceApron(String pdfFileString, PdfInfo pdfInfo) throws IOException {
         InputStream apronFile;
         try {
-            apronFile = PdfTitlePageCreator.produceHeaderPage(pdfInfo);
+            apronFile = PdfApronCreator.produceApronPage(pdfInfo);
         } catch (TransformerException | SAXException e) {
             throw new InternalServiceObjection("Failed to construct header page for '" + pdfFileString + "'", e);
         }
         return apronFile;
     }
     
-    private ClosablePair<InputStream, PDDocumentInformation> cleanOldApronPages(File pdfFile, PdfInfo pdfInfo) throws IOException {
+    private InputStream createCombinedPdf(File originalPdfFile,
+                                          PdfInfo pdfInfo,
+                                          InputStream apronFile)
+            throws IOException {
         InputStream requestedPDF;
-        PDDocumentInformation pdfMetadata;
-        try (PDDocument pdDocument = PdfUtils.openDocument(new FileInputStream(pdfFile))) {
-            pdfMetadata = pdDocument.getDocumentInformation();
-            PdfTitlePageCleaner.cleanHeaderPages(pdDocument);
+        
+        try (PDDocument pdDocument = PdfUtils.openDocument(new FileInputStream(originalPdfFile))) {
+            
+            PDDocumentInformation newMetadata = PdfMetadataUtils.constructPdfMetadata(pdfInfo,
+                                                                                      pdDocument.getDocumentInformation());
+            pdDocument.setDocumentInformation(newMetadata);
+            
+            PdfApronPageCleaner.cleanApronPages(pdDocument);
+            
             if (pdfInfo.getApronType() == ApronType.C) {
-                log.info("Starting to insert footers for {}", pdfFile);
+                log.info("Starting to insert footers for {}", originalPdfFile);
                 CopyrightFooterInserter.insertCopyrightFooter(pdDocument);
-                log.info("Finished inserting footers for {}", pdfFile);
+                log.info("Finished inserting footers for {}", originalPdfFile);
             }
-            requestedPDF = PdfUtils.dumpDocument(pdDocument,pdfFile.getName());
+    
+            requestedPDF = mergeApronPagesWithPdf(originalPdfFile, apronFile, pdDocument);
+    
         }
-        return ClosablePair.of(requestedPDF, pdfMetadata);
+        return requestedPDF;
+    }
+    
+    @Nonnull
+    private InputStream mergeApronPagesWithPdf(File pdfFile, InputStream apronFile, PDDocument pdDocument) throws IOException {
+        InputStream requestedPDF;
+        try (PDDocument apronDocument = PdfUtils.openDocument(apronFile)) {
+            //This weird for loop is to accound for the possibility of multiple apron pages
+            int apronPageCount = apronDocument.getNumberOfPages();
+            for (int i = apronPageCount - 1; i >= 0; i--) {
+                //Start from the last apron page
+                //This ensures that multiple apron pages end up in the correct order
+                
+                //Import the page as the last page of the document
+                PDPage apronPage = apronDocument.getPage(i);
+                pdDocument.importPage(apronPage);
+                
+                //Move the last page to the first page
+                PDPageTree allPages = pdDocument.getPages();
+                int lastPageIndex = allPages.getCount() - 1;
+                PDPage lastPage = allPages.get(lastPageIndex);
+                allPages.remove(lastPageIndex);
+                PDPage firstPage = allPages.get(0);
+                allPages.insertBefore(lastPage, firstPage);
+            }
+    
+            //The apronDoc apparently needs to still be open while this happens. Go figure
+            requestedPDF = PdfUtils.dumpDocument(pdDocument, pdfFile.getName());
+        }
+        return requestedPDF;
     }
     
     
     /**
      * This method simply converts any Exception into a Service exception
      *
-     * @param e : Any kind of exception
+     * @param e                : Any kind of exception
      * @param requestedPdfFile
      * @return A ServiceException
      */
@@ -316,7 +368,13 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
             return (ServiceObjection) e; // Do nothing - this is a declared ServiceException from within module.
         } else {// Unforseen exception (should not happen). Wrap in internal service exception
             //log.error("ServiceObjection(HTTP 500): for requested file {}", requestedPdfFile, e); //You probably want to log this.
-            return new InternalServiceObjection("Exception "+e.getClass().getName()+"("+e.getMessage()+") when trying to prepare "+requestedPdfFile+".");
+            return new InternalServiceObjection("Exception "
+                                                + e.getClass().getName()
+                                                + "("
+                                                + e.getMessage()
+                                                + ") when trying to prepare "
+                                                + requestedPdfFile
+                                                + ".");
         }
     }
 }
