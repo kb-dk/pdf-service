@@ -10,9 +10,11 @@
 #
 
 alma:
-
+  # Api key name: dodpdfsv.devel.key
+  # Must have these permissions
+  #   Bibs - Read-only - To retrieve records and metadata
+  #   Configuration - Read-only - To check name of current ALMA instance
   apikey: SHOULD SET IN librarylending-environment.yaml or librarylending-local.yaml
-
 
   # The Alma URL. This should never change, you control which alma instance you use by the key, not the url
   url: https://api-eu.hosted.exlibrisgroup.com/almaws/v1/
@@ -52,41 +54,80 @@ alma:
 
 pdfService:
 
-  primo:
-    #    host: "https://soeg.kbdk" # For production
-    host: "https://kbdk-kgl-psb.primo.exlibrisgroup.com" #Important, do not have double / between host and path
-    path: "/discovery/fulldisplay?docid=alma" #The mmsID is appended here
-    postfix: "&context=U&vid=45KBDK_KGL:KGL&lang=da"
+
+  #  Where original PDFs are read from
+  PDFsource:
+    - "/data1/e-mat/dod"
+
+  cache:
+    #  Where generated PDFs are stored
+    cacheFolder: "/home/dodpdfsv/cache/"
+    # If copyrighted PDF is older than this age, request ALMA data and create it again
+    # This ensures that updates to ALMA will tage effect (after a while)
+    # Note that if this age is SHORTER than the alma.cache_timeout, the cached ALMA record
+    # will be used, which defeats the purpose....
+    maxAgeOfCachedPdfs:
+      value: 24
+      unit: HOURS
+      # unit can be one of NANOS, MICROS, MILLIS, SECONDS, MINUTES, HOURS, HALF_DAYS
 
 
-  # This section controls the settings for the apron page
+
+  concurrency:
+    # This controls how many (different) pdf files can maximally be served concurrently.
+    # Excess requests are just put on hold, so the user will not really notice
+    numConcurrentCacheDownloads: 1023
+    # This controls how many PDF files can concurrently be updated (with apron info)
+    # As the PDF files can be quite large (2+ GB),  they will trash around on the disk
+    #  a lot (or take up a lot of memory, see below), I found it useful to be able to
+    #  limit the number of concurrent operations
+    numConcurrentPdfConstructions: 2
+
+
+  temp:
+    #  Where temporary files are stored when we unload them from memopry
+    folder: "/home/dodpdfsv/temp/"
+    #This is the maximum memory we will use for PDFs. If we need more memory, we will use temp files in the folder above
+    # This allows us to open the 2+ GB pdf, without having 4+GB Memory just for this
+    memoryForPDFs: 800 MB # You can use KB, MB, GB, TB, PB, EB. You can use fractional numbers, like 4.5MB. Space between number and unit is optional
+
+
+
+  # When inserting new front page, we search for old frontpages to remove
+  # As soon as we find a page that is NOT a frontpage, we stop the search. So there
+  # should be no problem with removing pages deep in document
+  apronRemoval:
+
+    # First extract the images from each page
+    # For each image extracted, compare it to each of the header images in this folder
+    # We scale the extracted image to match the dimensions of the oldHeaderImages file
+    # If the difference is below 1%, we call it a match
+    oldHeaderImages:
+      imageDirectory: /home/dodpdfsv/services/conf/oldHeaderImages
+      # Percent difference between images before we regard them as different
+      # 1.0 is inverse colors. 0.0 pixel-perfect match.
+      maxDifferenceAllowedForMatch: 0.01
+
+    # If a page did NOT match any of the header images above, we examine the text on the page
+    # Some of the newer aprons are NOT static images with OCR, but actual PDF pages with correct text,
+    # so this is nessesary to handle these.
+    # If a page contains any of these strings (case insensitive), it is regarded
+    # as a frontpage and removed
+    oldHeaderStrings:
+      - "det kongelige bibliotek"
+      - "det kgl. bibliotek"
+      - "digitaliseret af"
+      - "oplysninger om ophavsret og brugerrettigheder, se venligst"
+
+
+
+  # This section controls the settings for the new apron page
   apron:
     #This XSLT generates the frontpage
     FOPfile: /home/dodpdfsv/services/conf/apron.xsl
     FOPconfig: /home/dodpdfsv/services/conf/fop.xconf
     #Relative URLs in this FOPfile will be resolved from the folder containing the FOPfile
     # So you can refer to KBLogo.png simply as "KBLogo.png" without any path
-
-    #These are the values for the metadata-table
-    metadataTable:
-      # We need these values here, rather than directly in the XSLT because the program needs them to perform
-      #  optimal line cutting; We try to remove the fewest number of lines, so that the apron do not spill over onto
-      #  2 pages
-
-      widthCM: 8.4 # Width in centimeters of the left column of the metadata table
-      # The other column is currently 8.6cm, for a total of 18cm, which seems to be the max allowed
-      # So if you increate this, decrease the other column in frontpage.xsl
-
-      #Perhaps use http://unifoundry.com/unifont/index.html instead??
-      fontFile: /home/dodpdfsv/services/conf/fonts/DejaVuSans.ttf # Font of the metadata table
-      fontSize: 10 #px
-
-      maxlines: # Remember these are very dependent on the font and fontsize above
-        # TODO easy procedure for determining max number of lines for each apron
-        # Number of lines available for metadata differ for the different apron types
-        A: 11
-        B: 12
-        C: 9
 
     # Logic for deciding which of the 4 types of aprons to use
     # See the apron types on https://sbprojects.statsbiblioteket.dk/display/DK/Record+Typer
@@ -127,6 +168,33 @@ pdfService:
         apronWithinCopyright: B
         apronOutOfCopyright: B
 
+    #These are the values for the metadata-table
+    metadataTable:
+      # We need these values here, rather than directly in the XSLT because the program needs them to perform
+      #  optimal line cutting; We try to remove the fewest number of lines, so that the apron do not spill over onto
+      #  2 pages
+
+      widthCM: 8.4 # Width in centimeters of the left column of the metadata table
+      # The other column is currently 8.6cm, for a total of 18cm, which seems to be the max allowed
+      # So if you increate this, decrease the other column in frontpage.xsl
+
+      #Perhaps use http://unifoundry.com/unifont/index.html instead??
+      fontFile: /home/dodpdfsv/services/conf/fonts/DejaVuSans.ttf # Font of the metadata table
+      fontSize: 10 #px
+
+      maxlines: # Remember these are very dependent on the font and fontsize above
+        # TODO easy procedure for determining max number of lines for each apron
+        # Number of lines available for metadata differ for the different apron types
+        A: 11
+        B: 12
+        C: 9
+
+    primo:
+      #    host: "https://soeg.kbdk" # For production
+      host: "https://kbdk-kgl-psb.primo.exlibrisgroup.com" #Important, do not have double / between host and path
+      path: "/discovery/fulldisplay?docid=alma" #The mmsID is appended here
+      postfix: "&context=U&vid=45KBDK_KGL:KGL&lang=da"
+
 
 
   theaterCriteria:
@@ -135,67 +203,6 @@ pdfService:
     999a:
       - "Teatermanus"
       - "TeatermanusudenOCR"
-
-
-  concurrency:
-    # This controls how many (different) pdf files can maximally be served concurrently.
-    # Excess requests are just put on hold, so the user will not really notice
-    numConcurrentCacheDownloads: 1023
-    # This controls how many PDF files can concurrently be updated (with apron info)
-    # As the PDF files can be quite large (2+ GB),  they will trash around on the disk
-    #  a lot (or take up a lot of memory, see below), I found it useful to be able to
-    #  limit the number of concurrent operations
-    numConcurrentPdfConstructions: 2
-
-
-  temp:
-    #  Where temporary files are stored when we unload them from memopry
-    folder: "/home/dodpdfsv/temp/"
-    #This is the maximum memory we will use for PDFs. If we need more memory, we will use temp files in the folder above
-    # This allows us to open the 2+ GB pdf, without having 4+GB Memory just for this
-    memoryForPDFs: 800 MB # You can use KB, MB, GB, TB, PB, EB. You can use fractional numbers, like 4.5MB. Space between number and unit is optional
-
-
-  #  Where original PDFs are read from
-  PDFsource:
-    - "/data1/e-mat/dod"
-
-  cache:
-    #  Where generated PDFs are stored
-    cacheFolder: "/home/dodpdfsv/cache/"
-    # If copyrighted PDF is older than this age, request ALMA data and create it again
-    # This ensures that updates to ALMA will tage effect (after a while)
-    # Note that if this age is SHORTER than the alma.cache_timeout, the cached ALMA record
-    # will be used, which defeats the purpose....
-    maxAgeOfCachedPdfs:
-      value: 24
-      unit: HOURS
-      # unit can be one of NANOS, MICROS, MILLIS, SECONDS, MINUTES, HOURS, HALF_DAYS
-
-  # When inserting new front page, we search for old frontpages to remove
-  # As soon as we find a page that is NOT a frontpage, we stop the search. So there
-  # should be no problem with removing pages deep in document
-
-  # First extract the images from each page
-  # For each image extracted, compare it to each of the header images in this folder
-  # We scale the extracted image to match the dimensions of the oldHeaderImages file
-  # If the difference is below 1%, we call it a match
-  oldHeaderImages:
-    imageDirectory: /home/dodpdfsv/services/conf/oldHeaderImages
-    # Percent difference between images before we regard them as different
-    # 1.0 is inverse colors. 0.0 pixel-perfect match.
-    maxDifferenceAllowedForMatch: 0.01
-
-  # If a page did NOT match any of the header images above, we examine the text on the page
-  # Some of the newer aprons are NOT static images with OCR, but actual PDF pages with correct text,
-  # so this is nessesary to handle these.
-  # If a page contains any of these strings (case insensitive), it is regarded
-  # as a frontpage and removed
-  oldHeaderStrings:
-    - "det kongelige bibliotek"
-    - "det kgl. bibliotek"
-    - "digitaliseret af"
-    - "oplysninger om ophavsret og brugerrettigheder, se venligst"
 
 
   # How long must pass since publication for at work to be outside copyright

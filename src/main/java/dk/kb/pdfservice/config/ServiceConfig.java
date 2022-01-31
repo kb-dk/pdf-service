@@ -194,15 +194,15 @@ public class ServiceConfig {
     
     //OldHeaders
     public static List<String> getHeaderLines() {
-        return getConfig().getList("pdfService.oldHeaderStrings");
+        return getConfig().getList("pdfService.apronRemoval.oldHeaderStrings");
     }
     
     public static File getOldHeaderImageDir() {
-        return new File(ServiceConfig.getConfig().getString("pdfService.oldHeaderImages.imageDirectory"));
+        return new File(ServiceConfig.getConfig().getString("pdfService.oapronRemoval.ldHeaderImages.imageDirectory"));
     }
     
     public static Double getOldHeaderImagesmMaxDifferenceAllowedForMatch() {
-        return ServiceConfig.getConfig().getDouble("pdfService.oldHeaderImages.maxDifferenceAllowedForMatch");
+        return ServiceConfig.getConfig().getDouble("pdfService.apronRemoval,oldHeaderImages.maxDifferenceAllowedForMatch");
     }
     
     private static List<BufferedImage> oldHeaderImages = null;
@@ -384,10 +384,10 @@ public class ServiceConfig {
     }
     
     public static String getPrimoLink(String mmsId) {
-        return getConfig().getString("pdfService.primo.host")
-               + getConfig().getString("pdfService.primo.path")
+        return getConfig().getString("pdfService.apron.primo.host")
+               + getConfig().getString("pdfService.apron.primo.path")
                + mmsId
-               + getConfig().getString("pdfService.primo.postfix");
+               + getConfig().getString("pdfService.apron.primo.postfix");
     }
     
     public static int getConcurrentServes() {
