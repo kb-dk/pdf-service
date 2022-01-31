@@ -1,4 +1,4 @@
-package dk.kb.pdfservice.titlepage;
+package dk.kb.pdfservice.footer;
 
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 

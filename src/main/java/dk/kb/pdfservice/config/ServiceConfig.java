@@ -4,12 +4,14 @@ import com.google.common.util.concurrent.Striped;
 import com.google.common.util.concurrent.StripedFactory;
 import dk.kb.alma.client.AlmaRestClient;
 import dk.kb.pdfservice.alma.ApronType;
+import dk.kb.pdfservice.footer.FontEnum;
 import dk.kb.util.yaml.YAML;
 import org.apache.commons.io.FileUtils;
 import org.apache.fop.fonts.truetype.FontFileReader;
 import org.apache.fop.fonts.truetype.OFFontLoader;
 import org.apache.fop.fonts.truetype.OFMtxEntry;
 import org.apache.fop.fonts.truetype.TTFFile;
+import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -240,6 +242,11 @@ public class ServiceConfig {
     public static Integer getCopyrightFooterFontSize() {
         return getConfig().getInteger("pdfService.copyrightFooter.Fontsize");
     }
+    
+    public static PDFont getCopyrightFooterFont() {
+        return FontEnum.valueOf(getConfig().getString("pdfService.copyrightFooter.Font")).getFont();
+    }
+    
     
     public static Color getCopyrightFooterColor() {
         return Color.decode(ServiceConfig.getConfig()

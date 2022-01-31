@@ -46,6 +46,8 @@ echo "Stopping tomcat"
 ssh "${devel}"  "(source .bash_profile && ~/bin/\$USER-tomcat.sh stop | grep 'tomcat is not running') || sleep 10"
 echo "Tomcat stopped"
 
+ssh "${devel}" "rm -f ~/cache/*"
+
 echo "Starting tomcat"
 ssh "${devel}" "(source .bash_profile; export JPDA_ADDRESS='0.0.0.0:${tomcatDebugPort}'; ~/bin/\$USER-tomcat.sh jpda start)"
 

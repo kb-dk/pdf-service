@@ -16,6 +16,7 @@ import dk.kb.pdfservice.webservice.exception.ServiceObjection;
 import dk.kb.util.other.NamedThread;
 import org.apache.commons.io.IOUtils;
 import org.apache.cxf.jaxrs.ext.MessageContext;
+import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -313,6 +314,8 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                                    OutputStream tempPdfFileStream)
             throws IOException {
         
+
+    
         try (PDDocument pdDocument = PdfUtils.openDocument(new FileInputStream(originalPdfFile))) {
             
             PDDocumentInformation newMetadata = PdfMetadataUtils.constructPdfMetadata(pdfInfo,

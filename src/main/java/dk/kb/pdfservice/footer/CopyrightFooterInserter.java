@@ -7,6 +7,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.apache.pdfbox.pdmodel.graphics.state.RenderingMode;
@@ -28,7 +29,7 @@ public class CopyrightFooterInserter {
         //TODO log something so we can see what is happening...
         
         //TODO configurable font for footer..
-        final PDType1Font font = PDType1Font.HELVETICA;
+        final PDFont font = ServiceConfig.getCopyrightFooterFont();
         //We add them from the bottom up, to reverse to preserve the order from the config file.
         final java.util.List<String> copyrightFooterTexts = Lists.reverse(ServiceConfig.getCopyrightFooterText());
         
