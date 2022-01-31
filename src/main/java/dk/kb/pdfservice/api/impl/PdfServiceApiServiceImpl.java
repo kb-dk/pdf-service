@@ -6,8 +6,8 @@ import dk.kb.pdfservice.alma.PdfInfo;
 import dk.kb.pdfservice.api.PdfServiceApi;
 import dk.kb.pdfservice.config.ServiceConfig;
 import dk.kb.pdfservice.footer.CopyrightFooterInserter;
-import dk.kb.pdfservice.titlepage.PdfApronPageCleaner;
 import dk.kb.pdfservice.titlepage.PdfApronCreator;
+import dk.kb.pdfservice.titlepage.PdfApronPageCleaner;
 import dk.kb.pdfservice.utils.PdfMetadataUtils;
 import dk.kb.pdfservice.utils.PdfUtils;
 import dk.kb.pdfservice.webservice.exception.InternalServiceObjection;
@@ -38,6 +38,7 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Providers;
 import javax.xml.transform.TransformerException;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -189,7 +190,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         
         String barcode = sourcePdfFile.getName().split("[-._]", 2)[0];
         PdfInfo pdfInfo = MarcClient.getPdfInfo(barcode);
-    
+        
         
         try {
             //Just in case the folder for the cached files do not already exist
@@ -197,27 +198,32 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
             
             //Temp file is same dir as the resulting pdf file.
             //This way, we KNOW that the files will be on the same mount
-            File tempFile = Files.createTempFile(cachedPdfFile.getParentFile().toPath(), sourcePdfFile.getName(), ".tmp").toFile();
-
-            //System.out.println(JSON.toJson(pdfInfo));
-            //TODO suppressed records should be available?
-            //TODO configurable produceApron module, so we can insert another
-            try (
-                    InputStream apronFile = produceApron(pdfFileString, pdfInfo);
+            
+            File tempFile = Files.createTempFile(cachedPdfFile.getParentFile().toPath(),
+                                                 sourcePdfFile.getName(),
+                                                 ".tmp").toFile();
+            
+            try {
+                //TODO suppressed records should be available?
+                //TODO configurable produceApron module, so we can insert another
+                try (InputStream apronFile = produceApron(pdfFileString, pdfInfo);
+                     OutputStream tempPdfFileStream = new FileOutputStream(tempFile)) {
                     
-                    InputStream requestedPDF = createCombinedPdf(sourcePdfFile,
-                                                                 pdfInfo,
-                                                                 apronFile);
-                    OutputStream tempPdfFileStream = new FileOutputStream(tempFile)) {
+                    //Write to the tempfile. This can take a while
+                    //People should be free to read the cached version (if they got a lock before we started)
+                    createCombinedPdf(sourcePdfFile,
+                                      pdfInfo,
+                                      apronFile,
+                                      tempPdfFileStream);
+                }
                 log.debug("Finished merging documents for {}", pdfFileString);
-    
-                //Write to the tempfile. This can take a while
-                //People should be free to read the cached version (if they got a lock before we started)
-                IOUtils.copy(requestedPDF, tempPdfFileStream);
                 
                 //And when done, atomically move the temp file to replace the cachedPdfFile
                 //This ensures that already open instances of this file is not mangled
-                Files.move(tempFile.toPath(), cachedPdfFile.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+                Files.move(tempFile.toPath(),
+                           cachedPdfFile.toPath(),
+                           StandardCopyOption.ATOMIC_MOVE,
+                           StandardCopyOption.REPLACE_EXISTING);
                 
                 log.info("Finished returning pdf {}", pdfFileString);
             } finally {
@@ -274,12 +280,13 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     
     @Nonnull
     private StreamingOutput returnPdfFile(File cachedPdfFile) throws IOException {
-
+        
         //We never write directly to the cached pdf file. Rather, we write to a temp file that is atomically
         // moved into the cachedPdfFile
         //So you will never get a mangled pdf file here.
         return output -> {
-            httpServletResponse.setHeader("Content-disposition", "inline; filename=\"" + cachedPdfFile.getName() + "\"");
+            httpServletResponse.setHeader("Content-disposition",
+                                          "inline; filename=\"" + cachedPdfFile.getName() + "\"");
             
             try (InputStream buffer = IOUtils.buffer(new FileInputStream(cachedPdfFile))) {
                 IOUtils.copy(buffer, output);
@@ -300,11 +307,11 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         return apronFile;
     }
     
-    private InputStream createCombinedPdf(File originalPdfFile,
-                                          PdfInfo pdfInfo,
-                                          InputStream apronFile)
+    private void createCombinedPdf(File originalPdfFile,
+                                   PdfInfo pdfInfo,
+                                   InputStream apronFile,
+                                   OutputStream tempPdfFileStream)
             throws IOException {
-        InputStream requestedPDF;
         
         try (PDDocument pdDocument = PdfUtils.openDocument(new FileInputStream(originalPdfFile))) {
             
@@ -319,16 +326,16 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                 CopyrightFooterInserter.insertCopyrightFooter(pdDocument);
                 log.info("Finished inserting footers for {}", originalPdfFile);
             }
-    
-            requestedPDF = mergeApronPagesWithPdf(originalPdfFile, apronFile, pdDocument);
-    
+            
+            mergeApronPagesWithPdf(apronFile, pdDocument, tempPdfFileStream);
+            
         }
-        return requestedPDF;
     }
     
-    @Nonnull
-    private InputStream mergeApronPagesWithPdf(File pdfFile, InputStream apronFile, PDDocument pdDocument) throws IOException {
-        InputStream requestedPDF;
+    private void mergeApronPagesWithPdf(InputStream apronFile,
+                                        PDDocument pdDocument,
+                                        OutputStream tempPdfFileStream) throws IOException {
+        
         try (PDDocument apronDocument = PdfUtils.openDocument(apronFile)) {
             //This weird for loop is to accound for the possibility of multiple apron pages
             int apronPageCount = apronDocument.getNumberOfPages();
@@ -348,11 +355,10 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                 PDPage firstPage = allPages.get(0);
                 allPages.insertBefore(lastPage, firstPage);
             }
-    
+            
             //The apronDoc apparently needs to still be open while this happens. Go figure
-            requestedPDF = PdfUtils.dumpDocument(pdDocument, pdfFile.getName());
+            pdDocument.save(new BufferedOutputStream(tempPdfFileStream));
         }
-        return requestedPDF;
     }
     
     

@@ -29,25 +29,6 @@ public class PdfUtils {
         return parser.getPDDocument();
     }
     
-    public static InputStream dumpDocument(PDDocument pdDocument, String name) throws IOException {
-        Path tempFile = Files.createTempFile(ServiceConfig.getTempPath(), name, ".pdf");
-        
-        DeferredFileOutputStream output = new DeferredFileOutputStream(ServiceConfig.getTempThresholdBytes(),
-                                                                       tempFile.toFile());
-        try (output) {
-            pdDocument.save(new BufferedOutputStream(output));
-        }
-        
-        return new ProxyInputStream(new BufferedInputStream(output.toInputStream())) {
-            @Override
-            public void close() throws IOException {
-                super.close();
-                // Deletes the spilled file, if nessesary
-                //file is never null, as we specify the exact file in the constructor above
-                Files.deleteIfExists(output.getFile().toPath());
-            }
-        };
-    }
     
     public static float calculateTextLengthPixelsPdfBox(String text,
                                                         float fontSize,

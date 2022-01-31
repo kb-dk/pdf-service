@@ -123,7 +123,7 @@ public class PdfApronCreator {
                 xslfoTransformer.setParameter("edition", info.get(3));
                 xslfoTransformer.setParameter("placeAndYear", info.get(4));
                 xslfoTransformer.setParameter("size", info.get(5));
-                xslfoTransformer.setParameter("documentType", pdfInfo.getApronType().name());
+                xslfoTransformer.setParameter("apronType", pdfInfo.getApronType().name());
     
                 xslfoTransformer.setParameter("volume", pdfInfo.getVolume());
                 xslfoTransformer.setParameter("primoLink", pdfInfo.getPrimoLink());

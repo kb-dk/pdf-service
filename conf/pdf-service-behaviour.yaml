@@ -53,7 +53,7 @@ alma:
 pdfService:
 
   primo:
-#    host: "https://soeg.kbdk" # For production
+    #    host: "https://soeg.kbdk" # For production
     host: "https://kbdk-kgl-psb.primo.exlibrisgroup.com" #Important, do not have double / between host and path
     path: "/discovery/fulldisplay?docid=alma" #The mmsID is appended here
     postfix: "&context=U&vid=45KBDK_KGL:KGL&lang=da"
@@ -62,7 +62,7 @@ pdfService:
   # This section controls the settings for the apron page
   apron:
     #This XSLT generates the frontpage
-    FOPfile: /home/dodpdfsv/services/conf/frontpage.xsl
+    FOPfile: /home/dodpdfsv/services/conf/apron.xsl
     FOPconfig: /home/dodpdfsv/services/conf/fop.xconf
     #Relative URLs in this FOPfile will be resolved from the folder containing the FOPfile
     # So you can refer to KBLogo.png simply as "KBLogo.png" without any path
@@ -96,12 +96,15 @@ pdfService:
     # If the __default__ value is not used, we fail...
     apronTypeMapper:
 
-      #I mit hoved så gælder følgende per fysisk post: DILA/LOHA mener der også bør skelnes mellem A og B forklæder i DOD:
-      #
-      #hvis der er 1 997 a DOD så skal den have hvis 1) trykkeår er ældre end 140 = B forklæde ellers A forklæde.
-      #Hvis der er 1 999 a DOD så skal den have hvis 1) trykkeår er ældre end 140 = B forklæde ellers A forklæde.
-      #Hvis der er 1 999 a Teatermanus, så skal den have 1) trykkeår er ældre end 140 = B forklæde ellers C forklæde.
+      #Aprons up to Z are defined in the code, but only A B C D are currently used
+
+      #Apron C is the only one with special behaivour as it includes a per-page footer
+
+      #hvis der er 1 997 a DOD så skal den have hvis 1) trykkeår er ældre end 140 = B forklæde;  ellers A forklæde.
+      #Hvis der er 1 999 a DOD så skal den have hvis 1) trykkeår er ældre end 140 = B forklæde; ellers A forklæde.
+      #Hvis der er 1 999 a Teatermanus, så skal den have 1) trykkeår er ældre end 140 = B forklæde; ellers C forklæde.
       #Ellers alle andre skal have forklæde B
+
       #dvs. 1600talsKUM, 1600talsC8, TeatermanusudenOCR (Sufflør), Danskkvindehistoriskkulturarv, EOD  ( det har de i dag via Limb), samt alle dem som ikke matcher ovenstående
       #
       #Danskkvindehistoriskkulturarv mangler afklaring hos LOHA.
@@ -125,26 +128,28 @@ pdfService:
         apronOutOfCopyright: B
 
 
+
   theaterCriteria:
+    #Theatre records have other rules about which marc21 fields to use
+    # Theatre records are all records with a 999a field with one of the listed values
     999a:
       - Teatermanus
       - TeatermanusudenOCR
 
+
   concurrency:
+    # This controls how many (different) pdf files can maximally be served concurrently.
+    # Excess requests are just put on hold, so the user will not really notice
     numConcurrentCacheDownloads: 1023
+    # This controls how many PDF files can concurrently be updated (with apron info)
+    # As the PDF files can be quite large (2+ GB) and they MUST be read into memory, this gives us a
+    # way to prevent "java heap space" errors
     numConcurrentPdfConstructions: 2
 
 
   #  Where original PDFs are read from
   PDFsource:
     - "/data1/e-mat/dod"
-
-  temp:
-    #  Where temporary files are stored when we unload them from memopry
-    folder: "/home/dodpdfsv/temp/"
-    #PDFs above this size will be spilled to disk, rather than kept in memory when being built
-    threshold: 10485760 # bytes 1048576 = 1MB:
-
 
   cache:
     #  Where generated PDFs are stored

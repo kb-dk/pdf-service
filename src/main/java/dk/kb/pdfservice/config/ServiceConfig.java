@@ -145,14 +145,6 @@ public class ServiceConfig {
         return getConfig().getList("pdfService.PDFsource");
     }
     
-    public static Path getTempPath() {
-        return Path.of(getConfig().getString("pdfService.temp.folder"));
-    }
-    
-    public static int getTempThresholdBytes() {
-        return getConfig().getInteger("pdfService.temp.threshold");
-    }
-    
     
     public static String getPdfCachePath() {
         return getConfig().getString("pdfService.cache.cacheFolder");

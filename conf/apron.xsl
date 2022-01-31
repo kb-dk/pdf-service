@@ -21,7 +21,7 @@
     <xsl:param name="size" as="xs:string"/>
 
     <!--DocumentType can be one of A,B,C,D,E,.... Currently only A,B,C is used-->
-    <xsl:param name="documentType" as="xs:string"/>
+    <xsl:param name="apronType" as="xs:string"/>
 
     <xsl:param name="volume" as="xs:string"/>
 
@@ -317,13 +317,13 @@
 
                     <fo:block keep-with-previous="always">
                         <xsl:choose>
-                            <xsl:when test="$documentType='A'">
+                            <xsl:when test="$apronType='A'">
                                 <xsl:copy-of select="$typeA-text"/>
                             </xsl:when>
-                            <xsl:when test="$documentType='B'">
+                            <xsl:when test="$apronType='B'">
                                 <xsl:copy-of select="$typeB-text"/>
                             </xsl:when>
-                            <xsl:when test="$documentType='C'">
+                            <xsl:when test="$apronType='C'">
                                 <xsl:copy-of select="$typeC-text"/>
                             </xsl:when>
                             <xsl:otherwise>

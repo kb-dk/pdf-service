@@ -80,11 +80,11 @@ public class PdfApronPageCleaner {
                                  .map(s -> s.toLowerCase(Locale.ROOT))
                                  .anyMatch(pageText::contains)) {
                     doc.removePage(p);
-                    pagenumber--;
                     log.info("Removed page {} as it match a known header string. Page {} is now the new page {}",
                              realPageNumber,
                              realPageNumber+1,
                              pagenumber);
+                    pagenumber--;
                     continue pageloop;
                 } else {
                     log.debug("Text content from page {} does not match known header strings", realPageNumber);
