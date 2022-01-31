@@ -315,7 +315,8 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                                    OutputStream tempPdfFileStream)
             throws IOException {
         
-
+        //TODO serious bug. The closing of the Document also closes the ScratchFile (for some insane reason), causing it
+        // to not be usable any more. How to work around this?
         log.info("Starting to open {} of size {}", originalPdfFile, SizeUtils.toHumanReadable(originalPdfFile.length()));
         try (PDDocument pdDocument = PdfUtils.openDocument(new FileInputStream(originalPdfFile))) {
             log.info("Opened {}", originalPdfFile);

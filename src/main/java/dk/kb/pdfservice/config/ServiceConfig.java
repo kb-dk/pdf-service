@@ -102,6 +102,7 @@ public class ServiceConfig {
     }
     
     public static void shutdown() {
+        log.warn("ServiceConfig is being closed");
         if (scratchFile != null) {
             try {
                 scratchFile.close();
@@ -198,11 +199,11 @@ public class ServiceConfig {
     }
     
     public static File getOldHeaderImageDir() {
-        return new File(ServiceConfig.getConfig().getString("pdfService.oapronRemoval.ldHeaderImages.imageDirectory"));
+        return new File(ServiceConfig.getConfig().getString("pdfService.apronRemoval.oldHeaderImages.imageDirectory"));
     }
     
     public static Double getOldHeaderImagesmMaxDifferenceAllowedForMatch() {
-        return ServiceConfig.getConfig().getDouble("pdfService.apronRemoval,oldHeaderImages.maxDifferenceAllowedForMatch");
+        return ServiceConfig.getConfig().getDouble("pdfService.apronRemoval.oldHeaderImages.maxDifferenceAllowedForMatch");
     }
     
     private static List<BufferedImage> oldHeaderImages = null;
