@@ -5,12 +5,15 @@ import com.google.common.util.concurrent.StripedFactory;
 import dk.kb.alma.client.AlmaRestClient;
 import dk.kb.pdfservice.alma.ApronType;
 import dk.kb.pdfservice.footer.FontEnum;
+import dk.kb.pdfservice.utils.SizeUtils;
 import dk.kb.util.yaml.YAML;
 import org.apache.commons.io.FileUtils;
 import org.apache.fop.fonts.truetype.FontFileReader;
 import org.apache.fop.fonts.truetype.OFFontLoader;
 import org.apache.fop.fonts.truetype.OFMtxEntry;
 import org.apache.fop.fonts.truetype.TTFFile;
+import org.apache.pdfbox.io.MemoryUsageSetting;
+import org.apache.pdfbox.io.ScratchFile;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,7 +80,35 @@ public class ServiceConfig {
         return threadPool;
     }
     
+    
+    private static ScratchFile scratchFile = null;
+    
+    public static synchronized ScratchFile getPdfMemorySettings() {
+        if (scratchFile == null) {
+            try {
+                MemoryUsageSetting
+                        memUsageSetting
+                        = MemoryUsageSetting.setupMixed(SizeUtils.toBytes(ServiceConfig.getConfig()
+                                                                                       .getString(
+                                                                                               "pdfService.temp.memoryForPDFs")));
+                memUsageSetting.setTempDir(new File(ServiceConfig.getConfig().getString("pdfService.temp.folder")));
+                scratchFile = new ScratchFile(memUsageSetting);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+        return scratchFile;
+        
+    }
+    
     public static void shutdown() {
+        if (scratchFile != null) {
+            try {
+                scratchFile.close();
+            } catch (IOException e) {
+                //ignore
+            }
+        }
         if (threadPool != null) {
             threadPool.shutdown();
             try {
@@ -98,10 +129,10 @@ public class ServiceConfig {
      * Reentrant Lock multiple times, and must unlock the same number of times to release it
      * When fair=true locks favor granting access to the longest-waiting thread.
      */
-    private static  Striped<ReadWriteLock> stripedLock = null;
+    private static Striped<ReadWriteLock> stripedLock = null;
     
     public static synchronized Striped<ReadWriteLock> getPdfServeLocks() {
-        if (stripedLock == null){
+        if (stripedLock == null) {
             stripedLock
                     = StripedFactory.readWriteLockLazyWeak(ServiceConfig.getConcurrentServes(), true);
         }
@@ -159,9 +190,7 @@ public class ServiceConfig {
         String unit = getConfig().getString(
                 "pdfService.cache.maxAgeOfCachedPdfs.unit");
         return Duration.of(value, ChronoUnit.valueOf(unit));
-        
     }
-    
     
     //OldHeaders
     public static List<String> getHeaderLines() {

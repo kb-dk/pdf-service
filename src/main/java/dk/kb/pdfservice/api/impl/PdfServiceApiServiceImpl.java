@@ -10,6 +10,7 @@ import dk.kb.pdfservice.titlepage.PdfApronCreator;
 import dk.kb.pdfservice.titlepage.PdfApronPageCleaner;
 import dk.kb.pdfservice.utils.PdfMetadataUtils;
 import dk.kb.pdfservice.utils.PdfUtils;
+import dk.kb.pdfservice.utils.SizeUtils;
 import dk.kb.pdfservice.webservice.exception.InternalServiceObjection;
 import dk.kb.pdfservice.webservice.exception.NotFoundServiceObjection;
 import dk.kb.pdfservice.webservice.exception.ServiceObjection;
@@ -315,9 +316,9 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
             throws IOException {
         
 
-    
+        log.info("Starting to open {} of size {}", originalPdfFile, SizeUtils.toHumanReadable(originalPdfFile.length()));
         try (PDDocument pdDocument = PdfUtils.openDocument(new FileInputStream(originalPdfFile))) {
-            
+            log.info("Opened {}", originalPdfFile);
             PDDocumentInformation newMetadata = PdfMetadataUtils.constructPdfMetadata(pdfInfo,
                                                                                       pdDocument.getDocumentInformation());
             pdDocument.setDocumentInformation(newMetadata);
@@ -338,7 +339,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     private void mergeApronPagesWithPdf(InputStream apronFile,
                                         PDDocument pdDocument,
                                         OutputStream tempPdfFileStream) throws IOException {
-        
+        log.info("Merging apron and original pdf");
         try (PDDocument apronDocument = PdfUtils.openDocument(apronFile)) {
             //This weird for loop is to accound for the possibility of multiple apron pages
             int apronPageCount = apronDocument.getNumberOfPages();
@@ -359,6 +360,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                 allPages.insertBefore(lastPage, firstPage);
             }
             
+            log.info("Saving resulting pdf");
             //The apronDoc apparently needs to still be open while this happens. Go figure
             pdDocument.save(new BufferedOutputStream(tempPdfFileStream));
         }

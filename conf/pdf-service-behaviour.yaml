@@ -96,7 +96,7 @@ pdfService:
     # If the __default__ value is not used, we fail...
     apronTypeMapper:
 
-      #Aprons up to Z are defined in the code, but only A B C D are currently used
+      #Aprons up to A-Z are defined in the code, but only A B C D are currently used
 
       #Apron C is the only one with special behaivour as it includes a per-page footer
 
@@ -133,8 +133,8 @@ pdfService:
     #Theatre records have other rules about which marc21 fields to use
     # Theatre records are all records with a 999a field with one of the listed values
     999a:
-      - Teatermanus
-      - TeatermanusudenOCR
+      - "Teatermanus"
+      - "TeatermanusudenOCR"
 
 
   concurrency:
@@ -142,9 +142,18 @@ pdfService:
     # Excess requests are just put on hold, so the user will not really notice
     numConcurrentCacheDownloads: 1023
     # This controls how many PDF files can concurrently be updated (with apron info)
-    # As the PDF files can be quite large (2+ GB) and they MUST be read into memory, this gives us a
-    # way to prevent "java heap space" errors
+    # As the PDF files can be quite large (2+ GB),  they will trash around on the disk
+    #  a lot (or take up a lot of memory, see below), I found it useful to be able to
+    #  limit the number of concurrent operations
     numConcurrentPdfConstructions: 2
+
+
+  temp:
+    #  Where temporary files are stored when we unload them from memopry
+    folder: "/home/dodpdfsv/temp/"
+    #This is the maximum memory we will use for PDFs. If we need more memory, we will use temp files in the folder above
+    # This allows us to open the 2+ GB pdf, without having 4+GB Memory just for this
+    memoryForPDFs: 800 MB # You can use KB, MB, GB, TB, PB, EB. You can use fractional numbers, like 4.5MB. Space between number and unit is optional
 
 
   #  Where original PDFs are read from
