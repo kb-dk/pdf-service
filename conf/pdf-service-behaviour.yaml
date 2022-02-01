@@ -159,6 +159,10 @@ pdfService:
         apronWithinCopyright: A
         apronOutOfCopyright: B
 
+      - 999a: "Danskkvindehistoriskkulturarv"
+        apronWithinCopyright: A
+        apronOutOfCopyright: B
+
       - 999a: "Teatermanus"
         apronWithinCopyright: C
         apronOutOfCopyright: B
