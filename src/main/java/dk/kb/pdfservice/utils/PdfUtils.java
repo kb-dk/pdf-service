@@ -1,41 +1,13 @@
 package dk.kb.pdfservice.utils;
 
-import dk.kb.pdfservice.config.ServiceConfig;
-import org.apache.commons.io.input.ProxyInputStream;
-import org.apache.commons.io.output.DeferredFileOutputStream;
 import org.apache.fop.fonts.truetype.OFMtxEntry;
 import org.apache.fop.fonts.truetype.TTFFile;
-import org.apache.pdfbox.io.MemoryUsageSetting;
-import org.apache.pdfbox.io.RandomAccess;
-import org.apache.pdfbox.io.RandomAccessBufferedFileInputStream;
-import org.apache.pdfbox.io.RandomAccessRead;
-import org.apache.pdfbox.io.ScratchFile;
-import org.apache.pdfbox.pdfparser.PDFParser;
-import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Map;
 
 public class PdfUtils {
-    public static PDDocument openDocument(InputStream pdData) throws IOException {
-        ScratchFile scratchFile = ServiceConfig.getPdfMemorySettings();
-        
-        //https://pdfbox.apache.org/2.0/faq.html#i'm-getting-an-outofmemoryerror.-what-can-i-do%3F
-        //use a scratch file by loading files with this code PDDocument.load(file, MemoryUsageSetting.setupTempFileOnly())
-        PDFParser parser;
-        try (RandomAccess rabfis = scratchFile.createBuffer(pdData);) {
-            
-            parser = new PDFParser(rabfis, scratchFile);
-            parser.parse();
-        }
-        return parser.getPDDocument();
-    }
     
     
     public static float calculateTextLengthPixelsPdfBox(String text,

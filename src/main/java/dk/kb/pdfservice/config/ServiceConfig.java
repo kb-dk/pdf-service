@@ -13,7 +13,6 @@ import org.apache.fop.fonts.truetype.OFFontLoader;
 import org.apache.fop.fonts.truetype.OFMtxEntry;
 import org.apache.fop.fonts.truetype.TTFFile;
 import org.apache.pdfbox.io.MemoryUsageSetting;
-import org.apache.pdfbox.io.ScratchFile;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,35 +80,19 @@ public class ServiceConfig {
     }
     
     
-    private static ScratchFile scratchFile = null;
     
-    public static synchronized ScratchFile getPdfMemorySettings() {
-        if (scratchFile == null) {
-            try {
-                MemoryUsageSetting
-                        memUsageSetting
-                        = MemoryUsageSetting.setupMixed(SizeUtils.toBytes(ServiceConfig.getConfig()
-                                                                                       .getString(
-                                                                                               "pdfService.temp.memoryForPDFs")));
-                memUsageSetting.setTempDir(new File(ServiceConfig.getConfig().getString("pdfService.temp.folder")));
-                scratchFile = new ScratchFile(memUsageSetting);
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        }
-        return scratchFile;
-        
+    public static MemoryUsageSetting getMemoryUsageSetting() {
+        MemoryUsageSetting
+                memUsageSetting
+                = MemoryUsageSetting.setupMixed(SizeUtils.toBytes(ServiceConfig.getConfig()
+                                                                               .getString(
+                                                                                       "pdfService.temp.memoryForPDFs")));
+        memUsageSetting.setTempDir(new File(ServiceConfig.getConfig().getString("pdfService.temp.folder")));
+        return memUsageSetting;
     }
     
     public static void shutdown() {
         log.warn("ServiceConfig is being closed");
-        if (scratchFile != null) {
-            try {
-                scratchFile.close();
-            } catch (IOException e) {
-                //ignore
-            }
-        }
         if (threadPool != null) {
             threadPool.shutdown();
             try {
@@ -203,7 +186,8 @@ public class ServiceConfig {
     }
     
     public static Double getOldHeaderImagesmMaxDifferenceAllowedForMatch() {
-        return ServiceConfig.getConfig().getDouble("pdfService.apronRemoval.oldHeaderImages.maxDifferenceAllowedForMatch");
+        return ServiceConfig.getConfig()
+                            .getDouble("pdfService.apronRemoval.oldHeaderImages.maxDifferenceAllowedForMatch");
     }
     
     private static List<BufferedImage> oldHeaderImages = null;

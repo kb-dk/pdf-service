@@ -1,7 +1,6 @@
 package dk.kb.pdfservice.titlepage;
 
 import dk.kb.pdfservice.config.ServiceConfig;
-import dk.kb.pdfservice.utils.PdfUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.junit.jupiter.api.Test;
 
@@ -22,7 +21,8 @@ class PdfTitlePageCleanerTest {
         
         //String testfile = "data/115808025307_bw.pdf";
         //String testfile = "data/130021589854-color.pdf";
-        try (PDDocument pdDocument = PdfUtils.openDocument(new FileInputStream(testfile))) {
+        try (PDDocument pdDocument = PDDocument.load(new FileInputStream(testfile),
+                                                     ServiceConfig.getMemoryUsageSetting())) {
             int numPagesBefore = pdDocument.getNumberOfPages();
             PdfApronPageCleaner.cleanApronPages(pdDocument);
             int numPagesAfter = pdDocument.getNumberOfPages();

@@ -9,7 +9,6 @@ import dk.kb.pdfservice.footer.CopyrightFooterInserter;
 import dk.kb.pdfservice.titlepage.PdfApronCreator;
 import dk.kb.pdfservice.titlepage.PdfApronPageCleaner;
 import dk.kb.pdfservice.utils.PdfMetadataUtils;
-import dk.kb.pdfservice.utils.PdfUtils;
 import dk.kb.pdfservice.utils.SizeUtils;
 import dk.kb.pdfservice.webservice.exception.InternalServiceObjection;
 import dk.kb.pdfservice.webservice.exception.NotFoundServiceObjection;
@@ -17,7 +16,6 @@ import dk.kb.pdfservice.webservice.exception.ServiceObjection;
 import dk.kb.util.other.NamedThread;
 import org.apache.commons.io.IOUtils;
 import org.apache.cxf.jaxrs.ext.MessageContext;
-import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -318,7 +316,8 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         //TODO serious bug. The closing of the Document also closes the ScratchFile (for some insane reason), causing it
         // to not be usable any more. How to work around this?
         log.info("Starting to open {} of size {}", originalPdfFile, SizeUtils.toHumanReadable(originalPdfFile.length()));
-        try (PDDocument pdDocument = PdfUtils.openDocument(new FileInputStream(originalPdfFile))) {
+        try (PDDocument pdDocument = PDDocument.load(new FileInputStream(originalPdfFile),
+                                                     ServiceConfig.getMemoryUsageSetting())) {
             log.info("Opened {}", originalPdfFile);
             PDDocumentInformation newMetadata = PdfMetadataUtils.constructPdfMetadata(pdfInfo,
                                                                                       pdDocument.getDocumentInformation());
@@ -341,7 +340,8 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                                         PDDocument pdDocument,
                                         OutputStream tempPdfFileStream) throws IOException {
         log.info("Merging apron and original pdf");
-        try (PDDocument apronDocument = PdfUtils.openDocument(apronFile)) {
+        //Do not use specialised memory settings for loading apronfile, as it is always small
+        try (PDDocument apronDocument = PDDocument.load(apronFile)) {
             //This weird for loop is to accound for the possibility of multiple apron pages
             int apronPageCount = apronDocument.getNumberOfPages();
             for (int i = apronPageCount - 1; i >= 0; i--) {
