@@ -51,6 +51,7 @@ import java.time.Instant;
 import java.time.temporal.TemporalAmount;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReadWriteLock;
 
@@ -147,7 +148,11 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                                             copyrightedPdfFile);
                                 }
                             });
-                            result.get(); //wait on result or exception, potentially forever
+                            try {
+                                result.get(); //wait on result or exception, potentially forever
+                            } catch (ExecutionException e){
+                                throw e.getCause();
+                            }
                         }
                         //If we got to here, everything worked
                     } finally {
@@ -158,7 +163,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                 //w=0,r=1, no matter if we went through the write procedure or not
                 return returnPdfFile(copyrightedPdfFile);
                 
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 log.error("Exception", e);
                 return object(() -> handleObjections(e, requestedPdfFile));
             } finally {
@@ -375,7 +380,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
      * @param requestedPdfFile
      * @return A ServiceException
      */
-    private ServiceObjection handleObjections(Exception e, String requestedPdfFile) {
+    private ServiceObjection handleObjections(Throwable e, String requestedPdfFile) {
         if (e instanceof ServiceObjection) {
             return (ServiceObjection) e; // Do nothing - this is a declared ServiceException from within module.
         } else {// Unforseen exception (should not happen). Wrap in internal service exception
