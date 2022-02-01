@@ -294,6 +294,9 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                                           "inline; filename=\"" + cachedPdfFile.getName() + "\"");
             
             try (InputStream buffer = IOUtils.buffer(new FileInputStream(cachedPdfFile))) {
+                //TODO handle Caused by: org.apache.catalina.connector.ClientAbortException: java.io.IOException: Connection reset by peer
+                //or Caused by: java.io.IOException: Connection reset by peer
+                //These should not polute the log, and they should not be counted as downloads below
                 IOUtils.copy(buffer, output);
             } finally {
                 //TODO perhaps log Author info here?
