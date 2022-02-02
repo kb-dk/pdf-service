@@ -35,7 +35,7 @@ public class MarcClient {
     public static final Logger log = LoggerFactory.getLogger(MarcClient.class);
     
     @Nonnull
-    public static PdfInfo getPdfInfo(String actualBarcode) {
+    public static PdfInfo getPdfInfo(String actualBarcode) throws NotFoundServiceObjection {
         Pair<Bib, Item> bibItem = AlmaLookupClient.getBib(actualBarcode);
         //Portfolios portFolios = almaInventoryClient.getBibPortfolios(mmsID);
         Bib bib = bibItem.getLeft();

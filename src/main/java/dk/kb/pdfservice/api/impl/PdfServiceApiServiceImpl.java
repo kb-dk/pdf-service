@@ -138,13 +138,18 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                     try {
                         //recheck that somebody did not update the pdf beneath us while we were waiting for the write lock
                         if (!canUseCachePdf(copyrightedPdfFile)) {
+                            
                             //recreate the copyrighted PDF
     
-                            final String name = namedThread.getName();
+                            //Extract the thread name while still in this context
+                            final String existingThreadName = namedThread.getName();
+                            
                             //Done in a threadpool so we can control the number of concurrect PDFs being created
                             Future<?> result = ServiceConfig.getPdfBuildersThreadPool().submit(() -> {
-                                try (NamedThread namedPoolThread = NamedThread.postfix(name)) {
-                                    
+                                //Name the thread with the old name as postfix
+                                //This allows us to track (in the log) which pool-thread continued the work from above
+                                try (NamedThread namedPoolThread = NamedThread.postfix(existingThreadName)) {
+                                    //recreate the copyrighted PDF
                                     createCopyrightedPDF(
                                             requestedPdfFile,
                                             copyrightedPdfFile);
@@ -191,7 +196,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         readWriteLock.writeLock().lock();
     }
     
-    private void createCopyrightedPDF(String pdfFileString, File cachedPdfFile) {
+    private void createCopyrightedPDF(String pdfFileString, File cachedPdfFile) throws NotFoundServiceObjection {
         //4. otherwise create
         final File sourcePdfFile = getSourcePdfFile(pdfFileString);
         
