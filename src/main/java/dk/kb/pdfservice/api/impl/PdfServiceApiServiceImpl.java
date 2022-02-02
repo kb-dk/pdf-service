@@ -138,10 +138,11 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                         //recheck that somebody did not update the pdf beneath us while we were waiting for the write lock
                         if (!canUseCachePdf(copyrightedPdfFile)) {
                             //recreate the copyrighted PDF
-                            
+    
+                            final String name = namedThread.getName();
                             //Done in a threadpool so we can control the number of concurrect PDFs being created
                             Future<?> result = ServiceConfig.getPdfBuildersThreadPool().submit(() -> {
-                                try (NamedThread namedPoolThread = NamedThread.postfix(requestedPdfFile)) {
+                                try (NamedThread namedPoolThread = NamedThread.postfix(name)) {
                                     
                                     createCopyrightedPDF(
                                             requestedPdfFile,
@@ -284,23 +285,37 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     }
     
     @Nonnull
-    private StreamingOutput returnPdfFile(File cachedPdfFile) throws IOException {
-        
+    private StreamingOutput returnPdfFile(File cachedPdfFile) {
+    
         //We never write directly to the cached pdf file. Rather, we write to a temp file that is atomically
         // moved into the cachedPdfFile
         //So you will never get a mangled pdf file here.
         return output -> {
-            httpServletResponse.setHeader("Content-disposition",
-                                          "inline; filename=\"" + cachedPdfFile.getName() + "\"");
+            try (NamedThread ignored = NamedThread.postfix(cachedPdfFile.getName())){
+                httpServletResponse.setHeader("Content-disposition",
+                                              "inline; filename=\"" + cachedPdfFile.getName() + "\"");
+        
+        
+                try (InputStream buffer = IOUtils.buffer(new FileInputStream(cachedPdfFile))) {
+                    //TODO handle Caused by: org.apache.catalina.connector.ClientAbortException: java.io.IOException: Connection reset by peer
+                    //or Caused by: java.io.IOException: Connection reset by peer
+                    //These should not polute the log, and they should not be counted as downloads below
             
-            try (InputStream buffer = IOUtils.buffer(new FileInputStream(cachedPdfFile))) {
-                //TODO handle Caused by: org.apache.catalina.connector.ClientAbortException: java.io.IOException: Connection reset by peer
-                //or Caused by: java.io.IOException: Connection reset by peer
-                //These should not polute the log, and they should not be counted as downloads below
-                IOUtils.copy(buffer, output);
-            } finally {
-                //TODO perhaps log Author info here?
-                downloadLogger.info("IP {} downloaded {}", httpServletRequest.getRemoteAddr(), cachedPdfFile.getName());
+                    IOUtils.copy(buffer, output);
+            
+                    //TODO perhaps log Author info here?
+                    downloadLogger.info("IP {} downloaded {}",
+                                        httpServletRequest.getRemoteAddr(),
+                                        cachedPdfFile.getName());
+            
+            
+                } catch (IOException e) {
+                    if (log.isDebugEnabled()) {
+                        log.debug("IOException while sending PDF {} to user with ip {}", cachedPdfFile.getName(), httpServletRequest.getRemoteAddr(), e);
+                    } else {
+                        log.info("User ({}) closed stream while downloading {}", httpServletRequest.getRemoteAddr(), cachedPdfFile.getName());
+                    }
+                }
             }
         };
     }
