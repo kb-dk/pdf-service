@@ -49,6 +49,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.time.temporal.TemporalAmount;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
@@ -286,38 +287,56 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     
     @Nonnull
     private StreamingOutput returnPdfFile(File cachedPdfFile) {
-    
-        //We never write directly to the cached pdf file. Rather, we write to a temp file that is atomically
-        // moved into the cachedPdfFile
+        //We never write directly to the cached pdf file. Rather, we write to a temp file that is atomically moved into the cachedPdfFile
         //So you will never get a mangled pdf file here.
         return output -> {
             try (NamedThread ignored = NamedThread.postfix(cachedPdfFile.getName())){
                 httpServletResponse.setHeader("Content-disposition",
                                               "inline; filename=\"" + cachedPdfFile.getName() + "\"");
-        
-        
+    
+                String userIP = httpServletRequest.getRemoteAddr();
+                
                 try (InputStream buffer = IOUtils.buffer(new FileInputStream(cachedPdfFile))) {
-                    //TODO handle Caused by: org.apache.catalina.connector.ClientAbortException: java.io.IOException: Connection reset by peer
-                    //or Caused by: java.io.IOException: Connection reset by peer
-                    //These should not polute the log, and they should not be counted as downloads below
-            
+                 
                     IOUtils.copy(buffer, output);
-            
+                    
+                    log.info("IP {} downloaded {}",
+                                        userIP,
+                                        cachedPdfFile.getName());
+                    
                     //TODO perhaps log Author info here?
                     downloadLogger.info("IP {} downloaded {}",
-                                        httpServletRequest.getRemoteAddr(),
+                                        userIP,
                                         cachedPdfFile.getName());
-            
-            
                 } catch (IOException e) {
-                    if (log.isDebugEnabled()) {
-                        log.debug("IOException while sending PDF {} to user with ip {}", cachedPdfFile.getName(), httpServletRequest.getRemoteAddr(), e);
+                    List<String> messages = getExceptionMessages(e);
+                    if (messages.contains("Connection reset by peer") ||
+                        messages.contains("Broken pipe")){
+                        //Do not log the stack trace for this rather standard error
+                        log.info("User ({}) closed connection while downloading {}. This is not counted as a download", userIP, cachedPdfFile.getName());
                     } else {
-                        log.info("User ({}) closed stream while downloading {}", httpServletRequest.getRemoteAddr(), cachedPdfFile.getName());
+                        log.warn("IOException while sending {} to user {}",
+                                 cachedPdfFile.getName(),
+                                 userIP,
+                                  e);
                     }
+                } catch (Exception e){
+                    log.error("Exception while sending {} to user {}",
+                             cachedPdfFile.getName(),
+                             userIP,
+                             e);
                 }
             }
         };
+    }
+    
+    private static List<String> getExceptionMessages(Throwable e) {
+        List<String> result = new ArrayList<>();
+        result.add(e.getMessage());
+        if(e.getCause() != null){
+            result.addAll(getExceptionMessages(e.getCause()));
+        }
+        return result;
     }
     
     private InputStream produceApron(String pdfFileString, PdfInfo pdfInfo) throws IOException {
