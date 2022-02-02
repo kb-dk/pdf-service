@@ -16,10 +16,12 @@ import org.w3c.dom.Element;
 
 import javax.annotation.Nonnull;
 import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -37,10 +39,24 @@ public class MarcClient {
     @Nonnull
     public static PdfInfo getPdfInfo(String actualBarcode) throws NotFoundServiceObjection {
         Pair<Bib, Item> bibItem = AlmaLookupClient.getBib(actualBarcode);
+    
+    
+    
         //Portfolios portFolios = almaInventoryClient.getBibPortfolios(mmsID);
         Bib bib = bibItem.getLeft();
         Item item = bibItem.getRight();
-        
+    
+        ZonedDateTime itemModDate = item.getItemData().getModificationDate().toGregorianCalendar().toZonedDateTime();
+        ZonedDateTime bibModDate = bib.getLastModifiedDate().toGregorianCalendar().toZonedDateTime();
+    
+        ZonedDateTime latestModDate = List.of(itemModDate, bibModDate)
+                                          .stream()
+                                          .filter(Objects::nonNull)
+                                          .max(Comparator.naturalOrder())
+                                          .orElse(ZonedDateTime.now().minusYears(10));
+    
+    
+    
         Element marc21 = bib.getAnies()
                             .stream()
                             .filter(element -> Objects.equals(element.getLocalName(), "record"))
@@ -81,7 +97,8 @@ public class MarcClient {
                                       publicationDateString,
                                       isWithinCopyright,
                                       keywords,
-                                      primoLink);
+                                      primoLink,
+                                      latestModDate);
         return pdfInfo;
     }
     

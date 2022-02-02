@@ -128,7 +128,13 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
             readWriteLock.readLock().lock();
             //state: w=0,r=1
             try {
-                boolean useCachePdf = canUseCachePdf(copyrightedPdfFile);
+    
+    
+                String barcode = copyrightedPdfFile.getName().split("[-._]", 2)[0];
+                
+                PdfInfo pdfInfo = MarcClient.getPdfInfo(barcode);
+                
+                boolean useCachePdf = canUseCachePdf(copyrightedPdfFile, pdfInfo);
                 
                 //The copyrighted PDF is not usable, so it must be regenerated
                 if (!useCachePdf) {
@@ -137,7 +143,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                     //state: w=1,r=0,
                     try {
                         //recheck that somebody did not update the pdf beneath us while we were waiting for the write lock
-                        if (!canUseCachePdf(copyrightedPdfFile)) {
+                        if (!canUseCachePdf(copyrightedPdfFile, pdfInfo)) {
                             
                             //recreate the copyrighted PDF
     
@@ -152,7 +158,8 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                                     //recreate the copyrighted PDF
                                     createCopyrightedPDF(
                                             requestedPdfFile,
-                                            copyrightedPdfFile);
+                                            copyrightedPdfFile,
+                                            pdfInfo);
                                 }
                             });
                             try {
@@ -196,12 +203,9 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         readWriteLock.writeLock().lock();
     }
     
-    private void createCopyrightedPDF(String pdfFileString, File cachedPdfFile) throws NotFoundServiceObjection {
+    private void createCopyrightedPDF(String pdfFileString, File cachedPdfFile, PdfInfo pdfInfo) throws NotFoundServiceObjection {
         //4. otherwise create
         final File sourcePdfFile = getSourcePdfFile(pdfFileString);
-        
-        String barcode = sourcePdfFile.getName().split("[-._]", 2)[0];
-        PdfInfo pdfInfo = MarcClient.getPdfInfo(barcode);
         
         
         try {
@@ -268,15 +272,21 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         return new File(ServiceConfig.getPdfCachePath(), file.getName());
     }
     
-    private boolean canUseCachePdf(File readyPdfFile) {
+    private boolean canUseCachePdf(File readyPdfFile, PdfInfo pdfInfo) {
         
         //2. Check if file exists
         if (isUsable(readyPdfFile)) {
             Instant pdfLastModified = Instant.ofEpochMilli(readyPdfFile.lastModified());
             TemporalAmount maxAllowedAge = ServiceConfig.getMaxAgeTempPdf();
-            //Check if the file is not too old
-            //3. if good, return the ready file
-            return !pdfLastModified.plus(maxAllowedAge).isBefore(Instant.now());
+    
+            final Instant otherInstant = pdfInfo.getLatestModDate().toInstant();
+            return pdfLastModified.isAfter(otherInstant);
+            //
+            ////Check if the file is not too old
+            ////3. if good, return the ready file
+            //final boolean before = pdfLastModified.plus(maxAllowedAge).isBefore(Instant.now());
+            //
+            //return !before;
         }
         return false;
     }

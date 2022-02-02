@@ -3,6 +3,7 @@ package dk.kb.pdfservice.alma;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDate;
+import java.time.ZonedDateTime;
 
 /**
  * Data transfer class from MarcClient
@@ -24,6 +25,7 @@ public class PdfInfo {
     private final ApronType apronType;
     private final String keywords;
     private final String primoLink;
+    private final ZonedDateTime latestModDate;
     
     
     public PdfInfo(
@@ -39,7 +41,8 @@ public class PdfInfo {
             @JsonProperty("publicationDateString") String publicationDateString,
             @JsonProperty("isWithinCopyright") boolean isWithinCopyright,
             @JsonProperty("keywords") String keywords,
-            @JsonProperty("primoLink") String primoLink) {
+            @JsonProperty("primoLink") String primoLink,
+            @JsonProperty("latestModDate")ZonedDateTime latestModDate) {
         this.authors               = authors;
         this.title                 = title;
         this.alternativeTitle      = alternativeTitle;
@@ -54,6 +57,7 @@ public class PdfInfo {
         this.keywords              = keywords;
         
         this.primoLink = primoLink;
+        this.latestModDate = latestModDate;
     }
     
     public String getAuthors() {
@@ -107,6 +111,10 @@ public class PdfInfo {
         return primoLink;
     }
     
+    public ZonedDateTime getLatestModDate() {
+        return latestModDate;
+    }
+    
     @Override
     public String toString() {
         return "PdfInfo{" +
@@ -122,6 +130,9 @@ public class PdfInfo {
                ", isWithinCopyright=" + isWithinCopyright +
                ", apronType=" + apronType +
                ", keywords='" + keywords + '\'' +
+               ", primoLink='" + primoLink + '\'' +
+               ", latestModDate=" + latestModDate +
+               ", withinCopyright=" + isWithinCopyright() +
                '}';
     }
 }
