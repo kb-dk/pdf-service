@@ -19,6 +19,13 @@
                 <exclude>${project.artifactId}-environment.yaml</exclude>
             </excludes>
         </fileSet>
+        <fileSet>
+            <outputDirectory>services/bin</outputDirectory>
+            <directory>src/main/bin</directory>
+            <filtered>false</filtered>
+            <fileMode>755</fileMode>
+        </fileSet>
+
     </fileSets>
     <files>
         <file>
