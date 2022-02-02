@@ -19,16 +19,5 @@ data/*.pdf
 test.pdf
 lorem-ipsum.pdf
 
-sampleFiles/*.pdf
-
-TS_DRAlaes-A552.pdf
-130018852943.pdf
-
-TS_DRAlaes-A577.pdf
-130018854342.pdf
-
-TS_DRAlaes- C839.pdf
-130022786122.pdf
-
-130017172639.pdf
-
+data/*.pdf
+cache/*.pdf

@@ -383,4 +383,13 @@ public class ServiceConfig {
         return getConfig().getInteger("pdfService.concurrency.numConcurrentPdfConstructions");
     }
     
+    private static final MetadataToFileMapper metadataToFileMapper = new MetadataToFileMapper();
+    
+    public static MetadataToFileMapper getMetadataToFileMapper() {
+        return metadataToFileMapper;
+    }
+    
+    public static boolean isMetadataUpdateCheck() {
+        return getConfig().getBoolean("pdfService.cache.checkMetadataChanges",false);
+    }
 }

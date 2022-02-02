@@ -13,7 +13,10 @@ import dk.kb.pdfservice.utils.SizeUtils;
 import dk.kb.pdfservice.webservice.exception.InternalServiceObjection;
 import dk.kb.pdfservice.webservice.exception.NotFoundServiceObjection;
 import dk.kb.pdfservice.webservice.exception.ServiceObjection;
+import dk.kb.util.json.JSON;
 import dk.kb.util.other.NamedThread;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -52,6 +55,7 @@ import java.time.temporal.TemporalAmount;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -140,7 +144,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                         if (!canUseCachePdf(copyrightedPdfFile)) {
                             
                             //recreate the copyrighted PDF
-    
+                            
                             //Extract the thread name while still in this context
                             final String existingThreadName = namedThread.getName();
                             
@@ -157,7 +161,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                             });
                             try {
                                 result.get(); //wait on result or exception, potentially forever
-                            } catch (ExecutionException e){
+                            } catch (ExecutionException e) {
                                 throw e.getCause();
                             }
                         }
@@ -203,10 +207,27 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         String barcode = sourcePdfFile.getName().split("[-._]", 2)[0];
         PdfInfo pdfInfo = MarcClient.getPdfInfo(barcode);
         
+        String metadataChecksum = DigestUtils.md5Hex(JSON.toJson(pdfInfo));
+        
         
         try {
+    
             //Just in case the folder for the cached files do not already exist
             Files.createDirectories(cachedPdfFile.getParentFile().toPath());
+    
+            if (ServiceConfig.isMetadataUpdateCheck()){
+                if (cachedPdfFile.exists()) {
+        
+                    String existingFileMetadataChecksum = ServiceConfig.getMetadataToFileMapper()
+                                                                       .getMetadataChecksumForFile(cachedPdfFile);
+        
+                    if (Objects.equals(metadataChecksum, existingFileMetadataChecksum)) {
+                        //TODO check apron and other configs...
+                        FileUtils.touch(cachedPdfFile);
+                        return;
+                    }
+                }
+        }
             
             //Temp file is same dir as the resulting pdf file.
             //This way, we KNOW that the files will be on the same mount
@@ -236,8 +257,13 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                            cachedPdfFile.toPath(),
                            StandardCopyOption.ATOMIC_MOVE,
                            StandardCopyOption.REPLACE_EXISTING);
+    
+                if (ServiceConfig.isMetadataUpdateCheck()) {
+                    ServiceConfig.getMetadataToFileMapper()
+                                 .updateMetadataChecksumForFile(cachedPdfFile, metadataChecksum);
+                }
                 
-                log.info("Finished returning pdf {}", pdfFileString);
+                log.info("Finished producing pdf {}", pdfFileString);
             } finally {
                 Files.deleteIfExists(tempFile.toPath());
             }
@@ -295,19 +321,19 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         //We never write directly to the cached pdf file. Rather, we write to a temp file that is atomically moved into the cachedPdfFile
         //So you will never get a mangled pdf file here.
         return output -> {
-            try (NamedThread ignored = NamedThread.postfix(cachedPdfFile.getName())){
+            try (NamedThread ignored = NamedThread.postfix(cachedPdfFile.getName())) {
                 httpServletResponse.setHeader("Content-disposition",
                                               "inline; filename=\"" + cachedPdfFile.getName() + "\"");
-    
+                
                 String userIP = httpServletRequest.getRemoteAddr();
                 
                 try (InputStream buffer = IOUtils.buffer(new FileInputStream(cachedPdfFile))) {
-                 
+                    
                     IOUtils.copy(buffer, output);
                     
                     log.info("IP {} downloaded {}",
-                                        userIP,
-                                        cachedPdfFile.getName());
+                             userIP,
+                             cachedPdfFile.getName());
                     
                     //TODO perhaps log Author info here?
                     downloadLogger.info("IP {} downloaded {}",
@@ -316,20 +342,22 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
                 } catch (IOException e) {
                     List<String> messages = getExceptionMessages(e);
                     if (messages.contains("Connection reset by peer") ||
-                        messages.contains("Broken pipe")){
+                        messages.contains("Broken pipe")) {
                         //Do not log the stack trace for this rather standard error
-                        log.info("User ({}) closed connection while downloading {}. This is not counted as a download", userIP, cachedPdfFile.getName());
+                        log.info("User ({}) closed connection while downloading {}. This is not counted as a download",
+                                 userIP,
+                                 cachedPdfFile.getName());
                     } else {
                         log.warn("IOException while sending {} to user {}",
                                  cachedPdfFile.getName(),
                                  userIP,
-                                  e);
+                                 e);
                     }
-                } catch (Exception e){
+                } catch (Exception e) {
                     log.error("Exception while sending {} to user {}",
-                             cachedPdfFile.getName(),
-                             userIP,
-                             e);
+                              cachedPdfFile.getName(),
+                              userIP,
+                              e);
                 }
             }
         };
@@ -338,7 +366,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     private static List<String> getExceptionMessages(Throwable e) {
         List<String> result = new ArrayList<>();
         result.add(e.getMessage());
-        if(e.getCause() != null){
+        if (e.getCause() != null) {
             result.addAll(getExceptionMessages(e.getCause()));
         }
         return result;
@@ -362,7 +390,9 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         
         //TODO serious bug. The closing of the Document also closes the ScratchFile (for some insane reason), causing it
         // to not be usable any more. How to work around this?
-        log.info("Starting to open {} of size {}", originalPdfFile, SizeUtils.toHumanReadable(originalPdfFile.length()));
+        log.info("Starting to open {} of size {}",
+                 originalPdfFile,
+                 SizeUtils.toHumanReadable(originalPdfFile.length()));
         try (PDDocument pdDocument = PDDocument.load(new FileInputStream(originalPdfFile),
                                                      ServiceConfig.getMemoryUsageSetting())) {
             log.info("Opened {}", originalPdfFile);

@@ -71,6 +71,12 @@ pdfService:
       unit: HOURS
       # unit can be one of NANOS, MICROS, MILLIS, SECONDS, MINUTES, HOURS, HALF_DAYS
 
+    # Note: This feature is not ready yet
+    # Check if the metadata is actually changed, before rejecting the cached copy
+    # TODO this only works from in-memory so lost on restart
+    # TODO this does not check if the apron.xsl or other configs have changed, just the metadata
+    checkMetadataChanges: false
+
 
 
   concurrency:

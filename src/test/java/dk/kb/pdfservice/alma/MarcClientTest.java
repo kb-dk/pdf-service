@@ -1,11 +1,10 @@
 package dk.kb.pdfservice.alma;
 
 import dk.kb.pdfservice.config.ServiceConfig;
+import dk.kb.util.json.JSON;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class MarcClientTest {
     
@@ -13,6 +12,6 @@ class MarcClientTest {
     void getPdfInfo() throws IOException {
         ServiceConfig.initialize("conf/*.yaml");
     
-        MarcClient.getPdfInfo("130021854531");
+        System.out.println(JSON.toJson(MarcClient.getPdfInfo("130021854531")));
     }
 }
