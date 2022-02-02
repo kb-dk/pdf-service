@@ -1,6 +1,7 @@
 package dk.kb.pdfservice.config;
 
-import dk.kb.pdfservice.alma.ApronType;
+
+import dk.kb.pdfservice.model.ApronType;
 
 import java.util.Objects;
 

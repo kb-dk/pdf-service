@@ -1,11 +1,11 @@
 package dk.kb.pdfservice.api.impl;
 
-import dk.kb.pdfservice.alma.ApronType;
 import dk.kb.pdfservice.alma.MarcClient;
-import dk.kb.pdfservice.alma.PdfInfo;
 import dk.kb.pdfservice.api.PdfServiceApi;
 import dk.kb.pdfservice.config.ServiceConfig;
 import dk.kb.pdfservice.footer.CopyrightFooterInserter;
+import dk.kb.pdfservice.model.ApronType;
+import dk.kb.pdfservice.model.PdfMetadata;
 import dk.kb.pdfservice.titlepage.PdfApronCreator;
 import dk.kb.pdfservice.titlepage.PdfApronPageCleaner;
 import dk.kb.pdfservice.utils.PdfMetadataUtils;
@@ -106,6 +106,15 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     private transient MessageContext messageContext;
     
     
+    @Override
+    public PdfMetadata getPdfMetadata(String pdfFile) {
+    
+        String barcode = new File(pdfFile).getName().split("[-._]", 2)[0];
+        PdfMetadata pdfInfo = MarcClient.getPdfInfo(barcode);
+        return pdfInfo;
+    }
+    
+    
     /**
      * Request pdf file with copyright info added
      *
@@ -186,6 +195,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     }
     
     
+    
     private void downgradeToReadLock(ReadWriteLock readWriteLock) {
         //Downgrade by acquiring read lock before releasing write lock
         readWriteLock.readLock().lock();
@@ -205,7 +215,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         final File sourcePdfFile = getSourcePdfFile(pdfFileString);
         
         String barcode = sourcePdfFile.getName().split("[-._]", 2)[0];
-        PdfInfo pdfInfo = MarcClient.getPdfInfo(barcode);
+        PdfMetadata pdfInfo = MarcClient.getPdfInfo(barcode);
         
         String metadataChecksum = DigestUtils.md5Hex(JSON.toJson(pdfInfo));
         
@@ -372,7 +382,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
         return result;
     }
     
-    private InputStream produceApron(String pdfFileString, PdfInfo pdfInfo) throws IOException {
+    private InputStream produceApron(String pdfFileString, PdfMetadata pdfInfo) throws IOException {
         InputStream apronFile;
         try {
             apronFile = PdfApronCreator.produceApronPage(pdfInfo);
@@ -383,7 +393,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     }
     
     private void createCombinedPdf(File originalPdfFile,
-                                   PdfInfo pdfInfo,
+                                   PdfMetadata pdfInfo,
                                    InputStream apronFile,
                                    OutputStream tempPdfFileStream)
             throws IOException {

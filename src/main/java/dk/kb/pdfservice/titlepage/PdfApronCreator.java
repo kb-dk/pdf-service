@@ -1,8 +1,8 @@
 package dk.kb.pdfservice.titlepage;
 
-import dk.kb.pdfservice.alma.ApronType;
-import dk.kb.pdfservice.alma.PdfInfo;
 import dk.kb.pdfservice.config.ServiceConfig;
+import dk.kb.pdfservice.model.ApronType;
+import dk.kb.pdfservice.model.PdfMetadata;
 import dk.kb.pdfservice.utils.PdfUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang3.tuple.MutablePair;
@@ -42,7 +42,7 @@ public class PdfApronCreator {
     
     private static final Logger log = LoggerFactory.getLogger(PdfApronCreator.class);
     
-    public static InputStream produceApronPage(PdfInfo pdfInfo)
+    public static InputStream produceApronPage(PdfMetadata pdfInfo)
             throws TransformerException, FOPException, IOException {
         File formatterFile = ServiceConfig.getFrontPageFopFile().toFile();
         

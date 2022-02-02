@@ -5,6 +5,8 @@ import dk.kb.alma.gen.bibs.Bib;
 import dk.kb.alma.gen.items.Item;
 import dk.kb.pdfservice.config.ApronMapping;
 import dk.kb.pdfservice.config.ServiceConfig;
+import dk.kb.pdfservice.model.ApronType;
+import dk.kb.pdfservice.model.PdfMetadata;
 import dk.kb.pdfservice.webservice.exception.NotFoundServiceObjection;
 import dk.kb.util.other.StringListUtils;
 import dk.kb.util.xml.XPathSelector;
@@ -35,7 +37,7 @@ public class MarcClient {
     public static final Logger log = LoggerFactory.getLogger(MarcClient.class);
     
     @Nonnull
-    public static PdfInfo getPdfInfo(String actualBarcode) throws NotFoundServiceObjection {
+    public static PdfMetadata getPdfInfo(String actualBarcode) throws NotFoundServiceObjection {
         Pair<Bib, Item> bibItem = AlmaLookupClient.getBib(actualBarcode);
         //Portfolios portFolios = almaInventoryClient.getBibPortfolios(mmsID);
         Bib bib = bibItem.getLeft();
@@ -69,20 +71,34 @@ public class MarcClient {
         
         String primoLink = ServiceConfig.getPrimoLink(bib.getMmsId());
         
-        PdfInfo pdfInfo = new PdfInfo(authors,
-                                      title,
-                                      alternativeTitle,
-                                      udgavebetegnelse,
-                                      volume,
-                                      placeAndYear,
-                                      size,
-                                      apronType,
-                                      publicationDate,
-                                      publicationDateString,
-                                      isWithinCopyright,
-                                      keywords,
-                                      primoLink);
-        return pdfInfo;
+        return new PdfMetadata()
+                .authors(authors)
+                .title(title)
+                .alternativeTitle(alternativeTitle)
+                .udgavebetegnelse(udgavebetegnelse)
+                .volume(volume)
+                .placeAndYear(placeAndYear)
+                .size(size)
+                .apronType(apronType)
+                .publicationDate(publicationDate)
+                .publicationDateString(publicationDateString)
+                .isWithinCopyright(isWithinCopyright)
+                .keywords(keywords)
+                .primoLink(primoLink);
+        //PdfInfo pdfInfo = new PdfInfo(authors,
+        //                              title,
+        //                              alternativeTitle,
+        //                              udgavebetegnelse,
+        //                              volume,
+        //                              placeAndYear,
+        //                              size,
+        //                              apronType,
+        //                              publicationDate,
+        //                              publicationDateString,
+        //                              isWithinCopyright,
+        //                              keywords,
+        //                              primoLink);
+        //return pdfInfo;
     }
     
     private static String getKeywords(Element marc21, RecordType recordType) {
@@ -286,7 +302,7 @@ public class MarcClient {
     
         //This is an ordered map, so you can trust the iteration order
         List<ApronMapping> mappings = ServiceConfig.getApronTypeMapping();
-        Pair<ApronType,ApronType> defaultResult = Pair.of(ApronType.Unknown, ApronType.Unknown);
+        Pair<ApronType,ApronType> defaultResult = Pair.of(ApronType.UNKNOWN, ApronType.UNKNOWN);
     
         Pair<ApronType,ApronType> result = null;
         outerloop:

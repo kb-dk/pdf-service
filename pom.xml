@@ -346,7 +346,6 @@
                 <configuration>
                     <generatorName>jaxrs-cxf-extended</generatorName>
                     <inputSpec>${project.build.outputDirectory}/openapi.yaml</inputSpec>
-                    <modelNameSuffix>Dto</modelNameSuffix>
                     <generateSupportingFiles>false</generateSupportingFiles>
                     <generateApiTests>false</generateApiTests>
                     <generateModelDocumentation>true</generateModelDocumentation>
@@ -364,7 +363,7 @@
                         <dateLibrary>threetenbp</dateLibrary>
                         <implFolder>src/main/java</implFolder>
                         <invokerPackage>${project.package}</invokerPackage>
-                        <dateLibrary>Java11</dateLibrary>
+                        <dateLibrary>java8</dateLibrary>
                     </configOptions>
                     <packageName>${project.package}</packageName>
                 </configuration>

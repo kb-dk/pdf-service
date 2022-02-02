@@ -1,6 +1,6 @@
 package dk.kb.pdfservice.utils;
 
-import dk.kb.pdfservice.alma.PdfInfo;
+import dk.kb.pdfservice.model.PdfMetadata;
 import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.common.PDMetadata;
@@ -49,8 +49,8 @@ public class PdfMetadataUtils {
     }
     
     @Nonnull
-    public static PDDocumentInformation constructPdfMetadata(PdfInfo pdfInfo,
-                                                              PDDocumentInformation origPdfMetadata) {
+    public static PDDocumentInformation constructPdfMetadata(PdfMetadata pdfInfo,
+                                                             PDDocumentInformation origPdfMetadata) {
         PDDocumentInformation pddocInfo = new PDDocumentInformation();
         
                         /*

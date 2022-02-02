@@ -37,24 +37,97 @@ paths:
                 type: string
                 format: binary
 
+  /getPdfMetadata/{pdfFile}:
+    get:
+      tags:
+        - "${project.name}"
+      summary: 'Request the metadata for a given pdf file'
+      operationId: getPdfMetadata
+      x-streamingOutput: false # If enabled the method will return StreamingOutput.
+      parameters:
+        - name: pdfFile
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 130018852943.pdf
+      responses:
+        '200':
+          description: A pdf with attached page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PdfMetadata'
+
+
 components:
   schemas:
-    HelloReply:
+    ApronType:
+      type: string
+      nullable: true
+      enum:
+        - A
+        - B
+        - C
+        - D
+        - F
+        - G
+        - H
+        - I
+        - J
+        - K
+        - L
+        - M
+        - N
+        - O
+        - P
+        - Q
+        - R
+        - S
+        - T
+        - U
+        - V
+        - W
+        - X
+        - Y
+        - Z
+        - Unknown
+
+    PdfMetadata:
       type: object
-      required:
-        - message
       properties:
-        message:
+        authors:
           type: string
-          description: Greeting from the API
-    Error:
-      type: object
-      required:
-        - code
-        - message
-      properties:
-        code:
-          type: integer
-          format: int32
-        message:
+        title:
           type: string
+        alternativeTitle:
+          type: string
+          nullable: true
+        udgavebetegnelse:
+          type: string
+          default: ""
+        volume:
+          type: string
+          default: ""
+        placeAndYear:
+          type: string
+          default: ""
+        size:
+          type: string
+          default: ""
+        publicationDate:
+          type: string
+          format: date
+        publicationDateString:
+          type: string
+          default: ""
+        isWithinCopyright:
+          type: boolean
+        apronType:
+          $ref: '#/components/schemas/ApronType'
+        keywords:
+          type: string
+          default: ""
+        primoLink:
+          type: string
+          default: ""

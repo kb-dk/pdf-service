@@ -1,8 +1,8 @@
 package dk.kb.pdfservice.titlepage;
 
-import dk.kb.pdfservice.alma.ApronType;
-import dk.kb.pdfservice.alma.PdfInfo;
 import dk.kb.pdfservice.config.ServiceConfig;
+import dk.kb.pdfservice.model.ApronType;
+import dk.kb.pdfservice.model.PdfMetadata;
 import dk.kb.util.json.JSON;
 import org.apache.fop.apps.FOPException;
 import org.junit.jupiter.api.Test;
@@ -15,7 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class PdfTitlePageCreatorTest {
     
@@ -61,7 +61,7 @@ class PdfTitlePageCreatorTest {
                        + "  \"udgavebetegnelse\" : \"\",\n"
                        + "  \"withinCopyright\" : false\n"
                        + "}";
-        PdfInfo pdfInfo = JSON.fromJson(json1, PdfInfo.class);
+        PdfMetadata pdfInfo = JSON.fromJson(json1, PdfMetadata.class);
         try (InputStream apronPage = PdfApronCreator.produceApronPage(pdfInfo)) {
             Files.copy(apronPage, Path.of("test.pdf"), StandardCopyOption.REPLACE_EXISTING);
         }
@@ -92,7 +92,7 @@ class PdfTitlePageCreatorTest {
         List<String> resultingLines = PdfApronCreator.enforceLimits(textBlocks, ApronType.B,
                                                                     ServiceConfig.getApronMetadataTableFontSize(),
                                                                     ServiceConfig.getApronMetadataTableWidthCm());
-        assertEquals("Dero Königl. Majestät zu Dännemarck Norwegen, &c. &c. bestalten Raths, August Wygands, Entsetzter Vortrab, oder Kurtzer Anfang des künfftigen Beweises; Dass alles in ermeltem Vortrab enthalten (1.) die reine, lautere ... Warheit bleibe; (2.) Darin der ietzo prædominirenden Parthey des Hamburgischen Rahts nicht der tausendste Theil der in ihnen ... wohnenden Bossheit, noch weniger die bey dem gemeinen Gut in Hamburg vorgehende entsetzliche Diebereyen enthalten oder vorgestellet; Und (3.) das von ermelter Rahts-Parthey darwider ...",resultingLines.get(1));
+        assertEquals("Dero Königl. Majestät zu Dännemarck Norwegen, &c. &c. bestalten Raths, August Wygands, Entsetzter Vortrab, oder Kurtzer Anfang des künfftigen Beweises; Dass alles in ermeltem Vortrab enthalten (1.) die reine, lautere ... Warheit bleibe; (2.) Darin der ietzo prædominirenden Parthey des...",resultingLines.get(1));
         //System.out.println(resultingLines);
     }
     
