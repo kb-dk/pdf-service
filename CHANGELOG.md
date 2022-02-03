@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Something
 
 
-## [1.0.0](https://github.com/<project>/tree/<project>-1.0.0) - YYYY-MM-DD
+## [1.0.0]
 ### Added
 
-- Initial release of <project>
+- Initial release of pdf-service
