@@ -17,7 +17,7 @@ projectName=$(basename "$SCRIPT_DIR")
 tomcatHttpPort=8211
 tomcatDebugPort=8219
 build=fast
-version=$(mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version -Psbprojects-nexus | sed -n -e '/^\[.*\]/ !{ /^[0-9]/ { p; q } }')
+version=$(mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version -Psbforge-nexus | sed -n -e '/^\[.*\]/ !{ /^[0-9]/ { p; q } }')
 
 #Build
 
