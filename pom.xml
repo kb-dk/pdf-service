@@ -51,6 +51,7 @@
         <!--Specify the licenses here, so they can be picked up by openAPI-->
         <license.name>Apache License, Version 2.0</license.name>
         <license.url>https://www.apache.org/licenses/LICENSE-2.0.txt</license.url>
+        <maven.javadoc.skip>true</maven.javadoc.skip>
 
         <project.package>dk.kb.pdfservice</project.package>
 
