@@ -16,13 +16,13 @@ curl --version > /dev/null || {
 
 
 #The log file to parse
-LOGFILE=${1:-~/tomcat/logs/pdf-service-downloads.log}
+LOGFILE="${1:-~/tomcat/logs/pdf-service-downloads.log}"
 
 #What server to use
-export SERVER=${2:-http://localhost:8211/pdf-service}
+export SERVER="${2:-http://localhost:8211/pdf-service}"
 
 #Where to output. Default to stdout
-export OUTPUT=${3:-/dev/stdout}
+export OUTPUT="${3:-/dev/stdout}"
 
 #These columns should be excluded from the output
 excludeColumns='alternativeTitle,keywords,publicationDate,size,udgavebetegnelse,volume'
@@ -42,7 +42,7 @@ trap '{ rm -f -- "$errorLog"; }' EXIT
 # jq -s: Parse json lines to json array
 # jq exclusions: Remove unnessesary fields from each record
 # jq -r: Magic to turn json array into CSV
-cat "$LOGFILE" | \
+cat $LOGFILE | \
   cut -d' ' -f10- | \
   sort  | \
   uniq -c | \
