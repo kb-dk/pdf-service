@@ -4,6 +4,17 @@
 # ./getMetadataStatistics.sh [~/tomcat/logs/pdf-service-downloads.log] [http://localhost:8211/pdf-service] [output.csv]
 SCRIPT_DIR=$(dirname "$(readlink -f -- ${BASH_SOURCE[0]})")
 
+jq --version > /dev/null || {
+   >&2 echo "This script requires jq ( https://stedolan.github.io/jq/ ) to function. Please install and rerun the script"
+   exit 2;
+}
+curl --version > /dev/null || {
+   >&2 echo "This script requires curl to function. Please install and rerun the script"
+   exit 2;
+}
+
+
+
 #The log file to parse
 LOGFILE=${1:-~/tomcat/logs/pdf-service-downloads.log}
 
@@ -46,11 +57,14 @@ cat "$LOGFILE" | \
   jq -r '(map(keys) | add | unique) as $cols | map(. as $row | $cols | map($row[.])) as $rows | $cols, $rows[] | @csv' - > "$OUTPUT"
 
 if [[ -s "$errorLog" ]]; then
-  >&2 echo -e "Encountered problems with some files, which means that they are excluded from the output:\n"
+  >&2 echo ""
+  >&2 echo "Encountered problems with some files, which means that they are excluded from the output:"
+  >&2 echo ""
   >&2 cat "$errorLog"
   >&2 echo "This is most likely because the barcodes no longer exist in ALMA."
-  >&2 echo "While this script only output download statistics for Teater Manuscripts, it cannot determine which files are teater manuscripts without being able to look up the file in ALMA."
+  >&2 echo "While this script only output download statistics for Teater Manuscripts, it cannot determine which files are teater manuscripts without being able to look up the files in ALMA."
   >&2 echo "So while the errors most likely will not affect the final output, you will have to investigate it yourself."
+  >&2 echo ""
   >&2 echo "If the barcode of a record was changed (in ALMA) follow this procedure to fix the error"
   >&2 echo "1. Find the original pdf file and open it to read the title and author directly"
   >&2 echo "2. In ALMA, search for this title and author to find the new Bib record"
