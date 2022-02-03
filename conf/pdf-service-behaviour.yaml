@@ -14,7 +14,7 @@ alma:
   # Must have these permissions
   #   Bibs - Read-only - To retrieve records and metadata
   #   Configuration - Read-only - To check name of current ALMA instance
-  apikey: SHOULD SET IN librarylending-environment.yaml or librarylending-local.yaml
+  apikey: SHOULD SET IN pdf-service-environment.yaml or pdf-service-local.yaml
 
   # The Alma URL. This should never change, you control which alma instance you use by the key, not the url
   url: https://api-eu.hosted.exlibrisgroup.com/almaws/v1/

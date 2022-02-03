@@ -78,7 +78,7 @@ webext-10 er prod host for adgang til e-mat/dod. Al prod adgang til filerne fra 
 
 Behov:
 ------
-Den benytter sig af tre ting
+Den benytter sig af disse ting
 
 1. Den læser pdf filerne lokalt, så serveren skal have et mount hvor den kan læse
    `webext-10.kb.dk:/data1/e-mat/dod`
