@@ -115,7 +115,7 @@ pdfService:
     # If the difference is below 1%, we call it a match
     oldHeaderImages:
 #      imageDirectory: "/home/dodpdfsv/services/conf/oldHeaderImages"
-      imageDirectory: "conf/oldHeaderImages"
+      imageDirectory: "conf/resources/oldHeaderImages"
 
       # Percent difference between images before we regard them as different
       # 1.0 is inverse colors. 0.0 pixel-perfect match.
@@ -138,9 +138,9 @@ pdfService:
   apron:
     #This XSLT generates the frontpage
 #    FOPfile: "/home/dodpdfsv/services/conf/apron.xsl"
-    FOPfile: "conf/apron.xsl"
+    FOPfile: "conf/resources/apron.xsl"
 #    FOPconfig: "/home/dodpdfsv/services/conf/fop.xconf"
-    FOPconfig: "conf/fop.xconf"
+    FOPconfig: "conf/resources/fop.xconf"
     #Relative URLs in this FOPfile will be resolved from the folder containing the FOPfile
     # So you can refer to KBLogo.png simply as "KBLogo.png" without any path
 
@@ -199,7 +199,7 @@ pdfService:
 
       #Perhaps use http://unifoundry.com/unifont/index.html instead??
 #      fontFile: "/home/dodpdfsv/services/conf/fonts/DejaVuSans.ttf" # Font of the metadata table
-      fontFile: "conf/fonts/DejaVuSans.ttf" # Font of the metadata table
+      fontFile: "conf/resources/fonts/DejaVuSans.ttf" # Font of the metadata table
       fontSize: 10 #px
 
       maxlines: # Remember these are very dependent on the font and fontsize above

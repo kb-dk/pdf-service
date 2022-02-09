@@ -1,13 +1,13 @@
-<Context docBase="/home/dodpdfsv/services/tomcat-apps/pdf-service.war">
+<Context docBase="${user.home}/services/tomcat-apps/pdf-service.war">
 
   <Environment name="pdf-service-logback-config"
-               value="/home/dodpdfsv/services/conf/logback.xml"
+               value="${user.home}/services/conf/logback.xml"
                type="java.lang.String"
                override="false"/>
 
   <!-- Note that the application-config is defined using globbing: Multiple config files are merged -->
   <Environment name="application-config"
-               value="/home/dodpdfsv/services/conf/pdf-service-*.yaml"
+               value="${user.home}/services/conf/pdf-service-*.yaml"
                type="java.lang.String"
                override="false"/>
 

@@ -9,7 +9,7 @@
             <fonts>
                 <!--https://xmlgraphics.apache.org/fop/2.7/fonts.html -->
                 <!-- register all the fonts found in a directory -->
-                <directory>conf/fonts/</directory>
+                <directory>conf/resources/fonts/</directory>
                 <!-- automatically detect operating system installed fonts -->
 <!--                <auto-detect/>-->
 

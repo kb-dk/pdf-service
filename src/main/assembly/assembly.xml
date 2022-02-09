@@ -20,27 +20,28 @@
             </excludes>
         </fileSet>
         <fileSet>
-            <outputDirectory>services/bin</outputDirectory>
+            <outputDirectory>bin</outputDirectory>
             <directory>src/main/bin</directory>
             <filtered>false</filtered>
             <fileMode>755</fileMode>
+            <directoryMode>750</directoryMode>
         </fileSet>
 
     </fileSets>
     <files>
         <file>
-            <outputDirectory>services/conf</outputDirectory>
+            <outputDirectory>services/conf/resources/</outputDirectory>
             <source>conf/devel12/fop.xconf</source>
         </file>
         <file>
-            <outputDirectory>services/conf</outputDirectory>
+            <outputDirectory>tomcat/conf/Catalina/localhost/</outputDirectory>
             <source>conf/devel12/${project.artifactId}.xml</source>
         </file>
 
 
         <file>
             <outputDirectory>services/tomcat-apps</outputDirectory>
-            <source>target/${project.artifactId}-${project.version}.war</source>
+            <source>target/${project.artifactId}.war</source>
         </file>
 
         <file>

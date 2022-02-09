@@ -17,8 +17,9 @@ projectName=$(basename "$SCRIPT_DIR")
 tomcatHttpPort=8211
 tomcatDebugPort=8219
 build=fast
-version=$(mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version -Psbforge-nexus | sed -n -e '/^\[.*\]/ !{ /^[0-9]/ { p; q } }')
+version=$(mvn -Psbprojects-nexus  org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version -Psbforge-nexus | sed -n -e '/^\[.*\]/ !{ /^[0-9]/ { p; q } }')
 
+echo $version
 #Build
 
 if [ $build == "fast" ]; then
@@ -37,8 +38,9 @@ fi
 
 set -x
 #install
-rsync -av "$SCRIPT_DIR/target/${projectName}-${version}.war" "${devel}:services/tomcat-apps/${projectName}.war"
-rsync -av "$SCRIPT_DIR/conf" --exclude='*-local.yaml' --include '/conf/oldHeaderImages/' --include '/conf/fonts/' --exclude '/**/**/'  "${devel}:services/"
+rsync -av "$SCRIPT_DIR/target/${projectName}-${version}-package.tar.gz" "${devel}:."
+ssh "${devel}" "tar -xvzf ./${projectName}-${version}-package.tar.gz"
+
 rsync -av "$SCRIPT_DIR/conf/devel12/" "${devel}:services/conf/"
 rsync -av "$SCRIPT_DIR/conf/devel12/${projectBaseUrl}.xml" "${devel}:tomcat/conf/Catalina/localhost/${projectBaseUrl}.xml"
 
