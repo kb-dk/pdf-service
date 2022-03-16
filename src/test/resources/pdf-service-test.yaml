@@ -1,0 +1,17 @@
+#
+# This config contains behaviour data: Thread allocation, allowed fields for lookup, limits for arguments etc.
+#
+# The behaviour config is normally controlled by developers and is part of the code repository.
+# Sensitive information such as machine names and user/passwords should not be part of this config.
+#
+# It will be automatically merged with the environment config when accessed through the
+# application config system.
+#
+#
+
+alma:
+  # Api key name: dodpdfsv.devel.key
+  # Must have these permissions
+  #   Bibs - Read-only - To retrieve records and metadata
+  #   Configuration - Read-only - To check name of current ALMA instance
+  apikey: ${alma.apikey}

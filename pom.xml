@@ -305,6 +305,12 @@
                 <filtering>false</filtering>
             </resource>
         </resources>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+                <filtering>true</filtering>
+            </testResource>
+        </testResources>
         <plugins>
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>

@@ -10,7 +10,7 @@ class MarcClientTest {
     
     @Test
     void getPdfInfo() throws IOException {
-        ServiceConfig.initialize("conf/*.yaml");
+        ServiceConfig.initialize("conf/*.yaml",Thread.currentThread().getContextClassLoader().getResource("pdf-service-test.yaml").getFile());
     
         System.out.println(JSON.toJson(MarcClient.getPdfInfo("130021854531")));
     }
