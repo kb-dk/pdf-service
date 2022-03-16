@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Something
 
+## [1.1.0]
+### Added
+
+- date pattern Named month require at least one alphabetic character in month name. 
+  This should prevent date parsing errors like `1961/62-1981.` as seen in Sag-1093685
+
+- Added a lot of date parsing tests to account for all the weird and wonderful ways a Librarian can write a date
+
+- Packaged in a TEK-compatible structure
 
 ## [1.0.0]
 ### Added
