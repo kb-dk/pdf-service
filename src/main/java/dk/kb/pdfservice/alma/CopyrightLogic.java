@@ -30,7 +30,7 @@ public class CopyrightLogic {
      * It does NOT need to be the same in both places
      **/
     private static final Pattern yearFromNamedMonthPattern = Pattern.compile(PREFIX
-                                                                             + "(?<day>\\d{1,2})[-/ .]+(?<month>\\w+)[-/ .]+(?<year>\\d{4})"
+                                                                             + "(?<day>\\d{1,2})[-/ .]+(?<month>\\w*[a-zA-Z]\\w*)[-/ .]+(?<year>\\d{4})"
                                                                              + POSTFIX);
     /**
      * Extract date from format DD-MM-YYYY
