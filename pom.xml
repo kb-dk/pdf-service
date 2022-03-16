@@ -10,7 +10,7 @@
 
     <groupId>dk.kb.pdfservice</groupId>
     <artifactId>pdf-service</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.1</version>
     <packaging>war</packaging>
 
     <repositories>
@@ -30,7 +30,7 @@
         <url>https://github.com/kb-dk/pdf-service</url>
         <connection>scm:git:git@github.com:kb-dk/pdf-service.git</connection>
         <developerConnection>scm:git:git@github.com:kb-dk/pdf-service.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>pdf-service-1.1</tag>
     </scm>
 
     <licenses>
