@@ -18,6 +18,7 @@
                 <exclude>${project.artifactId}-local.yaml</exclude>
                 <exclude>${project.artifactId}-environment.yaml</exclude>
             </excludes>
+            <filtered>false</filtered>
         </fileSet>
         <fileSet>
             <outputDirectory>bin</outputDirectory>
