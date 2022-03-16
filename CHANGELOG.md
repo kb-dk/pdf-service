@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Something
 
+
+## [1.1.1]
+
+Correctly packaged package
+
+
 ## [1.1.0]
 ### Added
 
