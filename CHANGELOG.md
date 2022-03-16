@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0]
 ### Added
 
+- `services/conf/resources/fop.xconf` specifies font dir as `/home/dodpdfsv/services/conf/resources/fonts/` to prevent
+  problems with relative paths
+
 - date pattern Named month require at least one alphabetic character in month name. 
   This should prevent date parsing errors like `1961/62-1981.` as seen in Sag-1093685
 
