@@ -2,6 +2,7 @@ package dk.kb.pdfservice.titlepage;
 
 import dk.kb.pdfservice.config.ServiceConfig;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.FileInputStream;
@@ -10,6 +11,7 @@ import java.io.IOException;
 class PdfTitlePageCleanerTest {
     
     @Test
+    @Disabled("Depends on test data not in git repo")
     void cleanHeaderPages() throws IOException {
         ServiceConfig.initialize("conf/*.yaml");
         
