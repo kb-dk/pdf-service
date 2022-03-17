@@ -8,6 +8,7 @@ import dk.kb.pdfservice.model.ApronType;
 import dk.kb.pdfservice.utils.SizeUtils;
 import dk.kb.util.yaml.YAML;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.text.StringSubstitutor;
 import org.apache.fop.fonts.truetype.FontFileReader;
 import org.apache.fop.fonts.truetype.OFFontLoader;
 import org.apache.fop.fonts.truetype.OFMtxEntry;
@@ -87,7 +88,7 @@ public class ServiceConfig {
                 = MemoryUsageSetting.setupMixed(SizeUtils.toBytes(ServiceConfig.getConfig()
                                                                                .getString(
                                                                                        "pdfService.temp.memoryForPDFs")));
-        memUsageSetting.setTempDir(new File(ServiceConfig.getConfig().getString("pdfService.temp.folder")));
+        memUsageSetting.setTempDir(new File(extrapolate(ServiceConfig.getConfig().getString("pdfService.temp.folder"))));
         return memUsageSetting;
     }
     
@@ -159,12 +160,16 @@ public class ServiceConfig {
     }
     
     public static List<String> getPdfSourcePath() {
-        return getConfig().getList("pdfService.PDFsource");
+        return getConfig().getList("pdfService.PDFsource").stream().map(ServiceConfig::extrapolate).collect(Collectors.toList());
     }
     
     
     public static String getPdfCachePath() {
-        return getConfig().getString("pdfService.cache.cacheFolder");
+        return extrapolate(getConfig().getString("pdfService.cache.cacheFolder"));
+    }
+    
+    public static String extrapolate(Object string) {
+        return StringSubstitutor.replaceSystemProperties(string);
     }
     
     public static TemporalAmount getMaxAgeTempPdf() {
@@ -182,7 +187,9 @@ public class ServiceConfig {
     }
     
     public static File getOldHeaderImageDir() {
-        return new File(ServiceConfig.getConfig().getString("pdfService.apronRemoval.oldHeaderImages.imageDirectory"));
+        final String string = ServiceConfig.getConfig()
+                                           .getString("pdfService.apronRemoval.oldHeaderImages.imageDirectory");
+        return new File(extrapolate(string));
     }
     
     public static Double getOldHeaderImagesmMaxDifferenceAllowedForMatch() {
@@ -245,7 +252,7 @@ public class ServiceConfig {
     
     //FrontPage
     public static Path getFrontPageFopFile() {
-        return Path.of(getConfig().getString("pdfService.apron.FOPfile")).toAbsolutePath();
+        return Path.of(extrapolate(getConfig().getString("pdfService.apron.FOPfile"))).toAbsolutePath();
     }
     
     //Copyright Footer
@@ -332,7 +339,7 @@ public class ServiceConfig {
     
     public static synchronized TTFFile getApronMetadataTableFont() {
         if (ttfFile == null) {
-            File file = new File(getConfig().getString("pdfService.apron.metadataTable.fontFile")).getAbsoluteFile();
+            File file = new File(extrapolate(getConfig().getString("pdfService.apron.metadataTable.fontFile"))).getAbsoluteFile();
             
             ttfFile = new TTFFile(false, true);
             try (InputStream stream = new FileInputStream(file)) {
@@ -365,7 +372,7 @@ public class ServiceConfig {
     }
     
     public static File getFOPConfigFile() {
-        return new File(ServiceConfig.getConfig().getString("pdfService.apron.FOPconfig")).getAbsoluteFile();
+        return new File(extrapolate(ServiceConfig.getConfig().getString("pdfService.apron.FOPconfig"))).getAbsoluteFile();
     }
     
     public static String getPrimoLink(String mmsId) {

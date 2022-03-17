@@ -27,16 +27,20 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.stream.StreamSource;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class PdfApronCreator {
     
@@ -51,24 +55,29 @@ public class PdfApronCreator {
         builder.setAccessibility(false);
         
         DefaultConfigurationBuilder cfgBuilder = new DefaultConfigurationBuilder();
+        
         try {
-            Configuration cfg = cfgBuilder.buildFromFile(ServiceConfig.getFOPConfigFile());
-            builder.setConfiguration(cfg);
+            String config = Files.readAllLines(ServiceConfig.getFOPConfigFile().toPath(), StandardCharsets.UTF_8)
+                                 .stream()
+                                 .map(ServiceConfig::extrapolate)
+                                 .collect(Collectors.joining("\n"));
+            try (InputStream configStream = new ByteArrayInputStream(config.getBytes(StandardCharsets.UTF_8))) {
+                Configuration cfg = cfgBuilder.build(configStream);
+                builder.setConfiguration(cfg);
+            }
         } catch (ConfigurationException e) {
             throw new RuntimeException(e);
         }
         
         FopFactory fopFactory = builder.build();
         
-        
         try (ByteArrayOutputStream outStream = new ByteArrayOutputStream()) {
             FOUserAgent agent = fopFactory.newFOUserAgent();
-
+            
             //How to override the FOP logging
             //LoggingEventListener loggingEventListener = new LoggingEventListener();
             //agent.getEventBroadcaster().addEventListener(loggingEventListener);
             
-        
             
             Fop fop = fopFactory.newFop(MimeConstants.MIME_PDF, agent, outStream);
             
@@ -97,7 +106,7 @@ public class PdfApronCreator {
                 Transformer xslfoTransformer = factory.newTransformer(new StreamSource(formatterStream,
                                                                                        formatterFile.toURI()
                                                                                                     .toASCIIString()));
-    
+                
                 //String resplaced = string.replaceAll("̈\u0308", "\u200B̈ \\1");
                 //String resplaced = string.replaceAll("̈\u0308", "\u200B̈ \\1");
                 //String resplaced = string.replaceAll("̈\u0308", "\u200B̈ \\1");
@@ -124,11 +133,11 @@ public class PdfApronCreator {
                 xslfoTransformer.setParameter("placeAndYear", info.get(4));
                 xslfoTransformer.setParameter("size", info.get(5));
                 xslfoTransformer.setParameter("apronType", pdfInfo.getApronType().name());
-    
+                
                 xslfoTransformer.setParameter("volume", pdfInfo.getVolume());
                 xslfoTransformer.setParameter("primoLink", pdfInfo.getPrimoLink());
-    
-    
+                
+                
                 xslfoTransformer.setParameter("metadataTableFont",
                                               Objects.requireNonNull(ServiceConfig.getApronMetadataTableFont())
                                                      .getFullName());
@@ -175,10 +184,7 @@ public class PdfApronCreator {
         //If is is to many lines, remove last line from the longest, and keep going until reduced to acceptable level
         while (usedLines > maxLines) {
             //TODO If multiple, prefer the last entry
-            Pair<String, Double> longestEntry = lengthMap.values()
-                                                         .stream()
-                                                         .max(Map.Entry.comparingByValue())
-                                                         .get();
+            Pair<String, Double> longestEntry = lengthMap.values().stream().max(Map.Entry.comparingByValue()).get();
             
             double newValue = longestEntry.getValue() - 1;
             longestEntry.setValue(newValue);

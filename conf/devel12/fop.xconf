@@ -1,19 +1,9 @@
 <fop version="1.0">
     <renderers>
-        <!--https://xmlgraphics.apache.org/fop/0.95/configuration.html-->
-        <!--https://xmlgraphics.apache.org/fop/0.95/embedding.html#config-internal-->
-        <!--https://xmlgraphics.apache.org/fop/2.7/complexscripts.html-->
-
         <renderer mime="application/pdf">
             <fonts>
-                <!--https://xmlgraphics.apache.org/fop/2.7/fonts.html -->
-
-                <!-- register all the fonts found in a directory -->
-                <directory>/home/dodpdfsv/services/conf/resources/fonts/</directory>
-
-
+                <directory>${user.home}/services/conf/resources/fonts/</directory>
             </fonts>
         </renderer>
     </renderers>
-
 </fop>
