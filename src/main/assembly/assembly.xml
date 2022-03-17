@@ -21,7 +21,7 @@
             <filtered>false</filtered>
         </fileSet>
         <fileSet>
-            <outputDirectory>bin</outputDirectory>
+            <outputDirectory>services/bin</outputDirectory>
             <directory>src/main/bin</directory>
             <filtered>false</filtered>
             <fileMode>755</fileMode>
@@ -31,11 +31,11 @@
     </fileSets>
     <files>
         <file>
-            <outputDirectory>services/conf/resources/</outputDirectory>
+            <outputDirectory>services/conf/</outputDirectory>
             <source>conf/devel12/fop.xconf</source>
         </file>
         <file>
-            <outputDirectory>tomcat/conf/Catalina/localhost/</outputDirectory>
+            <outputDirectory>services/tomcat-apps/</outputDirectory>
             <source>conf/devel12/${project.artifactId}.xml</source>
         </file>
 

@@ -38,7 +38,7 @@
     <xsl:variable name="typeA-text">
         <fo:block font-size="18pt" font-weight="bold"
                   space-after="5mm" text-align="center" line-height="15px">
-            DK - (A)
+            DK
         </fo:block>
         <fo:block text-align="left" font-size="14pt" keep-with-previous="always">
             Værket kan være ophavsretligt beskyttet, og så må du kun bruge PDF-filen til personlig brug. Hvis
@@ -49,7 +49,7 @@
         <fo:block space-after="10mm" keep-with-previous="always"/>
         <fo:block font-size="18pt" font-weight="bold"
                   space-after="5mm" text-align="center" line-height="15px" keep-with-previous="always">
-            UK - (A)
+            UK
         </fo:block>
         <fo:block text-align="left" font-size="14pt" keep-with-previous="always">
             The work may be copyrighted in which case the PDF file may only be used for personal use. If the author died
@@ -62,7 +62,7 @@
     <xsl:variable name="typeB-text">
         <fo:block font-size="18pt" font-weight="bold"
                   space-after="5mm" text-align="center" line-height="15px">
-            DK - (B)
+            DK
         </fo:block>
         <fo:block text-align="left" font-size="14pt" keep-with-previous="always">
             Materialet er fri af ophavsret. Du kan kopiere, ændre, distribuere eller fremføre værket, også til
@@ -71,7 +71,7 @@
         <fo:block space-after="10mm" keep-with-previous="always"/>
         <fo:block font-size="18pt" font-weight="bold"
                   space-after="5mm" text-align="center" line-height="15px" keep-with-previous="always">
-            UK - (B)
+            UK
         </fo:block>
         <fo:block text-align="left" font-size="14pt" keep-with-previous="always">
             The work is free of copyright. You can copy, change, distribute or present the work, even for commercial
@@ -97,7 +97,7 @@
     <xsl:variable name="typeC-text">
         <fo:block font-size="18pt" font-weight="bold"
                   space-after="5mm" text-align="center" line-height="15px">
-            DK - (C)
+            DK
         </fo:block>
         <fo:block text-align="left" font-size="14pt">
             Dette manuskript er ophavsretligt beskyttet, og må kun benyttes til personlig brug. Du må dog også bruge
@@ -113,7 +113,7 @@
         <fo:block space-after="10mm"/>
         <fo:block font-size="18pt" font-weight="bold"
                   space-after="5mm" text-align="center" line-height="15px">
-            UK - (C)
+            UK
         </fo:block>
         <fo:block text-align="left" font-size="14pt">
             This manuscript is copyright protected and is only for personal use. However, you may also use the

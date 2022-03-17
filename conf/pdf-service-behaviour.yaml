@@ -57,13 +57,11 @@ pdfService:
 
   #  Where original PDFs are read from
   PDFsource:
-#    - "/data1/e-mat/dod"
-    - "data/"
+    - "/data1/e-mat/dod"
 
   cache:
     #  Where generated PDFs are stored
-    cacheFolder: "cache/"
-#    cacheFolder: "/dodpdfsv-cache/cache/"
+    cacheFolder: "/dodpdfsv-cache/cache/"
     # If copyrighted PDF is older than this age, request ALMA data and create it again
     # This ensures that updates to ALMA will tage effect (after a while)
     # Note that if this age is SHORTER than the alma.cache_timeout, the cached ALMA record
@@ -94,8 +92,7 @@ pdfService:
 
   temp:
     #  Where temporary files are stored when we unload them from memory
-#    folder: "/dodpdfsv-cache/temp/"
-    folder: "temp/"
+    folder: "/dodpdfsv-cache/temp/"
 
     #This is the maximum memory we will use for each PDF being built. If we need more memory, we will use temp files in the folder above
     # This allows us to open the TWO 2+ GB PDFs, while only allocating 1GB Heap
@@ -114,8 +111,7 @@ pdfService:
     # We scale the extracted image to match the dimensions of the oldHeaderImages file
     # If the difference is below 1%, we call it a match
     oldHeaderImages:
-#      imageDirectory: "/home/dodpdfsv/services/conf/oldHeaderImages"
-      imageDirectory: "conf/resources/oldHeaderImages"
+      imageDirectory: "/home/dodpdfsv/services/conf/resources/oldHeaderImages"
 
       # Percent difference between images before we regard them as different
       # 1.0 is inverse colors. 0.0 pixel-perfect match.
@@ -137,10 +133,8 @@ pdfService:
   # This section controls the settings for the new apron page
   apron:
     #This XSLT generates the frontpage
-#    FOPfile: "/home/dodpdfsv/services/conf/apron.xsl"
-    FOPfile: "conf/resources/apron.xsl"
-#    FOPconfig: "/home/dodpdfsv/services/conf/fop.xconf"
-    FOPconfig: "conf/resources/fop.xconf"
+    FOPfile: "/home/dodpdfsv/services/conf/resources/apron.xsl"
+    FOPconfig: "/home/dodpdfsv/services/conf/fop.xconf"
     #Relative URLs in this FOPfile will be resolved from the folder containing the FOPfile
     # So you can refer to KBLogo.png simply as "KBLogo.png" without any path
 
@@ -198,8 +192,7 @@ pdfService:
       # So if you increate this, decrease the other column in frontpage.xsl
 
       #Perhaps use http://unifoundry.com/unifont/index.html instead??
-#      fontFile: "/home/dodpdfsv/services/conf/fonts/DejaVuSans.ttf" # Font of the metadata table
-      fontFile: "conf/resources/fonts/DejaVuSans.ttf" # Font of the metadata table
+      fontFile: "/home/dodpdfsv/services/conf/resources/fonts/DejaVuSans.ttf" # Font of the metadata table
       fontSize: 10 #px
 
       maxlines: # Remember these are very dependent on the font and fontsize above
