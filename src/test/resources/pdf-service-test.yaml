@@ -15,3 +15,52 @@ alma:
   #   Bibs - Read-only - To retrieve records and metadata
   #   Configuration - Read-only - To check name of current ALMA instance
   apikey: ${alma.apikey}
+
+pdfService:
+  
+  
+  #  Where original PDFs are read from
+  PDFsource:
+    - "data/"
+  
+  cache:
+    #  Where generated PDFs are stored
+    cacheFolder: "cache/"
+    # If copyrighted PDF is older than this age, request ALMA data and create it again
+    # This ensures that updates to ALMA will tage effect (after a while)
+    # Note that if this age is SHORTER than the alma.cache_timeout, the cached ALMA record
+    # will be used, which defeats the purpose....
+    maxAgeOfCachedPdfs:
+      value: 24
+      unit: SECONDS
+      # unit can be one of NANOS, MICROS, MILLIS, SECONDS, MINUTES, HOURS, HALF_DAYS
+  
+  
+  
+  
+  temp:
+    #  Where temporary files are stored when we unload them from memopry
+    folder: "temp/"
+  
+  # When inserting new front page, we search for old frontpages to remove
+  # As soon as we find a page that is NOT a frontpage, we stop the search. So there
+  # should be no problem with removing pages deep in document
+  apronRemoval:
+    
+    # First extract the images from each page
+    # For each image extracted, compare it to each of the header images in this folder
+    # We scale the extracted image to match the dimensions of the oldHeaderImages file
+    # If the difference is below 1%, we call it a match
+    oldHeaderImages:
+      imageDirectory: "conf/resources/oldHeaderImages"
+  
+  apron:
+    #This XSLT generates the frontpage
+    FOPfile: "conf/resources/apron.xsl"
+    FOPconfig: "conf/fop.xconf"
+    
+    metadataTable:
+      
+      #Perhaps use http://unifoundry.com/unifont/index.html instead??
+      fontFile: "conf/resources/fonts/DejaVuSans.ttf" # Font of the metadata table
+
