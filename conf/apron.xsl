@@ -128,6 +128,33 @@
         </fo:block>
     </xsl:variable>
 
+    <xsl:variable name="typeE-text">
+        <fo:block font-size="18pt" font-weight="bold"
+                  space-after="5mm" text-align="center" line-height="15px">
+            DK
+        </fo:block>
+        <fo:block text-align="left" font-size="14pt">
+            Love, administrative forskrifter, retsafgørelser og lignende offentlige aktstykker er ikke genstand for ophavsret.
+            Du kan frit kopiere, distribuere eller fremføre materialet uden at bede om tilladelse.
+        </fo:block>
+        <fo:block text-align="left" font-size="14pt">
+            Hvis materialet indeholder selvstændige bidrag, skal du være opmærksom på, at disse bidrag kan være beskyttet af ophavsret.
+            Selvstændige bidrag må gengives i forbindelse med aktstykket. Hvis det selvstændige bidrag bruges adskilt fra aktstykket gælder de øvrige ophavsretlige regler
+        </fo:block>
+        <fo:block space-after="10mm"/>
+        <fo:block font-size="18pt" font-weight="bold"
+                  space-after="5mm" text-align="center" line-height="15px">
+            UK
+        </fo:block>
+        <fo:block text-align="left" font-size="14pt">
+            Laws, administrative regulations, court decisions and similar public documents are not subject to copyright.
+            You can copy, distribute and perform the material without asking permission.
+        </fo:block>
+        <fo:block text-align="left" font-size="14pt">
+            If the material contains independent contributions, please be aware that these contributions may be protected by copyright. Independent contributions can be reproduced in connection with the document.
+            If the independent contributions are used separately from the document, the normal copyright rules apply.
+        </fo:block>
+    </xsl:variable>
 
     <xsl:template match="/">
         <fo:root xmlns:fo="http://www.w3.org/1999/XSL/Format">
@@ -325,6 +352,9 @@
                             </xsl:when>
                             <xsl:when test="$apronType='C'">
                                 <xsl:copy-of select="$typeC-text"/>
+                            </xsl:when>
+                            <xsl:when test="$apronType='E'">
+                                <xsl:copy-of select="$typeE-text"/>
                             </xsl:when>
                             <xsl:otherwise>
                             </xsl:otherwise>

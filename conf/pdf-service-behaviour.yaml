@@ -175,6 +175,9 @@ pdfService:
         apronWithinCopyright: C
         apronOutOfCopyright: B
 
+      - 999a: "DAB_dokumenter"
+        apronWithinCopyright: E
+        apronOutOfCopyright: E
 
       # If no other values match, use Apron B
       - __default__: "Value here does not matter"
