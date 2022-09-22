@@ -204,6 +204,7 @@ pdfService:
         A: 11
         B: 12
         C: 9
+        E: 7
 
     primo:
       #    host: "https://soeg.kbdk" # For production
