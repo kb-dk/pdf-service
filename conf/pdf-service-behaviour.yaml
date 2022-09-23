@@ -175,6 +175,9 @@ pdfService:
         apronWithinCopyright: C
         apronOutOfCopyright: B
 
+      - 999a: "DAB_dokumenter"
+        apronWithinCopyright: E
+        apronOutOfCopyright: E
 
       # If no other values match, use Apron B
       - __default__: "Value here does not matter"
@@ -201,6 +204,7 @@ pdfService:
         A: 11
         B: 12
         C: 9
+        E: 7
 
     primo:
       #    host: "https://soeg.kbdk" # For production
