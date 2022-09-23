@@ -88,7 +88,7 @@
                                      content-width="scale-to-fit"
                                      content-height="30pt"
                                      scaling="uniform"
-                                     src="resources/publicdomain.svg"/>
+                                     src="publicdomain.svg"/>
             </fo:basic-link>
         </fo:block>
     </xsl:variable>
@@ -154,7 +154,7 @@
                                              height="270pt"
                                              scaling="uniform"
                                              text-align="center"
-                                             src="resources/KBlogo.png"/>
+                                             src="KBlogo.png"/>
                     </fo:block>
 
 

@@ -133,7 +133,7 @@ pdfService:
   # This section controls the settings for the new apron page
   apron:
     #This XSLT generates the frontpage
-    FOPfile: "${user.home}/services/conf/apron.xsl"
+    FOPfile: "${user.home}/services/conf/resources/apron.xsl"
     FOPconfig: "${user.home}/services/conf/fop.xconf"
     #Relative URLs in this FOPfile will be resolved from the folder containing the FOPfile
     # So you can refer to KBLogo.png simply as "KBLogo.png" without any path
