@@ -126,6 +126,14 @@ response while announcing a well-defined structure in the Swagger UI.
 
 Normally you do not need to touch the Mustache-files.
 
+### Tests
+
+The project contains "normal" unittest plus PdfTitlePageCleanerTest class. The latter depends on specific test files
+being present at the local file system, why those tests have the @Disabled annotation.  
+(At least) in case of problems with apron cleaning, copy the relevant documents from the server, and 
+run those tests also.
+
+
 ## Release procedure
 
 1. Review that the `version` in `pom.xml` is fitting. `pdf-service` uses

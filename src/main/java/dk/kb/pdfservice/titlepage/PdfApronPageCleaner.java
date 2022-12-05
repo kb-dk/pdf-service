@@ -19,6 +19,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class PdfApronPageCleaner {
     
@@ -42,19 +45,19 @@ public class PdfApronPageCleaner {
         int realPageNumber = 0; //For log purposes
         int pagenumber = 0; //Text Stripper works on page numbers
         pageloop:
-        for (PDPage p : doc.getPages()) {
+        for (PDPage pdfPage : doc.getPages()) {
             pagenumber++;
             realPageNumber++;
             
             log.debug("Examining page {}", realPageNumber);
-            List<BufferedImage> pageImages = getImagesFromPage(p.getResources());
+            List<BufferedImage> pageImages = getImagesFromPage(pdfPage.getResources());
             
             log.debug("Extracted {} images from page {}", pageImages.size(), realPageNumber);
             for (BufferedImage pageImage : pageImages) {
                 for (BufferedImage referenceImage : referenceImages) {
                     boolean identical = compareImages(pageImage, referenceImage);
                     if (identical) {
-                        doc.removePage(p);
+                        doc.removePage(pdfPage);
                         log.info("Removed page {} as it match an oldHeaderImage. Page {} is now the new page {}",
                                  realPageNumber,
                                  realPageNumber+1,
@@ -75,11 +78,17 @@ public class PdfApronPageCleaner {
                 log.trace("Found text '{}' om page {}",content, realPageNumber);
                 String pageText = content.replaceAll("\\s+", " ")
                                          .toLowerCase(Locale.ROOT);
-                if (ServiceConfig.getHeaderLines()
-                                 .stream()
-                                 .map(s -> s.toLowerCase(Locale.ROOT))
-                                 .anyMatch(pageText::contains)) {
-                    doc.removePage(p);
+
+                final List<String> headerLines = ServiceConfig.getHeaderLines();
+                final boolean headerLineMatchFound = headerLines
+                        .stream()
+                        .map(s -> s.toLowerCase(Locale.ROOT))
+                        .anyMatch(pageText::contains);
+
+                final boolean hasStampOrBarcodeLabel = hasStampOrBarcodeLabel(pageText, headerLines);
+
+                if (headerLineMatchFound && !hasStampOrBarcodeLabel) {
+                    doc.removePage(pdfPage);
                     log.info("Removed page {} as it match a known header string. Page {} is now the new page {}",
                              realPageNumber,
                              realPageNumber+1,
@@ -97,7 +106,30 @@ public class PdfApronPageCleaner {
             break;
         }
     }
-    
+
+    /**
+     *
+     * @param pageText
+     * @param headerLines
+     * @return true if we assume to have found either a stamp containing the text beneath or a barcode label
+     */
+    private static boolean hasStampOrBarcodeLabel(String pageText, List<String> headerLines) {
+        final List<String> matchingHeaderlines = headerLines
+                .stream()
+                .map(s -> s.toLowerCase(Locale.ROOT))
+                .filter(pageText::contains)
+                .collect(Collectors.toList());
+        final String stampTextInLowerCase = "det kongelige bibliotek dramatisk bibliotek postboks 2149 1016 københavn k danmark";
+        final boolean stampTextFound = pageText.contains(stampTextInLowerCase);
+        final boolean hasStamp = matchingHeaderlines.contains("DET KONGELIGE BIBLIOTEK".toLowerCase(Locale.ROOT)) && stampTextFound;
+        Pattern pattern = Pattern.compile("\\d{12}");
+        Matcher matcher = pattern. matcher(pageText);
+        boolean found12Digits = matcher.find();
+        final boolean barcodeLabelExists = pageText.contains("\\1")|| pageText.contains("1\\")||found12Digits;// "\\1" or "1\\" will most likely be part of barcode if present. If NOT present we look for 12 digits in a row.
+        final boolean hasBarcodeLabel = matchingHeaderlines.contains("DET KONGELIGE BIBLIOTEK".toLowerCase(Locale.ROOT)) && barcodeLabelExists;
+        return hasStamp || hasBarcodeLabel;
+    }
+
     private static boolean compareImages(BufferedImage imgA, BufferedImage imgB) {
         
         //TODO if we scale UP, we already know that this is a failure, as the reference images are SCALED DOWN versions of the apron

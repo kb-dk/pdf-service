@@ -4,10 +4,11 @@ All notable changes to pdf-service will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-### Added
-
-- Something
+## [1.2.0]
+- org.apache.pdfbox updated
+- jbig2-imageio dependency added to fix unknown faliore problem
+- code added to prevent apronCleaner form deleting pages containing barcode-labels and stamps added by The Royla Danish Library
+- PdfTitlePageCleaner - added several testcases related to "apron cleaning".
 
 
 ## [1.1.1]
