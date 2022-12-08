@@ -126,7 +126,9 @@ public class PdfApronPageCleaner {
         Matcher matcher = pattern. matcher(pageText);
         boolean found12Digits = matcher.find();
         final boolean barcodeLabelExists = pageText.contains("\\1")|| pageText.contains("1\\")||found12Digits;// "\\1" or "1\\" will most likely be part of barcode if present. If NOT present we look for 12 digits in a row.
-        final boolean hasBarcodeLabel = matchingHeaderlines.contains("DET KONGELIGE BIBLIOTEK".toLowerCase(Locale.ROOT)) && barcodeLabelExists;
+        final boolean hasFullRoyalLibraryText = matchingHeaderlines.contains("DET KONGELIGE BIBLIOTEK".toLowerCase(Locale.ROOT));
+        final boolean hasAbbreviatedRoyalLibraryText = matchingHeaderlines.contains("det kgl. bibliotek");
+        final boolean hasBarcodeLabel = (hasFullRoyalLibraryText || hasAbbreviatedRoyalLibraryText) && barcodeLabelExists;
         return hasStamp || hasBarcodeLabel;
     }
 
