@@ -57,6 +57,12 @@ public class CopyrightLogic {
     private static final Pattern yearFromD4D4Pattern = Pattern.compile(PREFIX + "(?<year>\\d{4})-\\d{4}\\.?" + POSTFIX);
     
     /**
+     * Extract year from format YYYY og YYYY. Returns 1. of jan of the first year in the pair
+     * Introduced to cover publication format: "mellem YYYY og YYYY"
+     */
+    private static final Pattern yearFromD4OgD4Pattern = Pattern.compile(PREFIX + "mellem (?<year>\\d{4}) og \\d{4}\\.?" + POSTFIX);
+
+    /**
      * Extract year from format YYYY. Returns 1. of jan of the year
      */
     private static final Pattern yearFromD4Pattern = Pattern.compile(PREFIX + "(?<year>\\d{4})" + POSTFIX);
@@ -114,30 +120,37 @@ public class CopyrightLogic {
                           .map(a -> a.split(" ", 3)[1])
                           .findFirst();
         
-        final String dateField = premiere.orElse(tag260c.orElse(dateOfPublication));
-        return dateField;
+        return premiere.orElse(tag260c.orElse(dateOfPublication));
     }
     
     @Nullable
     public static LocalDate parseDate(String dateField) {
+    // Bemærk: Rækkefølgen betyder alt! Sørg for at køre alle tests - også PdfTitlePageCleanerTest før prod!
         Optional<LocalDate> firstYear =
-                parsePublicationDateWithPattern(dateField, yearFromD4D4Pattern)
-                        .or(() -> parsePublicationDateWithPattern(dateField, yearFromNamedMonthPattern))
-                        .or(() -> parsePublicationDateWithPattern(dateField, yearFromYMDPattern))
-                        .or(() -> parsePublicationDateWithPattern(dateField, yearFromDMYPattern))
-                        .or(() -> parsePublicationDateWithPattern(dateField, yearFromD4Pattern))
-                        .or(() -> parsePublicationDateWithPattern(dateField, yearFromD3Pattern))
-                        .or(() -> parsePublicationDateWithPattern(dateField, yearFromD2Pattern))
-                        .or(() -> parsePublicationDateWithPattern(dateField, yearFromSAPattern));
-        
+                parsePublicationDateWithPattern(dateField, yearFromD4OgD4Pattern, "yearFromD4OgD4Pattern")
+                        .or(() -> parsePublicationDateWithPattern(dateField, yearFromD4D4Pattern, "yearFromD4D4Pattern"))
+                        .or(() -> parsePublicationDateWithPattern(dateField, yearFromNamedMonthPattern, "yearFromNamedMonthPattern"))
+                        .or(() -> parsePublicationDateWithPattern(dateField, yearFromYMDPattern, "yearFromYMDPattern"))
+                        .or(() -> parsePublicationDateWithPattern(dateField, yearFromDMYPattern, "yearFromDMYPattern"))
+                        .or(() -> parsePublicationDateWithPattern(dateField, yearFromD4Pattern, "yearFromD4Pattern"))
+                        .or(() -> parsePublicationDateWithPattern(dateField, yearFromD3Pattern, "yearFromD3Pattern"))
+                        .or(() -> parsePublicationDateWithPattern(dateField, yearFromD2Pattern, "yearFromD2Pattern"))
+                        .or(() -> parsePublicationDateWithPattern(dateField, yearFromSAPattern, "yearFromSAPattern"));
+/*
+
+        Optional<LocalDate> firstYear =
+                parsePublicationDateWithPattern(dateField, yearFromD4OgD4Pattern, "yearFromD4OgD4Pattern");
+
+*/
         return firstYear.orElse(null);
     }
     
     
-    private static Optional<LocalDate> parsePublicationDateWithPattern(String tag260c, Pattern pattern) {
+    private static Optional<LocalDate> parsePublicationDateWithPattern(String tag260c, Pattern pattern, String patternName) {
         //17. maj 2012
         final Matcher matcher = pattern.matcher(tag260c);
         if (matcher.matches()) {
+            log.debug(tag260c +  " matcher: " + patternName + " " + pattern );
             int firstYear = getFirstYear(matcher);
             Month firstMonth = parseMonth(getGroupOrDefault(matcher, "month", "01"));
             if (firstMonth == null) {
@@ -157,8 +170,7 @@ public class CopyrightLogic {
         } else {
             //Ensure that the year is 4 digits long
             String year4Digits = (yearRaw + "99").substring(0, 4);
-            int yearInt = Integer.parseInt(year4Digits); //year must be there
-            return yearInt;
+            return Integer.parseInt(year4Digits); //year must be there
         }
     }
     

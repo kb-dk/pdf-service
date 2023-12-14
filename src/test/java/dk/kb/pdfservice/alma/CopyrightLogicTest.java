@@ -145,7 +145,7 @@ public class CopyrightLogicTest {
     
     @Test
     void parseDate7_YYYY_YYYY_2() {
-        // YYYY_YYYY
+        // YYYY_YYYY   [mellem 1771 og 1784].
         
         LocalDate date = CopyrightLogic.parseDate("31.1961-1986/04/21.");
         
@@ -220,6 +220,15 @@ public class CopyrightLogicTest {
         Assertions.assertEquals(LocalDate.of(LocalDate.now(ZoneId.systemDefault()).getYear(), 1, 1), date);
     }
     
-    
+    @Test
+    void parseDate_mellem_YYYY_og_YYYY_1() {
+        // mellem YYYY og YYYY
+
+        LocalDate date = CopyrightLogic.parseDate("mellem 1771 og 1784");
+
+        Assertions.assertEquals(LocalDate.of(1771, 1, 1), date);
+    }
+
+
     
 }
