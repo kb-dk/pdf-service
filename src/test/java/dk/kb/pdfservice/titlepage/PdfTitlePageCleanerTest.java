@@ -11,13 +11,14 @@ import java.io.IOException;
 
 class PdfTitlePageCleanerTest {
 
-    //Asgers test-files, than may be worth testing??
+    //test-files, that may be worth testing??
     //String testfile = "data/130020902567.pdf";
     //String testfile = "data/130020159147.pdf";
     //String testfile = "data/130020902524.pdf";
     //String testfile = "data/130023138892-color.pdf";
     //String testfile = "data/115808025307_bw.pdf";
     //String testfile = "data/130021589854-color.pdf";
+    //String testfile = "data/130022082494-color.pdf";
 
 
 

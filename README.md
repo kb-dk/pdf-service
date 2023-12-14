@@ -143,6 +143,12 @@ Den benytter sig af disse ting
           path: "/discovery/fulldisplay?docid=alma" #The mmsID is appended here
           postfix: "&context=U&vid=45KBDK_KGL:KGL&lang=da"
     ```
+7. Fil struktur, nødvendig for release:perform (i hvert fald for mig)
+
+    ${user.home}/services/
+    ![img.png](img.png)
+
+
 
 ### Test Urls
 
