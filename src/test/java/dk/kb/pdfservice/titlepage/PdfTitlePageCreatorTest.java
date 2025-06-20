@@ -26,7 +26,8 @@ class PdfTitlePageCreatorTest {
         
         
        
-        ServiceConfig.initialize("conf/*.yaml");
+        ServiceConfig.initialize("conf/*.yaml", Thread.currentThread().getContextClassLoader().getResource("pdf-service-test.yaml").getFile());
+
         String json1 = "{\n"
                             + "  \"alternativeTitle\" : \"\",\n"
                             + "  \"apronType\" : \"A\",\n"
@@ -81,7 +82,7 @@ class PdfTitlePageCreatorTest {
     void enforceLimits() throws IOException {
 
         //http://localhost:8080/pdf-service/api/getPdf/130019369456-color.pdf
-        ServiceConfig.initialize("conf/*.yaml");
+        ServiceConfig.initialize("conf/*.yaml", Thread.currentThread().getContextClassLoader().getResource("pdf-service-test.yaml").getFile());
         List<String> textBlocks = List.of("Wygand, August.",
                                           "Dero Königl. Majestät zu Dännemarck Norwegen, &c. &c. bestalten Raths, August Wygands, Entsetzter Vortrab, oder Kurtzer Anfang des künfftigen Beweises; Dass alles in ermeltem Vortrab enthalten (1.) die reine, lautere ... Warheit bleibe; (2.) Darin der ietzo prædominirenden Parthey des Hamburgischen Rahts nicht der tausendste Theil der in ihnen ... wohnenden Bossheit, noch weniger die bey dem gemeinen Gut in Hamburg vorgehende entsetzliche Diebereyen enthalten oder vorgestellet; Und (3.) das von ermelter Rahts-Parthey darwider ... publicirte so genannte Warnungs-Edict eine verlogene, ... Büttels-feuerwürdige Schand-Charteque sey, ...",
                                           "",
