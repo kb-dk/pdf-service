@@ -5,6 +5,7 @@ import dk.kb.pdfservice.model.ApronType;
 import dk.kb.pdfservice.model.PdfMetadata;
 import dk.kb.util.json.JSON;
 import org.apache.fop.apps.FOPException;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import javax.xml.transform.TransformerException;

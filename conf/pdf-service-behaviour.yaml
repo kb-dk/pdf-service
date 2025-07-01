@@ -18,6 +18,7 @@ alma:
 
   # The Alma URL. This should never change, you control which alma instance you use by the key, not the url
   url: https://api-eu.hosted.exlibrisgroup.com/almaws/v1/
+  scu_url: https://kbdk-kgl-psb.alma.exlibrisgroup.com/view/sru/45KBDK_KGL
 
   lang: da
 
@@ -175,9 +176,15 @@ pdfService:
         apronWithinCopyright: C
         apronOutOfCopyright: B
 
+      - 999a: "NPTeatermanus"
+        apronWithinCopyright: C
+        apronOutOfCopyright: B
+
       - 999a: "DAB_dokumenter"
         apronWithinCopyright: E
         apronOutOfCopyright: E
+
+
 
       # If no other values match, use Apron B
       - __default__: "Value here does not matter"
@@ -220,6 +227,7 @@ pdfService:
     999a:
       - "Teatermanus"
       - "TeatermanusudenOCR"
+      - "NPTeatermanus"
 
 
   # How long must pass since publication for at work to be outside copyright

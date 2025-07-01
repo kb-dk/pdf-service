@@ -1,6 +1,8 @@
 package dk.kb.pdfservice.alma;
 
 import com.google.common.collect.Sets;
+import dk.kb.alma.client.sru.Query;
+import dk.kb.alma.client.utils.SRUtils;
 import dk.kb.alma.gen.bibs.Bib;
 import dk.kb.alma.gen.items.Item;
 import dk.kb.pdfservice.config.ApronMapping;
@@ -9,6 +11,7 @@ import dk.kb.pdfservice.model.ApronType;
 import dk.kb.pdfservice.model.PdfMetadata;
 import dk.kb.pdfservice.webservice.exception.NotFoundServiceObjection;
 import dk.kb.util.other.StringListUtils;
+import dk.kb.util.xml.XML;
 import dk.kb.util.xml.XPathSelector;
 import dk.kb.util.xml.XpathUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -17,17 +20,9 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 
 import javax.annotation.Nonnull;
+import javax.xml.transform.TransformerException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -100,7 +95,94 @@ public class MarcClient {
         //                              primoLink);
         //return pdfInfo;
     }
-    
+
+    @Nonnull
+    public static PdfMetadata getPdfInfoFromSRU(String url) throws NotFoundServiceObjection {
+
+        System.out.println(getQuery(url));
+
+        Iterator<Element> result = ServiceConfig.getAlmaSRUClient().search(getQuery(url));
+        List<Element> resultList = StringListUtils.asStream(result).collect(Collectors.toList());
+
+
+        Element first = resultList.get(0);
+
+        String mmsID = SRUtils.extractMMSid(first).get();
+        String xml = null;
+
+
+
+        try {
+            xml = XML.domToString(first);
+            System.out.println(xml);
+        } catch (TransformerException e) {
+            throw new RuntimeException(e);
+        }
+
+        Element marc21 = first;
+        RecordType recordType = getRecordType(marc21);
+
+        String publicationDateString = CopyrightLogic.getPublicationDateString(marc21, recordType);
+        final LocalDate publicationDate = CopyrightLogic.getPublicationDate(publicationDateString);
+        boolean isWithinCopyright = CopyrightLogic.isWithinCopyright(publicationDate);
+
+        ApronType apronType = getApronType(marc21, isWithinCopyright);
+
+        String authors = getAuthors(marc21, recordType);
+        String title = getTitle(marc21, recordType);
+        String alternativeTitle = getAlternativeTitle(marc21, recordType);
+        String udgavebetegnelse = getUdgavebetegnelse(marc21, recordType);
+        String placeAndYear = getPlaceAndYear(marc21, recordType);
+        String size = getSize(marc21, recordType);
+        String keywords = getKeywords(marc21, recordType);
+
+/*        String volume = item.getItemData().getDescription();
+        //bib.getSuppressFromExternalSearch()
+
+        String primoLink = ServiceConfig.getPrimoLink(bib.getMmsId());*/
+
+        return new PdfMetadata()
+                .authors(authors)
+                .title(title)
+                .alternativeTitle(alternativeTitle)
+                .udgavebetegnelse(udgavebetegnelse)
+                .volume("volume")
+                .placeAndYear(placeAndYear)
+                .size(size)
+                .apronType(apronType)
+                .publicationDate(publicationDate)
+                .publicationDateString(publicationDateString)
+                .isWithinCopyright(isWithinCopyright)
+                .keywords(keywords)
+                .primoLink(mmsID);
+
+
+        /*        PdfInfo pdfInfo = new PdfInfo(authors,
+                                      title,
+                                      alternativeTitle,
+                                      udgavebetegnelse,
+                                      volume,
+                                      placeAndYear,
+                                      size,
+                                      apronType,
+                                      publicationDate,
+                                      publicationDateString,
+                                      isWithinCopyright,
+                                      keywords,
+                                      primoLink);*/
+//        return new PdfMetadata();
+    }
+
+    private static Query getQuery(String url) {
+
+        String filename = url.substring(url.lastIndexOf('/') + 1);
+
+        String barcode = filename.split("[-._]", 2)[0];
+
+        return Query.containsWords(Query.barcode, barcode);
+    }
+
+
     private static String getKeywords(Element marc21, RecordType recordType) {
     
         List<String> tag653a = getStrings(marc21, "653", "a");

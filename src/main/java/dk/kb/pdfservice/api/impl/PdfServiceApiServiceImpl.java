@@ -213,9 +213,8 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     private void createCopyrightedPDF(String pdfFileString, File cachedPdfFile) throws NotFoundServiceObjection {
         //4. otherwise create
         final File sourcePdfFile = getSourcePdfFile(pdfFileString);
-        
-        String barcode = sourcePdfFile.getName().split("[-._]", 2)[0];
-        PdfMetadata pdfInfo = MarcClient.getPdfInfo(barcode);
+
+        PdfMetadata pdfInfo = MarcClient.getPdfInfo(sourcePdfFile.getName());
         
         String metadataChecksum = DigestUtils.md5Hex(JSON.toJson(pdfInfo));
         

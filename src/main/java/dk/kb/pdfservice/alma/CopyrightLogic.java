@@ -122,6 +122,28 @@ public class CopyrightLogic {
         
         return premiere.orElse(tag260c.orElse(dateOfPublication));
     }
+
+    protected static String getPublicationDateString(Element marc21, RecordType recordType) {
+//        final String dateOfPublication = bib.getDateOfPublication();
+//        log.debug("Alma dateOfPublication (should correspond to marc008) {}",dateOfPublication);
+
+        final Optional<String> tag260c = MarcClient.getString(marc21, "260", "c");
+        log.debug("tag260c {}", tag260c);
+
+
+        final Optional<String> premiere =
+                MarcClient.ifTeater(recordType, () -> {
+                            List<String> tag500a = MarcClient.getStrings(marc21, "500", "a");
+                            log.debug("tag500a {}", tag500a);
+                            return tag500a;
+                        })
+                        .stream()
+                        .filter(str -> str.startsWith("Premiere"))
+                        .map(a -> a.split(" ", 3)[1])
+                        .findFirst();
+
+        return premiere.orElse(tag260c+"");
+    }
     
     @Nullable
     public static LocalDate parseDate(String dateField) {

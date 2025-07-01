@@ -3,6 +3,7 @@ package dk.kb.pdfservice.config;
 import com.google.common.util.concurrent.Striped;
 import com.google.common.util.concurrent.StripedFactory;
 import dk.kb.alma.client.AlmaRestClient;
+import dk.kb.alma.client.AlmaSRUClient;
 import dk.kb.pdfservice.footer.FontEnum;
 import dk.kb.pdfservice.model.ApronType;
 import dk.kb.pdfservice.utils.SizeUtils;
@@ -56,6 +57,8 @@ public class ServiceConfig {
      */
     private static YAML serviceConfig;
     private static AlmaRestClient almaRestClient;
+
+    private static AlmaSRUClient almaSRUClient;
     
     /**
      * Initialized the configuration from the provided configFile.
@@ -322,7 +325,23 @@ public class ServiceConfig {
         }
         return almaRestClient;
     }
-    
+
+    public static synchronized AlmaSRUClient getAlmaSRUClient() {
+        if (almaSRUClient == null) {
+            log.debug("Creating new AlmaSRUClient");
+            YAML config = getConfig();
+            almaSRUClient = new AlmaSRUClient(config.getString("alma.scu_url"),
+                    5,
+                    Long.parseLong(config.getString("alma.rate_limit.min_sleep_millis")),
+                    Long.parseLong(config.getString("alma.rate_limit.sleep_variation_millis")),
+                    Integer.parseInt(config.getString("alma.connect_timeout")),
+                    Integer.parseInt(config.getString("alma.read_timeout")),
+                    Long.parseLong(config.getString("alma.cache_timeout", "0")),
+                    Integer.parseInt(config.getString("alma.max_retries", "3")));
+        }
+        return almaSRUClient;
+    }
+
     public static double getMaxLinesForApron(ApronType apronType) {
         return getConfig().getDouble("pdfService.apron.metadataTable.maxlines." + apronType.name());
     }
