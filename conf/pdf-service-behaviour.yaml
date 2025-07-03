@@ -57,7 +57,7 @@ pdfService:
 
   #  Where original PDFs are read from
   PDFsource:
-    - "/data1/e-mat/dod"
+    - "/home/tbgo/workspace/pdf-service/data1/e-mat/dod"
 
   cache:
     #  Where generated PDFs are stored

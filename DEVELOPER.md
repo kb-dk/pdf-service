@@ -26,6 +26,7 @@ where "pdf-service" is your artifactID from above.
 
 The Swagger-UI is available at <http://localhost:8080/pdf-service/api/api-docs?url=openapi.json>
 which is the location that <http://localhost:8080/pdf-service/api/> will redirect to.
+http://localhost:8080/pdf-service/api/130024645461-color.pdf
 
 ## java webapp template structure
 
