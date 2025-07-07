@@ -1,22 +1,22 @@
 dod-pdf-service
 ==================
 
-Tilhørende projekt <https://sbprojects.statsbiblioteket.dk/display/DK/Projektblanket+KULA-170>
+Tilhørende projekt <https://kb-dk.atlassian.net/wiki/spaces/DK/pages/16921097/KULA-170+On-the-fly-forkl+de+og+footers+vedr.+copyright>
 
 Se mere om hvad dette er på
-* <https://sbprojects.statsbiblioteket.dk/display/SSYS/Overdragelse+af+DOD+PDF+Service+til+applikationsdrift>
+* <https://kb-dk.atlassian.net/wiki/spaces/SSYS/pages/19402418/Overdragelse+af+DOD+PDF+Service+til+applikationsdrift>
 
 
 
 Andre relevante links
 -----------------------
 
-* Record Types <https://sbprojects.statsbiblioteket.dk/display/DK/Record+Typer>
+* Record Types <https://kb-dk.atlassian.net/wiki/spaces/DK/pages/16909015/Record+Typer>
 
-* Test Eksempler <https://sbprojects.statsbiblioteket.dk/display/DK/Testeksempler>
+* Test Eksempler <https://kb-dk.atlassian.net/wiki/spaces/DK/pages/16911838/Testeksempler>
     * This lokalt brug kan man hente originalerne (med samme navne) fra `https://www.kb.dk/e-mat/dod/` eller `develro@webext-10.kb.dk:/data1/e-mat/dod/`
     
-* Marc21 felter og deres anvendelse <https://sbprojects.statsbiblioteket.dk/pages/viewpage.action?pageId=103877561>
+* Marc21 felter og deres anvendelse <https://kb-dk.atlassian.net/wiki/spaces/ALMAWIKI/pages/5641816/G+ldende+katalogpraksis>
 
 
 
@@ -152,6 +152,6 @@ Den benytter sig af disse ting
 
 ### Test Urls
 
-Se <https://sbprojects.statsbiblioteket.dk/display/DK/Testeksempler>
+Se <https://kb-dk.atlassian.net/wiki/spaces/DK/pages/16911838/Testeksempler>
 
 
