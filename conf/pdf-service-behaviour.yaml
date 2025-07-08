@@ -57,7 +57,7 @@ pdfService:
 
   #  Where original PDFs are read from
   PDFsource:
-    - "/home/tbgo/workspace/pdf-service/data1/e-mat/dod"
+    - "/data1/e-mat/dod"
 
   cache:
     #  Where generated PDFs are stored
@@ -250,4 +250,3 @@ pdfService:
       # See https://www.rapidtables.com/web/color/html-color-codes.html for possible values
       Color: '#FFFFFF' # White
       Transparency: 0.3 # Between 0.0 and 1.0. 1.0 is totally covering, i.e. not transparent. 0.0 is invisible
-
