@@ -69,13 +69,6 @@ Access to the configuration is through the static class at `src/main/java/dk.kb.
 **Note**: The environment configuration typically contains sensitive information. Do not put it in open code
 repositories. To guard against this, `conf/pdf-service-environment.yaml` is added to `.gitignore`. 
 
-## Jetty
-
-
-
-This project can be started with `mvn jetty:run`, which will expose a webserver with the implemented service at port 8080.
-If it is started in debug mode from an IDE (normally IntelliJ IDEA), breakpoints and all the usual debug functionality
-will be available.
 
 ## Tomcat
 
