@@ -14,7 +14,9 @@ alma:
   # Must have these permissions
   #   Bibs - Read-only - To retrieve records and metadata
   #   Configuration - Read-only - To check name of current ALMA instance
-  apikey: SHOULD SET IN pdf-service-environment.yaml or pdf-service-local.yaml
+  # For some reason jetty dont use .m2/settings.xml profiles, us we have to hard code id
+
+  apikey: XXXXXXXX
 
   # The Alma URL. This should never change, you control which alma instance you use by the key, not the url
   url: https://api-eu.hosted.exlibrisgroup.com/almaws/v1/
@@ -57,17 +59,17 @@ pdfService:
 
   #  Where original PDFs are read from
   PDFsource:
-    - "/data1/e-mat/dod"
+    - "${user.home}/jetty-test/data"
 
   cache:
     #  Where generated PDFs are stored
-    cacheFolder: "/dodpdfsv-cache/cache/"
+    cacheFolder: "${user.home}/jetty-test/cache"
     # If copyrighted PDF is older than this age, request ALMA data and create it again
     # This ensures that updates to ALMA will tage effect (after a while)
     # Note that if this age is SHORTER than the alma.cache_timeout, the cached ALMA record
     # will be used, which defeats the purpose....
     maxAgeOfCachedPdfs:
-      value: 24
+      value: 0
       unit: HOURS
       # unit can be one of NANOS, MICROS, MILLIS, SECONDS, MINUTES, HOURS, HALF_DAYS
 
@@ -92,7 +94,7 @@ pdfService:
 
   temp:
     #  Where temporary files are stored when we unload them from memory
-    folder: "/dodpdfsv-cache/temp/"
+    folder: "${user.home}/jetty-test/temp"
 
     #This is the maximum memory we will use for each PDF being built. If we need more memory, we will use temp files in the folder above
     # This allows us to open the TWO 2+ GB PDFs, while only allocating 1GB Heap
@@ -111,7 +113,7 @@ pdfService:
     # We scale the extracted image to match the dimensions of the oldHeaderImages file
     # If the difference is below 1%, we call it a match
     oldHeaderImages:
-      imageDirectory: "${user.home}/services/conf/resources/oldHeaderImages"
+      imageDirectory: "conf/resources/oldHeaderImages"
 
       # Percent difference between images before we regard them as different
       # 1.0 is inverse colors. 0.0 pixel-perfect match.
@@ -133,8 +135,8 @@ pdfService:
   # This section controls the settings for the new apron page
   apron:
     #This XSLT generates the frontpage
-    FOPfile: "${user.home}/services/conf/resources/apron.xsl"
-    FOPconfig: "${user.home}/services/conf/fop.xconf"
+    FOPfile: "conf/resources/apron.xsl"
+    FOPconfig: "conf/fop.xconf"
     #Relative URLs in this FOPfile will be resolved from the folder containing the FOPfile
     # So you can refer to KBLogo.png simply as "KBLogo.png" without any path
 
@@ -195,7 +197,7 @@ pdfService:
       # So if you increate this, decrease the other column in frontpage.xsl
 
       #Perhaps use http://unifoundry.com/unifont/index.html instead??
-      fontFile: "${user.home}/services/conf/resources/fonts/DejaVuSans.ttf" # Font of the metadata table
+      fontFile: "conf/resources/fonts/DejaVuSans.ttf" # Font of the metadata table
       fontSize: 10 #px
 
       maxlines: # Remember these are very dependent on the font and fontsize above
@@ -250,3 +252,4 @@ pdfService:
       # See https://www.rapidtables.com/web/color/html-color-codes.html for possible values
       Color: '#FFFFFF' # White
       Transparency: 0.3 # Between 0.0 and 1.0. 1.0 is totally covering, i.e. not transparent. 0.0 is invisible
+

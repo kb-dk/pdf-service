@@ -14,7 +14,7 @@ alma:
   # Must have these permissions
   #   Bibs - Read-only - To retrieve records and metadata
   #   Configuration - Read-only - To check name of current ALMA instance
-  apikey: ${alma.apikey}
+  apikey: ${alma.apikey.pdfserviece}
 
 pdfService:
   

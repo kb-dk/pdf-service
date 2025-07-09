@@ -8,24 +8,58 @@ Tomcat deployment or OpenAPI.
 
 ## Initial use
 
+### build fist
 After a fresh checkout or after the `openapi.yaml` specification has changed, the `api` and the `model` files 
 must be (re)generated. This is done by calling 
 ```
 mvn package
 ```
 
+### setup test data local
+
+run
+
+```
+./setupJettyTestData.sh
+```
+
+It will create test folders in your user home dir and download examples pdf's
+
+### rename and add alma.apikey.pdfserviece 
+
+copy pdf-service-local.yaml.sample to pdf-service-local.yaml
+
+```
+cp conf/pdf-service-local.yaml.sample conf/pdf-service-local.yaml
+```
+
+For some reason jetty dont use .m2/settings.xml profiles, so we have to hardcode it
+
+add alma.apikey.pdfserviece to pdf-service-local.yaml, after 'apikey:' in line 19
+
+### startting Jetty
+
+Jetty is a servlet container (like Tomcat) that is often used for testing during development.
+
 Jetty is enabled, so testing the webservice can be done by running
+
 Start a Jetty web server with the application:
 ```
 mvn jetty:run
 ```
 
-The default port is 8080 and the default Hello World service can be accessed at
-<http://localhost:8080/pdf-service/api/hello>
-where "pdf-service" is your artifactID from above.
-
 The Swagger-UI is available at <http://localhost:8080/pdf-service/api/api-docs?url=openapi.json>
 which is the location that <http://localhost:8080/pdf-service/api/> will redirect to.
+
+### running examples
+
+just open these links in af browser
+
+http://localhost:8080/pdf-service/api/getPdf/130007257539-color.pdf
+
+http://localhost:8080/pdf-service/api/getPdf/130008805998-color.pdf
+
+http://localhost:8080/pdf-service/api/getPdf/622264bf-9743-456b-8b73-52880cdac715_0001-color.pdf
 
 ## java webapp template structure
 
@@ -44,13 +78,6 @@ Access to the configuration is through the static class at `src/main/java/dk.kb.
 **Note**: The environment configuration typically contains sensitive information. Do not put it in open code
 repositories. To guard against this, `conf/pdf-service-environment.yaml` is added to `.gitignore`. 
 
-## Jetty
-
-Jetty is a servlet container (like Tomcat) that is often used for testing during development.
-
-This project can be started with `mvn jetty:run`, which will expose a webserver with the implemented service at port 8080.
-If it is started in debug mode from an IDE (normally IntelliJ IDEA), breakpoints and all the usual debug functionality
-will be available.
 
 ## Tomcat
 

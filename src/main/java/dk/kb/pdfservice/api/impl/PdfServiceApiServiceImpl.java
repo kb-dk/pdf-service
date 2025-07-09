@@ -287,6 +287,7 @@ public class PdfServiceApiServiceImpl implements PdfServiceApi {
     @Nonnull
     private File getSourcePdfFile(String pdfFileString) {
         List<String> pdfSourcePaths = ServiceConfig.getPdfSourcePath();
+        log.info("Looking for pdf file '{}' in {}", pdfFileString, pdfSourcePaths);
         return pdfSourcePaths.stream()
                              .map(File::new)
                              .filter(File::isDirectory)
