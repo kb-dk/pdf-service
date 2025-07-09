@@ -1,0 +1,255 @@
+#
+# This config contains behaviour data: Thread allocation, allowed fields for lookup, limits for arguments etc.
+#
+# The behaviour config is normally controlled by developers and is part of the code repository.
+# Sensitive information such as machine names and user/passwords should not be part of this config.
+#
+# It will be automatically merged with the environment config when accessed through the
+# application config system.
+#
+#
+
+alma:
+  # Api key name: dodpdfsv.devel.key
+  # Must have these permissions
+  #   Bibs - Read-only - To retrieve records and metadata
+  #   Configuration - Read-only - To check name of current ALMA instance
+  # For some reason jetty dont use .m2/settings.xml profiles, us we have to hard code id
+
+  apikey: XXXXXXXX
+
+  # The Alma URL. This should never change, you control which alma instance you use by the key, not the url
+  url: https://api-eu.hosted.exlibrisgroup.com/almaws/v1/
+
+  lang: da
+
+  #This parameter is nessesary when retrieving Resource Sharing Requests. It does not really matter what it it,
+  # but it NEEDS to be the code of any Partner. 800010 is the code of KGL Bib, and not likely to change.
+  partner_code: 800010
+
+  #How many requests per call, max 100
+  batch_size: 100
+
+  #The alma client will retry this number of times before giving up.
+  # If set to negative value, the client will retry forever
+  # if set to 0, no retries will be attempted.
+  max_retries: 3
+  # Not that HTTP 429 (Rate Limit) from ALMA will NOT be affected by this value, and these will always be retried forever
+
+  #cache alma responses for this duration. Milliseconds
+  # Cache for 1 minute, to handle repeated calls
+  cache_timeout: 60000
+
+  #Timeouts in milliseconds
+  connect_timeout: 60000
+  read_timeout: 30000
+
+  # Sleep durations when retrying or receiving a response 429 from alma (rate_limit)
+  rate_limit:
+    #When we retry we back off for at least min_sleep_millis
+    min_sleep_millis: 2000
+    #to avoid the rush when a lot of threads back off and then try again at the same time, we introduce a random element into
+    # the back off time. sleep_variation_millis multiplied with a randon number [0-1] will be added to the sleep time to combat this effect
+    sleep_variation_millis: 3000
+
+
+
+pdfService:
+
+
+  #  Where original PDFs are read from
+  PDFsource:
+    - "${user.home}/jetty-test/data"
+
+  cache:
+    #  Where generated PDFs are stored
+    cacheFolder: "${user.home}/jetty-test/cache"
+    # If copyrighted PDF is older than this age, request ALMA data and create it again
+    # This ensures that updates to ALMA will tage effect (after a while)
+    # Note that if this age is SHORTER than the alma.cache_timeout, the cached ALMA record
+    # will be used, which defeats the purpose....
+    maxAgeOfCachedPdfs:
+      value: 0
+      unit: HOURS
+      # unit can be one of NANOS, MICROS, MILLIS, SECONDS, MINUTES, HOURS, HALF_DAYS
+
+    # Note: This feature is not ready yet
+    # Check if the metadata is actually changed, before rejecting the cached copy
+    # TODO this only works from in-memory so lost on restart
+    # TODO this does not check if the apron.xsl or other configs have changed, just the metadata
+    checkMetadataChanges: false
+
+
+
+  concurrency:
+    # This controls how many (different) pdf files can maximally be served concurrently.
+    # Excess requests are just put on hold, so the user will not really notice
+    numConcurrentCacheDownloads: 1023
+    # This controls how many PDF files can concurrently be updated (with apron info)
+    # As the PDF files can be quite large (2+ GB),  they will trash around on the disk
+    #  a lot (or take up a lot of memory, see below), I found it useful to be able to
+    #  limit the number of concurrent operations
+    numConcurrentPdfConstructions: 2
+
+
+  temp:
+    #  Where temporary files are stored when we unload them from memory
+    folder: "${user.home}/jetty-test/temp"
+
+    #This is the maximum memory we will use for each PDF being built. If we need more memory, we will use temp files in the folder above
+    # This allows us to open the TWO 2+ GB PDFs, while only allocating 1GB Heap
+    # Note that this is amount is the nessesary Heap for each PDF Build, so see numConcurrentPdfConstructions above
+    memoryForPDFs: 400 MB # You can use KB, MB, GB, TB, PB, EB. You can use fractional numbers, like 4.5MB. Space between number and unit is optional
+
+
+
+  # When inserting new front page, we search for old frontpages to remove
+  # As soon as we find a page that is NOT a frontpage, we stop the search. So there
+  # should be no problem with removing pages deep in document
+  apronRemoval:
+
+    # First extract the images from each page
+    # For each image extracted, compare it to each of the header images in this folder
+    # We scale the extracted image to match the dimensions of the oldHeaderImages file
+    # If the difference is below 1%, we call it a match
+    oldHeaderImages:
+      imageDirectory: "conf/resources/oldHeaderImages"
+
+      # Percent difference between images before we regard them as different
+      # 1.0 is inverse colors. 0.0 pixel-perfect match.
+      maxDifferenceAllowedForMatch: 0.01
+
+    # If a page did NOT match any of the header images above, we examine the text on the page
+    # Some of the newer aprons are NOT static images with OCR, but actual PDF pages with correct text,
+    # so this is nessesary to handle these.
+    # If a page contains any of these strings (case insensitive), it is regarded
+    # as a frontpage and removed
+    oldHeaderStrings:
+      - "det kongelige bibliotek"
+      - "det kgl. bibliotek"
+      - "digitaliseret af"
+      - "oplysninger om ophavsret og brugerrettigheder, se venligst"
+
+
+
+  # This section controls the settings for the new apron page
+  apron:
+    #This XSLT generates the frontpage
+    FOPfile: "conf/resources/apron.xsl"
+    FOPconfig: "conf/fop.xconf"
+    #Relative URLs in this FOPfile will be resolved from the folder containing the FOPfile
+    # So you can refer to KBLogo.png simply as "KBLogo.png" without any path
+
+    # Logic for deciding which of the 4 types of aprons to use
+    # See the apron types on https://sbprojects.statsbiblioteket.dk/display/DK/Record+Typer
+    # First marc 999a+997a is retried, and then each of the entries below is tried,
+    #  _in the stated order_, starting from the top, until one match
+    # If none match, we use the __default__ value.
+    # If the __default__ value is not used, we fail...
+    apronTypeMapper:
+
+      #Aprons up to A-Z are defined in the code, but only A B C D are currently used
+
+      #Apron C is the only one with special behaivour as it includes a per-page footer
+
+      #hvis der er 1 997 a DOD så skal den have hvis 1) trykkeår er ældre end 140 = B forklæde;  ellers A forklæde.
+      #Hvis der er 1 999 a DOD så skal den have hvis 1) trykkeår er ældre end 140 = B forklæde; ellers A forklæde.
+      #Hvis der er 1 999 a Teatermanus, så skal den have 1) trykkeår er ældre end 140 = B forklæde; ellers C forklæde.
+      #Ellers alle andre skal have forklæde B
+
+      #dvs. 1600talsKUM, 1600talsC8, TeatermanusudenOCR (Sufflør), Danskkvindehistoriskkulturarv, EOD  ( det har de i dag via Limb), samt alle dem som ikke matcher ovenstående
+      #
+      #Danskkvindehistoriskkulturarv mangler afklaring hos LOHA.
+
+      - 997a: "DOD"
+        apronWithinCopyright: A
+        apronOutOfCopyright: B
+
+      - 999a: "DOD"
+        apronWithinCopyright: A
+        apronOutOfCopyright: B
+
+      - 999a: "Danskkvindehistoriskkulturarv"
+        apronWithinCopyright: A
+        apronOutOfCopyright: B
+
+      - 999a: "Teatermanus"
+        apronWithinCopyright: C
+        apronOutOfCopyright: B
+
+      - 999a: "DAB_dokumenter"
+        apronWithinCopyright: E
+        apronOutOfCopyright: E
+
+      # If no other values match, use Apron B
+      - __default__: "Value here does not matter"
+        apronWithinCopyright: B
+        apronOutOfCopyright: B
+
+    #These are the values for the metadata-table
+    metadataTable:
+      # We need these values here, rather than directly in the XSLT because the program needs them to perform
+      #  optimal line cutting; We try to remove the fewest number of lines, so that the apron do not spill over onto
+      #  2 pages
+
+      widthCM: 8.4 # Width in centimeters of the left column of the metadata table
+      # The other column is currently 8.6cm, for a total of 18cm, which seems to be the max allowed
+      # So if you increate this, decrease the other column in frontpage.xsl
+
+      #Perhaps use http://unifoundry.com/unifont/index.html instead??
+      fontFile: "conf/resources/fonts/DejaVuSans.ttf" # Font of the metadata table
+      fontSize: 10 #px
+
+      maxlines: # Remember these are very dependent on the font and fontsize above
+        # TODO easy procedure for determining max number of lines for each apron
+        # Number of lines available for metadata differ for the different apron types
+        A: 11
+        B: 12
+        C: 9
+        E: 7
+
+    primo:
+      #    host: "https://soeg.kbdk" # For production
+      host: "https://kbdk-kgl-psb.primo.exlibrisgroup.com" #Important, do not have double / between host and path
+      path: "/discovery/fulldisplay?docid=alma" #The mmsID is appended here
+      postfix: "&context=U&vid=45KBDK_KGL:KGL&lang=da"
+
+
+
+  theaterCriteria:
+    #Theatre records have other rules about which marc21 fields to use
+    # Theatre records are all records with a 999a field with one of the listed values
+    999a:
+      - "Teatermanus"
+      - "TeatermanusudenOCR"
+
+
+  # How long must pass since publication for at work to be outside copyright
+  TimeSincePublicationToBeOutsideCopyright:
+    value: 140
+    unit: YEARS
+
+
+  errorMessage: "Denne post kunne ikke fremvises. Hvis du mener det er en fejl, kan du henvende dig til Spørg Biblioteket med et link til den post du prøver at tilgå: https://www.kb.dk/spoerg-biblioteket"
+
+  # Details of the footer to insert for apron type C
+  copyrightFooter:
+    Text:
+      - "Manuskriptkopien må ikke anvendes til opførelse og må ikke videredistribueres"
+    #      - "The manuscript copy may not be used for public performance and may not be distributed."
+
+    Fontsize: 12
+
+    # Font can only be one of builtin PDF FONTS: The possible values are: TIMES_ROMAN, TIMES_BOLD, TIMES_ITALIC, TIMES_BOLD_ITALIC, HELVETICA, HELVETICA_BOLD, HELVETICA_OBLIQUE, HELVETICA_BOLD_OBLIQUE, COURIER, COURIER_BOLD, COURIER_OBLIQUE, COURIER_BOLD_OBLIQUE, SYMBOL, ZAPF_DINGBATS
+    Font: HELVETICA
+
+    # See https://www.rapidtables.com/web/color/html-color-codes.html for possible values
+    Color: '#000000' # Black
+    Transparency: 0.7 # Between 0.0 and 1.0. 1.0 is totally covering, i.e. not transparent. 0.0 is invisible
+
+    Background:
+      # In order for the footer to be visible on darker backgrounds
+      # See https://www.rapidtables.com/web/color/html-color-codes.html for possible values
+      Color: '#FFFFFF' # White
+      Transparency: 0.3 # Between 0.0 and 1.0. 1.0 is totally covering, i.e. not transparent. 0.0 is invisible
+
