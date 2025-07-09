@@ -25,15 +25,24 @@ run
 
 It will create test folders in your user home dir and download examples pdf's
 
-### add alma.apikey.pdfserviece to pdf-service-local.yaml
+### rename and add alma.apikey.pdfserviece 
+
+copy pdf-service-local.yaml.sample to pdf-service-local.yaml
+
+```
+cp conf/pdf-service-local.yaml.sample conf/pdf-service-local.yaml
+```
 
 For some reason jetty dont use .m2/settings.xml profiles, so we have to hardcode it
 
-the file is here "conf/pdf-service-local.yaml"
+add alma.apikey.pdfserviece to pdf-service-local.yaml, after 'apikey:' in line 19
 
 ### startting Jetty
+
 Jetty is a servlet container (like Tomcat) that is often used for testing during development.
+
 Jetty is enabled, so testing the webservice can be done by running
+
 Start a Jetty web server with the application:
 ```
 mvn jetty:run
