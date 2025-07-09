@@ -1,6 +1,7 @@
 #!/bin/bash
 
-echo $HOME
+# This script create test folders to use when running pdf-service local
+# and download test examples
 
 USER="dodpdfsv"
 EXTERNAL_PDF_FOLDER="devel12.statsbiblioteket.dk:/data1/e-mat/dod/"
@@ -25,3 +26,4 @@ scp $USER@$EXTERNAL_PDF_FOLDER/622264bf-9743-456b-8b73-52880cdac715_0001-color.p
 exit
 
 
+# scp dodpdfsv@devel12.statsbiblioteket.dk:/data1/e-mat/dod/130024645461-color.pdf  /home/XXX/jetty-test/data/

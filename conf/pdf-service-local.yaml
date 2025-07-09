@@ -69,7 +69,7 @@ pdfService:
     # Note that if this age is SHORTER than the alma.cache_timeout, the cached ALMA record
     # will be used, which defeats the purpose....
     maxAgeOfCachedPdfs:
-      value: 24
+      value: 0
       unit: HOURS
       # unit can be one of NANOS, MICROS, MILLIS, SECONDS, MINUTES, HOURS, HALF_DAYS
 
