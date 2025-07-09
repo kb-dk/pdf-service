@@ -15,7 +15,7 @@
         <!-- Note that the application-config is defined using globbing: Multiple config files are merged -->
         <Arg>application-config</Arg>
         <Arg type="java.lang.String">
-            ${basedir}/src/test/jetty/${project.artifactId}*.yaml
+            ${basedir}/conf/${project.artifactId}*.yaml
         </Arg>
         <Arg type="boolean">true</Arg>
     </New>

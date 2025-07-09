@@ -14,7 +14,9 @@ alma:
   # Must have these permissions
   #   Bibs - Read-only - To retrieve records and metadata
   #   Configuration - Read-only - To check name of current ALMA instance
-  apikey: l8xx080dbde5e44949dd8ec506a05f3fd893
+  # For some reason jetty dont use .m2/settings.xml profiles, us we have to hard code id
+  # This file will NOT be commited to git
+  apikey: add your alma.apikey.pdfserviece key from .m2/settings.xml
 
   # The Alma URL. This should never change, you control which alma instance you use by the key, not the url
   url: https://api-eu.hosted.exlibrisgroup.com/almaws/v1/
@@ -57,11 +59,11 @@ pdfService:
 
   #  Where original PDFs are read from
   PDFsource:
-    - "/home/tbgo/workspace/pdf-service/data"
+    - "${user.home}/jetty-test/data"
 
   cache:
     #  Where generated PDFs are stored
-    cacheFolder: "cache/"
+    cacheFolder: "${user.home}/jetty-test/cache"
     # If copyrighted PDF is older than this age, request ALMA data and create it again
     # This ensures that updates to ALMA will tage effect (after a while)
     # Note that if this age is SHORTER than the alma.cache_timeout, the cached ALMA record
@@ -92,7 +94,7 @@ pdfService:
 
   temp:
     #  Where temporary files are stored when we unload them from memory
-    folder: "temp/"
+    folder: "${user.home}/jetty-test/temp"
 
     #This is the maximum memory we will use for each PDF being built. If we need more memory, we will use temp files in the folder above
     # This allows us to open the TWO 2+ GB PDFs, while only allocating 1GB Heap
